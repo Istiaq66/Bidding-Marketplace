@@ -219,8 +219,6 @@ class _DarkColorToken extends ColorToken {
       onPrimary: onPrimary,
       primaryContainer: primaryContainer,
       onPrimaryContainer: onPrimaryContainer,
-      background: background,
-      onBackground: onBackground,
       surface: surface,
       onSurface: onSurface,
       error: error,

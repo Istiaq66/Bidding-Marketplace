@@ -1,3 +1,4 @@
+import 'package:app/Components/custom_image_holder.dart';
 import 'package:app/Screens/bid.dart';
 import 'package:flutter/material.dart';
 
@@ -5,13 +6,13 @@ class ProductCard extends StatelessWidget {
   final String docId;
   final String name;
   final String minPrice;
-  final String piclink;
+  final String imageUrl;
 
   const ProductCard({
     super.key,
     required this.name,
     required this.minPrice,
-    required this.piclink,
+    required this.imageUrl,
     required this.docId,
   });
 
@@ -35,19 +36,16 @@ class ProductCard extends StatelessWidget {
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(8),
                 child: Material(
-                  child: Ink.image(
-                    fit: BoxFit.cover,
-                    image: NetworkImage(piclink),
-                    child: InkWell(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => Bid(docId: docId),
-                          ),
-                        );
-                      },
-                    ),
+                  child: InkWell(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => Bid(docId: docId),
+                        ),
+                      );
+                    },
+                    child: CustomImageHolder(imageUrl: imageUrl),
                   ),
                 ),
               ),

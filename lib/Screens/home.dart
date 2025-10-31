@@ -1,10 +1,10 @@
 import 'package:app/Components/floating_action_button.dart';
 import 'package:app/Components/product_card.dart';
 import 'package:app/Screens/add_new_Item.dart';
+import 'package:app/Services/new_user.dart';
 import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import '../Services/new_user.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -65,7 +65,7 @@ class _HomeState extends State<Home> {
               height: 20,
             ),
             Expanded(
-                child: LiquidPullToRefresh(
+                child: RefreshIndicator(
               onRefresh: _handleRefresh,
               child: FutureBuilder<QuerySnapshot<Map<String, dynamic>>>(
                   future:
@@ -84,7 +84,7 @@ class _HomeState extends State<Home> {
                           return ProductCard(
                             name: 'Name: ${documentData['Product Name']}',
                             minPrice: 'Min bid price: ${documentData['Minimum Bid Price']}',
-                            piclink: documentData['Image Url'],
+                            imageUrl: documentData['Image Url'],
                             docId: doc[index].id,
                           );
 
