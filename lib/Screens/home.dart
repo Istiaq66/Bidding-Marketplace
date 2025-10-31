@@ -1,7 +1,7 @@
-import 'package:auction_app/Components/floating_action_button.dart';
+import 'package:app/Components/floating_action_button.dart';
+import 'package:app/Components/product_card.dart';
+import 'package:app/Screens/add_new_Item.dart';
 import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
-import 'package:auction_app/Components/product_card.dart';
-import 'package:auction_app/Screens/add_new_Item.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import '../Services/new_user.dart';

@@ -1,6 +1,6 @@
-import 'package:auction_app/providers/theme_provider.dart';
+import 'package:app/Screens/auth_page.dart';
+import 'package:app/providers/theme_provider.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:auction_app/Screens/auth_page.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';

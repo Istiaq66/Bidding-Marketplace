@@ -1,6 +1,6 @@
-import 'package:auction_app/Screens/login.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'login.dart';
 import 'navigation_page.dart';
 
 class AuthPage extends StatelessWidget {
@@ -15,7 +15,7 @@ class AuthPage extends StatelessWidget {
           if (snapshot.hasData) {
             return const NavigationPage();
           } else {
-            return Login();
+            return const LoginRegister();
           }
         },
       ),

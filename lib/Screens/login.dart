@@ -1,20 +1,221 @@
-import 'package:auction_app/Components/my_button.dart';
-import 'package:auction_app/Components/my_textfield.dart';
-import 'package:auction_app/Services/auth_service.dart';
-
-
+import 'package:app/Components/my_button.dart';
+import 'package:app/Components/my_textfield.dart';
+import 'package:app/Services/auth_service.dart';
 import 'package:flutter/material.dart';
 
-class Login extends StatelessWidget {
-   Login({super.key});
+class LoginRegister extends StatefulWidget {
+  const LoginRegister({super.key});
 
-  //text editing controllers
-  final usernameController = TextEditingController();
+  @override
+  State<LoginRegister> createState() => _LoginRegisterState();
+}
 
-  final passwordCntroller = TextEditingController();
+class _LoginRegisterState extends State<LoginRegister> {
+  // Text editing controllers
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
+  final confirmPasswordController = TextEditingController();
 
-   // Sign user in method
-  void signInUser() {}
+  bool isLoading = false;
+  bool isLoginMode = true; // Toggle between login and register
+
+  // Sign user in method
+  void _signInUser() async {
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      await AuthService.signInWithEmail(
+        email: emailController.text.trim(),
+        password: passwordController.text,
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Login successful!')),
+        );
+        // Navigate to home screen
+        // Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomeScreen()));
+      }
+    } catch (e) {
+      if (mounted) {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Login Failed'),
+            content: Text(e.toString().replaceAll('Exception: ', '')),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
+    }
+  }
+
+  // Register user method
+  void _registerUser() async {
+    // Validate passwords match
+    if (passwordController.text != confirmPasswordController.text) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Password Mismatch'),
+          content: const Text('Passwords do not match. Please try again.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    // Validate password length
+    if (passwordController.text.length < 6) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Weak Password'),
+          content: const Text('Password must be at least 6 characters long.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      await AuthService.signUpWithEmail(
+        email: emailController.text.trim(),
+        password: passwordController.text,
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Registration successful!')),
+        );
+        // Navigate to home screen
+        // Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomeScreen()));
+      }
+    } catch (e) {
+      if (mounted) {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Registration Failed'),
+            content: Text(e.toString().replaceAll('Exception: ', '')),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
+    }
+  }
+
+  // Forgot password
+  void _forgotPassword() async {
+    if (emailController.text.trim().isEmpty) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Email Required'),
+          content: const Text('Please enter your email address.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    try {
+      await AuthService.resetPassword(emailController.text.trim());
+      if (mounted) {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Password Reset'),
+            content: const Text('Password reset email sent. Check your inbox.'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Error'),
+            content: Text(e.toString().replaceAll('Exception: ', '')),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+      }
+    }
+  }
+
+  // Toggle between login and register
+  void _toggleMode() {
+    setState(() {
+      isLoginMode = !isLoginMode;
+      // Clear confirm password when switching to login
+      if (isLoginMode) {
+        confirmPasswordController.clear();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    emailController.dispose();
+    passwordController.dispose();
+    confirmPasswordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,82 +227,98 @@ class Login extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const SizedBox(
-                  height: 20,
-                ),
-                //logo
+                const SizedBox(height: 20),
+
+                // Logo
                 const Image(
                   image: AssetImage('images/logo.png'),
                   height: 150,
                   width: 150,
                 ),
 
-                //Appname
+                // App name
                 const Text(
                   'Auction App',
                   style: TextStyle(fontFamily: 'Pacifico', fontSize: 25),
                 ),
 
-                const SizedBox(
-                  height: 20,
+                const SizedBox(height: 20),
+
+                // Welcome message
+                Text(
+                  isLoginMode
+                      ? 'Welcome back, you\'ve been missed'
+                      : 'Create an account to get started',
+                  style: const TextStyle(fontFamily: 'SourceSans3', fontSize: 15),
                 ),
 
-                //welcome back, you've been missed
-                const Text(
-                  'Welcome back, you\'ve been missed',
-                  style: TextStyle(fontFamily: 'SourceSans3', fontSize: 15),
-                ),
+                const SizedBox(height: 20),
 
-                const SizedBox(
-                  height: 20,
-                ),
-
-                // username textfield
+                // Email textfield
                 MyTextField(
-                  controller: usernameController,
-                  hinText: 'Username',
+                  controller: emailController,
+                  hinText: 'Email',
                   obsecureText: false,
                 ),
 
-                const SizedBox(
-                  height: 20,
-                ),
-                // password textfield
+                const SizedBox(height: 20),
+
+                // Password textfield
                 MyTextField(
-                  controller: passwordCntroller,
+                  controller: passwordController,
                   hinText: 'Password',
                   obsecureText: true,
                 ),
-                const SizedBox(
-                  height: 20,
-                ),
-                // forgot password?
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 25.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
+
+                const SizedBox(height: 20),
+
+                // Confirm password textfield (only show in register mode)
+                if (!isLoginMode)
+                  Column(
                     children: [
-                      Text(
-                        'Forgot Password?',
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                        ),
+                      MyTextField(
+                        controller: confirmPasswordController,
+                        hinText: 'Confirm Password',
+                        obsecureText: true,
                       ),
+                      const SizedBox(height: 20),
                     ],
                   ),
-                ),
-                const SizedBox(
-                  height: 20,
-                ),
-                // sign in button
-                MyButton(
-                  onTap: signInUser,
+
+                // Forgot password (only show in login mode)
+                if (isLoginMode)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 25.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        GestureDetector(
+                          onTap: _forgotPassword,
+                          child: Text(
+                            'Forgot Password?',
+                            style: TextStyle(
+                              color: Colors.grey[600],
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                const SizedBox(height: 20),
+
+                // Sign in/Register button
+                isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : MyButton(
+                  onTap: isLoginMode ? _signInUser : _registerUser,
+                  text: isLoginMode ? 'Sign In' : 'Register',
                 ),
 
-                const SizedBox(
-                  height: 25,
-                ),
-                // or continue with
+                const SizedBox(height: 25),
+
+                // Or continue with
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 25),
                   child: Row(
@@ -128,14 +345,37 @@ class Login extends StatelessWidget {
                     ],
                   ),
                 ),
-                // google sign in button
-                const SizedBox(
-                  height: 20,
-                ),
+
+                const SizedBox(height: 20),
+
+                // Google sign in button
                 GestureDetector(
-                  onTap:
-                      // anonymous function
-                      () => AuthService.signInWithGoogle(),
+                  onTap: () async {
+                    try {
+                      await AuthService.signInWithGoogle();
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Google sign in successful!')),
+                        );
+                      }
+                    } catch (e) {
+                      if (mounted) {
+                        showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text('Sign In Failed'),
+                            content: Text(e.toString().replaceAll('Exception: ', '')),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context),
+                                child: const Text('OK'),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+                    }
+                  },
                   child: Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
@@ -149,21 +389,25 @@ class Login extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(
-                  height: 20,
-                ),
-                // not a member register
-                const Row(
+
+                const SizedBox(height: 20),
+
+                // Toggle between login and register
+                Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text('Not a member?'),
-                    SizedBox(
-                      width: 5,
-                    ),
                     Text(
-                      'Register Now',
-                      style: TextStyle(
-                        color: Colors.blue,
+                      isLoginMode ? 'Not a member?' : 'Already have an account?',
+                    ),
+                    const SizedBox(width: 5),
+                    GestureDetector(
+                      onTap: _toggleMode,
+                      child: Text(
+                        isLoginMode ? 'Register Now' : 'Login Now',
+                        style: const TextStyle(
+                          color: Colors.blue,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     )
                   ],

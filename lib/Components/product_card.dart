@@ -1,4 +1,4 @@
-import 'package:auction_app/Screens/bid.dart';
+import 'package:app/Screens/bid.dart';
 import 'package:flutter/material.dart';
 
 class ProductCard extends StatelessWidget {

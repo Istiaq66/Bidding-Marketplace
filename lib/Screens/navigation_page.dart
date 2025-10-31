@@ -1,6 +1,6 @@
-import 'package:auction_app/Screens/dashboard.dart';
-import 'package:auction_app/Screens/home.dart';
-import 'package:auction_app/Screens/profile.dart';
+import 'package:app/Screens/dashboard.dart';
+import 'package:app/Screens/home.dart';
+import 'package:app/Screens/profile.dart';
 
 import 'package:flutter/material.dart';
 

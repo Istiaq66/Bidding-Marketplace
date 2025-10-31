@@ -1,4 +1,4 @@
-com.bidplace.app
+package com.bidplace.app
 
 import io.flutter.embedding.android.FlutterActivity
 
