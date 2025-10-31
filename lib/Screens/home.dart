@@ -82,12 +82,12 @@ class _HomeState extends State<Home> {
                         itemBuilder: (context, index) {
                           final documentData = doc[index].data();
                           return ProductCard(
-                            name: 'Name: ' + documentData['Product Name'],
-                            minPrice: 'Min bid price: ' +
-                                documentData['Minimum Bid Price'],
+                            name: 'Name: ${documentData['Product Name']}',
+                            minPrice: 'Min bid price: ${documentData['Minimum Bid Price']}',
                             piclink: documentData['Image Url'],
                             docId: doc[index].id,
                           );
+
                         },
                       );
                     } else {

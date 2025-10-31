@@ -2,8 +2,6 @@ import 'package:auction_app/providers/theme_provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-// Import your theme provider
-// import 'theme_provider.dart';
 
 class Profile extends StatelessWidget {
   Profile({super.key});

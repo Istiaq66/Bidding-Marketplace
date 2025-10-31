@@ -65,7 +65,7 @@ class ProductCard extends StatelessWidget {
             ),
           ),
           Text(
-            '${minPrice} tk',
+            '$minPrice tk',
             style: const TextStyle(
               fontFamily: 'SourceSans3',
               fontSize: 13,

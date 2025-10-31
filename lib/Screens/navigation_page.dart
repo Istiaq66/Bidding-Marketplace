@@ -5,21 +5,21 @@ import 'package:auction_app/Screens/profile.dart';
 import 'package:flutter/material.dart';
 
 
-class navigation_page extends StatefulWidget {
-  const navigation_page({super.key});
+class NavigationPage extends StatefulWidget {
+  const NavigationPage({super.key});
 
   @override
-  State<navigation_page> createState() => _navigation_pageState();
+  State<NavigationPage> createState() => _NavigationPageState();
 }
 
-class _navigation_pageState extends State<navigation_page> {
+class _NavigationPageState extends State<NavigationPage> {
 
 
   int index = 0;
   
   final screens = [
-    Home(),
-    Dashboard(),
+    const Home(),
+    const Dashboard(),
     Profile(),
   ];
 
