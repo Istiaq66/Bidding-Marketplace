@@ -7,20 +7,12 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:122106600540:android:0b9cb28b1e0f744ab49a99",
+        "mobilesdk_app_id": "1:122106600540:android:aa0098d9171ebf06b49a99",
         "android_client_info": {
-          "package_name": "com.example.auction_app"
+          "package_name": "com.bidplace.app"
         }
       },
       "oauth_client": [
-        {
-          "client_id": "122106600540-3lajgsvrnv80vrln5v0tuej54o8mfhuf.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.example.auction_app",
-            "certificate_hash": "4c373f60482fb14dc2eab64017165752b64326af"
-          }
-        },
         {
           "client_id": "122106600540-359hu91sqgrthmeq10746vic85uouq6a.apps.googleusercontent.com",
           "client_type": 3
