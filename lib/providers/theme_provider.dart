@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-
 abstract class ColorToken {
   ThemeData get themeData;
 
@@ -50,7 +49,7 @@ class _LightColorToken extends ColorToken {
   ThemeData get themeData => ThemeData(
     useMaterial3: true,
     brightness: Brightness.light,
-    primarySwatch: Colors.blue,
+    primarySwatch: Colors.grey,
 
     colorScheme: ColorScheme.light(
       primary: primary,
@@ -86,18 +85,18 @@ class _LightColorToken extends ColorToken {
       backgroundColor: Colors.transparent,
       elevation: 0,
       titleTextStyle: TextStyle(
-        color: onPrimary,
+        color: textPrimary,
         fontSize: 28,
         fontWeight: FontWeight.bold,
         fontFamily: 'SourceSans3',
       ),
-      iconTheme: IconThemeData(color: onPrimary),
+      iconTheme: IconThemeData(color: textPrimary),
     ),
 
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
-        backgroundColor: primary,
-        foregroundColor: onPrimary,
+        backgroundColor: AppColors.black,
+        foregroundColor: Colors.white,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
         ),
@@ -112,16 +111,16 @@ class _LightColorToken extends ColorToken {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
         ),
-        side: BorderSide.none,
+        side: BorderSide(color: divider),
       ),
     ),
 
     cardTheme: CardThemeData(
       color: cardBackground,
       shadowColor: shadow,
-      elevation: 2,
+      elevation: 1,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(12),
       ),
     ),
 
@@ -132,7 +131,7 @@ class _LightColorToken extends ColorToken {
   );
 
   @override
-  Color get primary => AppColors.blue667eea;
+  Color get primary => AppColors.gavelGrey; // Grey from gavel handle
 
   @override
   Color get onPrimary => Colors.white;
@@ -144,7 +143,7 @@ class _LightColorToken extends ColorToken {
   Color get onPrimaryContainer => AppColors.neutral800;
 
   @override
-  Color get background => AppColors.neutral050;
+  Color get background => AppColors.neutral050; // Light grey like screenshot
 
   @override
   Color get onBackground => AppColors.neutral900;
@@ -156,16 +155,16 @@ class _LightColorToken extends ColorToken {
   Color get onSurface => AppColors.neutral800;
 
   @override
-  Color get surfaceVariant => AppColors.neutral100;
+  Color get surfaceVariant => AppColors.neutral100; // Input field grey
 
   @override
-  Color get textPrimary => AppColors.neutral800;
+  Color get textPrimary => AppColors.neutral800; // "Auction App" black text
 
   @override
-  Color get textSecondary => AppColors.neutral500;
+  Color get textSecondary => AppColors.neutral500; // "Welcome back" grey
 
   @override
-  Color get textTertiary => AppColors.neutral400;
+  Color get textTertiary => AppColors.neutral400; // Placeholder text
 
   @override
   Color get success => AppColors.success;
@@ -195,7 +194,7 @@ class _LightColorToken extends ColorToken {
   Color get divider => AppColors.neutral200;
 
   @override
-  Color get shadow => Colors.black.withOpacity(0.1);
+  Color get shadow => Colors.black.withOpacity(0.05);
 
   @override
   Color get cardBackground => Colors.white;
@@ -204,7 +203,7 @@ class _LightColorToken extends ColorToken {
   Color get buttonSecondary => AppColors.neutral100;
 
   @override
-  Color get onButtonSecondary => AppColors.neutral600;
+  Color get onButtonSecondary => AppColors.neutral700;
 }
 
 class _DarkColorToken extends ColorToken {
@@ -212,7 +211,7 @@ class _DarkColorToken extends ColorToken {
   ThemeData get themeData => ThemeData(
     useMaterial3: true,
     brightness: Brightness.dark,
-    primarySwatch: Colors.blue,
+    primarySwatch: Colors.grey,
 
     colorScheme: ColorScheme.dark(
       primary: primary,
@@ -246,18 +245,18 @@ class _DarkColorToken extends ColorToken {
       backgroundColor: Colors.transparent,
       elevation: 0,
       titleTextStyle: TextStyle(
-        color: onPrimary,
+        color: textPrimary,
         fontSize: 28,
         fontWeight: FontWeight.bold,
         fontFamily: 'SourceSans3',
       ),
-      iconTheme: IconThemeData(color: onPrimary),
+      iconTheme: IconThemeData(color: textPrimary),
     ),
 
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
-        backgroundColor: primary,
-        foregroundColor: onPrimary,
+        backgroundColor: Colors.white,
+        foregroundColor: AppColors.black,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
         ),
@@ -272,16 +271,16 @@ class _DarkColorToken extends ColorToken {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
         ),
-        side: BorderSide.none,
+        side: BorderSide(color: divider),
       ),
     ),
 
     cardTheme: CardThemeData(
       color: cardBackground,
       shadowColor: shadow,
-      elevation: 2,
+      elevation: 1,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(12),
       ),
     ),
 
@@ -292,40 +291,40 @@ class _DarkColorToken extends ColorToken {
   );
 
   @override
-  Color get primary => AppColors.blue667eea;
+  Color get primary => AppColors.gavelGrey;
 
   @override
-  Color get onPrimary => Colors.white;
+  Color get onPrimary => AppColors.black;
 
   @override
-  Color get primaryContainer => AppColors.neutral700;
+  Color get primaryContainer => AppColors.neutral800;
 
   @override
   Color get onPrimaryContainer => AppColors.neutral100;
 
   @override
-  Color get background => AppColors.neutral900;
+  Color get background => AppColors.black;
 
   @override
   Color get onBackground => AppColors.neutral100;
 
   @override
-  Color get surface => AppColors.neutral800;
+  Color get surface => AppColors.neutral900;
 
   @override
   Color get onSurface => AppColors.neutral200;
 
   @override
-  Color get surfaceVariant => AppColors.neutral700;
+  Color get surfaceVariant => AppColors.neutral800;
 
   @override
   Color get textPrimary => AppColors.neutral100;
 
   @override
-  Color get textSecondary => AppColors.neutral300;
+  Color get textSecondary => AppColors.neutral400;
 
   @override
-  Color get textTertiary => AppColors.neutral400;
+  Color get textTertiary => AppColors.neutral500;
 
   @override
   Color get success => AppColors.success;
@@ -352,16 +351,16 @@ class _DarkColorToken extends ColorToken {
   Color get watchlist => AppColors.watchlist;
 
   @override
-  Color get divider => AppColors.neutral700;
+  Color get divider => AppColors.neutral800;
 
   @override
   Color get shadow => Colors.black.withOpacity(0.3);
 
   @override
-  Color get cardBackground => AppColors.neutral800;
+  Color get cardBackground => AppColors.neutral900;
 
   @override
-  Color get buttonSecondary => AppColors.neutral700;
+  Color get buttonSecondary => AppColors.neutral800;
 
   @override
   Color get onButtonSecondary => AppColors.neutral200;
@@ -403,11 +402,23 @@ class ThemeProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  // Helper methods for gradient backgrounds
-  LinearGradient get primaryGradient => const LinearGradient(
+  // Minimal background - NO gradient like screenshot
+  LinearGradient get primaryGradient => isLightTheme
+      ? const LinearGradient(
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
-    colors: [AppColors.blue667eea, AppColors.purple764ba2],
+    colors: [
+      AppColors.neutral050, // Just solid grey
+      AppColors.neutral050,
+    ],
+  )
+      : const LinearGradient(
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+    colors: [
+      AppColors.black,
+      AppColors.black,
+    ],
   );
 
   LinearGradient get cardGradient => isLightTheme
@@ -437,6 +448,6 @@ class ThemeProvider with ChangeNotifier {
 
   Color getStatusBackgroundColor(String status) {
     final color = getStatusColor(status);
-    return color.withOpacity(0.1);
+    return color.withValues(alpha: 0.1);
   }
 }
