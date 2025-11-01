@@ -1,72 +1,76 @@
+import 'package:app/Services/new_user.dart';
 import 'package:app/providers/theme_provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 class WatchList extends StatelessWidget {
-  final String userId;
 
-  const WatchList({Key? key, required this.userId}) : super(key: key);
+  const WatchList({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     final colorToken = ThemeProvider.of(context).colorToken;
+    final userId = NewUser().existingUser?.uid;
 
-    return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection('watchlist')
-          .where('User Id', isEqualTo: userId)
-          .snapshots(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(
-            child: CircularProgressIndicator(color: colorToken.primary),
-          );
-        }
 
-        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+    return Scaffold(
+      body: StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance
+            .collection('watchlist')
+            .where('User Id', isEqualTo: userId)
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(
+              child: CircularProgressIndicator(color: colorToken.primary),
+            );
+          }
+
+          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+            return Container(
+              color: colorToken.background,
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.favorite_border, size: 64, color: colorToken.textSecondary),
+                    const SizedBox(height: 16),
+                    Text(
+                      'No items in watchlist',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: colorToken.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Save items you\'re interested in',
+                      style: TextStyle(color: colorToken.textSecondary),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+
           return Container(
             color: colorToken.background,
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.favorite_border, size: 64, color: colorToken.textSecondary),
-                  const SizedBox(height: 16),
-                  Text(
-                    'No items in watchlist',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: colorToken.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Save items you\'re interested in',
-                    style: TextStyle(color: colorToken.textSecondary),
-                  ),
-                ],
-              ),
+            child: ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: snapshot.data!.docs.length,
+              itemBuilder: (context, index) {
+                final doc = snapshot.data!.docs[index];
+                return _buildWatchlistItem(
+                  context,
+                  doc.id,
+                  doc.data() as Map<String, dynamic>,
+                );
+              },
             ),
           );
-        }
-
-        return Container(
-          color: colorToken.background,
-          child: ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: snapshot.data!.docs.length,
-            itemBuilder: (context, index) {
-              final doc = snapshot.data!.docs[index];
-              return _buildWatchlistItem(
-                context,
-                doc.id,
-                doc.data() as Map<String, dynamic>,
-              );
-            },
-          ),
-        );
-      },
+        },
+      ),
     );
   }
 

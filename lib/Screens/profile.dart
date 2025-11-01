@@ -3,22 +3,57 @@ import 'package:app/Components/custom_image_holder.dart';
 import 'package:app/Screens/edit_profile_page.dart';
 import 'package:app/Screens/my_auction_page.dart';
 import 'package:app/Screens/my_bids_page.dart';
+import 'package:app/Screens/watch_list_page.dart';
 import 'package:app/Services/auth_service.dart';
+import 'package:app/Services/new_user.dart';
 import 'package:app/providers/theme_provider.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 
-class Profile extends StatelessWidget {
-  Profile({super.key});
+class Profile extends StatefulWidget {
+  const Profile({super.key});
 
-  final user = FirebaseAuth.instance.currentUser;
+  @override
+  State<Profile> createState() => _ProfileState();
+}
 
+class _ProfileState extends State<Profile> {
+  final User? user = NewUser().existingUser;
+  late String _currentImageUrl = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserProfile();
+  }
+
+  Future<void> _loadUserProfile() async {
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user?.uid)
+          .get();
+
+      if (doc.exists) {
+        final data = doc.data() as Map<String, dynamic>;
+
+        setState(() {
+          final profileUrl = data['profileImage'];
+          _currentImageUrl = (profileUrl != null && profileUrl.toString().isNotEmpty)
+              ? profileUrl
+              : null; // fallback to null if empty
+        });
+      }
+    } catch (e) {
+       debugPrint('Failed to load profile data');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-
     return Consumer<ThemeProvider>(
       builder: (context, theme, child) {
         final colorToken = theme.colorToken;
@@ -55,7 +90,7 @@ class Profile extends StatelessWidget {
                               ),
                               child: ClipOval(
                                 child: CustomImageHolder(
-                                  imageUrl:  user?.photoURL ?? "",
+                                  imageUrl:  _currentImageUrl,
                                   height: 100,
                                   width: 100,
                                 ),
@@ -237,7 +272,12 @@ class Profile extends StatelessWidget {
                         iconBg: theme.getStatusBackgroundColor('watching'),
                         colorToken: colorToken,
                         onTap: () {
-                          // Navigate to watchlist
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const WatchList(),
+                            ),
+                          );
                         },
                       ),
                       _buildMenuItem(
