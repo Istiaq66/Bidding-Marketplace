@@ -1,6 +1,8 @@
 
 import 'package:app/Components/custom_image_holder.dart';
 import 'package:app/Screens/edit_profile_page.dart';
+import 'package:app/Screens/my_auction_page.dart';
+import 'package:app/Screens/my_bids_page.dart';
 import 'package:app/Services/auth_service.dart';
 import 'package:app/providers/theme_provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -89,14 +91,6 @@ class Profile extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 4),
-                      Text(
-                        'Premium Bidder',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: colorToken.textSecondary,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -211,7 +205,28 @@ class Profile extends StatelessWidget {
                         iconBg: theme.getStatusBackgroundColor('bidding'),
                         colorToken: colorToken,
                         onTap: () {
-                          // Navigate to my bids
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const MyBids(),
+                            ),
+                          );
+                        },
+                      ),
+                      _buildMenuItem(
+                        icon: Icons.business_center,
+                        title: 'My Auctions',
+                        subtitle: 'Your all auctions',
+                        iconColor: colorToken.bidActive,
+                        iconBg: theme.getStatusBackgroundColor('won'),
+                        colorToken: colorToken,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const MyAuctionsPage(),
+                            ),
+                          );
                         },
                       ),
                       _buildMenuItem(

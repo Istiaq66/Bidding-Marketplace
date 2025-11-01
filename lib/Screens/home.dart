@@ -1,3 +1,5 @@
+import 'package:app/Components/custom_image_holder.dart';
+import 'package:app/Screens/product_details_page.dart';
 import 'package:app/Services/new_user.dart';
 import 'package:app/providers/theme_provider.dart';
 import 'package:flutter/material.dart';
@@ -448,7 +450,7 @@ class _HomeState extends State<Home> {
                     padding: const EdgeInsets.all(16),
                     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2,
-                      childAspectRatio: 0.75,
+                      childAspectRatio: 0.7,
                       crossAxisSpacing: 12,
                       mainAxisSpacing: 12,
                     ),
@@ -461,6 +463,7 @@ class _HomeState extends State<Home> {
                         name: documentData['Product Name'] ?? 'Unknown',
                         minPrice: documentData['Minimum Bid Price'] ?? '0',
                         imageUrl: documentData['Image Url'] ?? '',
+                        description: documentData['Product Description'] ?? '',
                         docId: doc.id,
                       );
                     },
@@ -475,12 +478,12 @@ class _HomeState extends State<Home> {
   }
 }
 
-// Minimalistic Product Card
 class MinimalisticProductCard extends StatelessWidget {
   final String name;
   final String minPrice;
   final String imageUrl;
   final String docId;
+  final String? description; // Added optional description
 
   const MinimalisticProductCard({
     Key? key,
@@ -488,6 +491,7 @@ class MinimalisticProductCard extends StatelessWidget {
     required this.minPrice,
     required this.imageUrl,
     required this.docId,
+    this.description, // Optional parameter
   }) : super(key: key);
 
   @override
@@ -497,127 +501,163 @@ class MinimalisticProductCard extends StatelessWidget {
 
     return GestureDetector(
       onTap: () {
-        // Navigate to product details
-        // Navigator.push(context, MaterialPageRoute(builder: (context) => ProductDetails(docId: docId)));
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ProductDetails(docId: docId),
+          ),
+        );
       },
       child: Container(
         decoration: BoxDecoration(
           color: themeProvider.isLightTheme
               ? colorToken.surface
-              : colorToken.surfaceVariant, // Lighter grey in dark mode
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: colorToken.divider,
-            width: 1,
-          ),
+              : colorToken.surfaceVariant,
+          borderRadius: BorderRadius.circular(16), // Increased radius for softer look
+          boxShadow: [
+            BoxShadow(
+              color: themeProvider.isLightTheme
+                  ? Colors.black.withValues(alpha: 0.08)
+                  : Colors.black.withValues(alpha: 0.2),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Image
+            // Image Section
             Expanded(
-              flex: 3,
-              child: ClipRRect(
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(12),
-                ),
-                child: imageUrl.isNotEmpty && imageUrl != ''
-                    ? Image.network(
-                  imageUrl,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                  loadingBuilder: (context, child, loadingProgress) {
-                    if (loadingProgress == null) return child;
-                    return Container(
-                      color: themeProvider.isLightTheme
-                          ? colorToken.surfaceVariant
-                          : colorToken.background,
-                      child: Center(
-                        child: CircularProgressIndicator(
-                          value: loadingProgress.expectedTotalBytes != null
-                              ? loadingProgress.cumulativeBytesLoaded /
-                              loadingProgress.expectedTotalBytes!
-                              : null,
-                          color: colorToken.primary,
-                          strokeWidth: 2,
+              flex: 5,
+              child: Stack(
+                children: [
+                  ClipRRect(
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(16),
+                    ),
+                    child: imageUrl.isNotEmpty && imageUrl != ''
+                        ? CustomImageHolder(imageUrl: imageUrl)
+                        : Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            colorToken.surfaceVariant,
+                            colorToken.surface,
+                          ],
                         ),
                       ),
-                    );
-                  },
-                  errorBuilder: (context, error, stack) {
-                    return Container(
-                      color: themeProvider.isLightTheme
-                          ? colorToken.surfaceVariant
-                          : colorToken.background,
                       child: Center(
                         child: Icon(
-                          Icons.image_not_supported_outlined,
+                          Icons.shopping_bag_outlined,
                           size: 40,
-                          color: colorToken.textSecondary,
+                          color: colorToken.textSecondary.withValues(alpha: 0.5),
                         ),
                       ),
-                    );
-                  },
-                )
-                    : Container(
-                  color: themeProvider.isLightTheme
-                      ? colorToken.surfaceVariant
-                      : colorToken.background,
-                  child: Center(
-                    child: Icon(
-                      Icons.shopping_bag_outlined,
-                      size: 40,
-                      color: colorToken.textSecondary,
                     ),
                   ),
-                ),
+
+                  // Subtle gradient overlay at bottom
+                  Positioned(
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    child: Container(
+                      height: 30,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.bottomCenter,
+                          end: Alignment.topCenter,
+                          colors: [
+                            Colors.black.withOpacity(0.15),
+                            Colors.transparent,
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
 
-            // Content
+            // Content Section
             Expanded(
-              flex: 2,
+              flex: 4, // Increased content area
               child: Padding(
                 padding: const EdgeInsets.all(12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     // Product Name
                     Text(
                       name,
-                      maxLines: 2,
+                      maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
                         color: colorToken.textPrimary,
                         fontFamily: 'SourceSans3',
+                        letterSpacing: -0.2,
                       ),
                     ),
 
-                    // Price
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.attach_money,
-                          size: 16,
-                          color: colorToken.textSecondary,
-                        ),
-                        Expanded(
-                          child: Text(
-                            minPrice,
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: colorToken.primary,
-                              fontFamily: 'SourceSans3',
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                    // Product Description (if available)
+                    if (description != null && description!.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Expanded(
+                        child: Text(
+                          description!,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: colorToken.textSecondary,
+                            fontFamily: 'SourceSans3',
+                            height: 1.3,
                           ),
                         ),
-                      ],
+                      ),
+                      const SizedBox(height: 8),
+                    ],
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: colorToken.textSecondary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            '\$',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: colorToken.textSecondary,
+                              fontFamily: 'SourceSans3',
+                            ),
+                          ),
+                          Flexible(
+                            child: Text(
+                              minPrice,
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: colorToken.textSecondary,
+                                fontFamily: 'SourceSans3',
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
