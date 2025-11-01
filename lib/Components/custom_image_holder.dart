@@ -4,14 +4,17 @@ import 'package:cached_network_image/cached_network_image.dart';
 
 class CustomImageHolder extends StatelessWidget {
   final String imageUrl;
+  final double height;
+  final double width;
 
-  const CustomImageHolder({super.key, required this.imageUrl});
+  const CustomImageHolder({super.key, required this.imageUrl, this.height = 200, this.width = double.infinity});
 
   @override
   Widget build(BuildContext context) {
     return CachedNetworkImage(
       imageUrl: imageUrl,
-      // Placeholder while loading
+      width: width,
+      height: height,
       placeholder: (context, url) => Container(
         color: ThemeProvider.of(context, listen: false).colorToken.surface,
         child: const Center(
@@ -32,9 +35,6 @@ class CustomImageHolder extends StatelessWidget {
       // Fade in animation
       fadeInDuration: const Duration(milliseconds: 500),
       fadeOutDuration: const Duration(milliseconds: 500),
-      // Image dimensions
-      width: double.infinity,
-      height: 200,
     );
   }
 }

@@ -194,7 +194,7 @@ class _LightColorToken extends ColorToken {
   Color get divider => AppColors.neutral200;
 
   @override
-  Color get shadow => Colors.black.withOpacity(0.05);
+  Color get shadow => Colors.black.withValues(alpha: 0.05);
 
   @override
   Color get cardBackground => Colors.white;
@@ -354,10 +354,10 @@ class _DarkColorToken extends ColorToken {
   Color get divider => AppColors.neutral800;
 
   @override
-  Color get shadow => Colors.black.withOpacity(0.3);
+  Color get shadow => Colors.black.withValues(alpha: 0.3);
 
   @override
-  Color get cardBackground => AppColors.neutral900;
+  Color get cardBackground => AppColors.neutral800;
 
   @override
   Color get buttonSecondary => AppColors.neutral800;

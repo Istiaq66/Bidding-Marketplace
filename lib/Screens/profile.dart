@@ -1,93 +1,31 @@
+
+import 'package:app/Components/custom_image_holder.dart';
+import 'package:app/Screens/edit_profile_page.dart';
+import 'package:app/Services/auth_service.dart';
 import 'package:app/providers/theme_provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:google_sign_in/google_sign_in.dart';
+import 'package:provider/provider.dart';
+
 
 class Profile extends StatelessWidget {
   Profile({super.key});
 
   final user = FirebaseAuth.instance.currentUser;
 
-  // Sign user out method
-  Future<void> signUserOut() async {
-    final GoogleSignIn googleSignIn = GoogleSignIn.instance;
-    await googleSignIn.signOut();
-    await FirebaseAuth.instance.signOut();
-  }
 
   @override
   Widget build(BuildContext context) {
-    final theme = ThemeProvider.of(context, listen: true);
-    final colorToken = theme.colorToken;
 
-    return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: theme.primaryGradient,
-        ),
-        child: SafeArea(
+    return Consumer<ThemeProvider>(
+      builder: (context, theme, child) {
+        final colorToken = theme.colorToken;
+
+        return SafeArea(
           child: SingleChildScrollView(
             child: Column(
               children: [
-                // Header
-                Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Profile',
-                        style: TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          color: colorToken.onPrimary,
-                        ),
-                      ),
-                      Row(
-                        children: [
-                          // Theme toggle button
-                          IconButton(
-                            onPressed: () {
-                              theme.toggleTheme();
-                            },
-                            icon: Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Icon(
-                                theme.isLightTheme
-                                    ? Icons.dark_mode
-                                    : Icons.light_mode,
-                                color: colorToken.onPrimary,
-                                size: 20,
-                              ),
-                            ),
-                          ),
-                          IconButton(
-                            onPressed: () {
-                              // Navigate to settings
-                            },
-                            icon: Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Icon(
-                                Icons.settings,
-                                color: colorToken.onPrimary,
-                                size: 20,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-
+                const SizedBox(height: 20),
                 // Profile Section
                 Container(
                   margin: const EdgeInsets.symmetric(horizontal: 20),
@@ -105,22 +43,21 @@ class Profile extends StatelessWidget {
                   ),
                   child: Column(
                     children: [
-                      // Avatar with status
                       Stack(
                         children: [
                           Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: BoxDecoration(
-                              gradient: theme.primaryGradient,
-                              borderRadius: BorderRadius.circular(60),
-                            ),
-                            child: CircleAvatar(
-                              backgroundImage: NetworkImage(
-                                user?.photoURL ?? 'https://via.placeholder.com/150',
+                              padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                gradient: theme.primaryGradient,
+                                borderRadius: BorderRadius.circular(60),
                               ),
-                              radius: 50,
-                              backgroundColor: colorToken.surfaceVariant,
-                            ),
+                              child: ClipOval(
+                                child: CustomImageHolder(
+                                  imageUrl:  user?.photoURL ?? "",
+                                  height: 100,
+                                  width: 100,
+                                ),
+                              )
                           ),
                           Positioned(
                             bottom: 4,
@@ -198,7 +135,12 @@ class Profile extends StatelessWidget {
                             flex: 2,
                             child: ElevatedButton(
                               onPressed: () {
-                                // Navigate to edit profile
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const EditProfilePage(),
+                                  ),
+                                );
                               },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: colorToken.primary,
@@ -336,8 +278,8 @@ class Profile extends StatelessWidget {
               ],
             ),
           ),
-        ),
-      ),
+        );
+      }
     );
   }
 
@@ -457,7 +399,7 @@ class Profile extends StatelessWidget {
             ElevatedButton(
               onPressed: () {
                 Navigator.of(context).pop();
-                signUserOut();
+                AuthService.signOut();
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: colorToken.error,

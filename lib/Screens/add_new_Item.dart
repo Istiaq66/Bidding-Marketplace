@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:app/Services/new_auction_item.dart';
+import 'package:app/providers/theme_provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -63,6 +64,7 @@ class _NewItemState extends State<NewItem> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: ThemeProvider.of(context).colorToken.background,
       appBar: AppBar(
         title: const Text('Add new item'),
         centerTitle: true,
