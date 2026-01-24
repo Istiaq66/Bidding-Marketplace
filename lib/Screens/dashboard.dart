@@ -384,35 +384,41 @@ class Dashboard extends StatelessWidget {
   Widget _buildEmptyState(BuildContext context, String title, String subtitle) {
     final colorToken = ThemeProvider.of(context).colorToken;
 
-    return Card(
-      color: colorToken.cardBackground,
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          children: [
-            Icon(
-              Icons.inventory_2_outlined,
-              size: 64,
-              color: colorToken.textSecondary,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: colorToken.textPrimary,
+    return Row(
+      children: [
+        Expanded(
+          child: Card(
+            color: colorToken.cardBackground,
+            child: Padding(
+              padding: const EdgeInsets.all(32),
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.inventory_2_outlined,
+                    size: 64,
+                    color: colorToken.textSecondary,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: colorToken.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    subtitle,
+                    style: TextStyle(color: colorToken.textSecondary),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 8),
-            Text(
-              subtitle,
-              style: TextStyle(color: colorToken.textSecondary),
-              textAlign: TextAlign.center,
-            ),
-          ],
+          ),
         ),
-      ),
+      ],
     );
   }
 }
