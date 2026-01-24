@@ -17,7 +17,7 @@ class _LoginRegisterState extends State<LoginRegister> {
   final confirmPasswordController = TextEditingController();
 
   bool isLoading = false;
-  bool isLoginMode = true; // Toggle between login and register
+  bool isLoginMode = true;
 
   // Sign user in method
   void _signInUser() async {
@@ -35,8 +35,6 @@ class _LoginRegisterState extends State<LoginRegister> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Login successful!')),
         );
-        // Navigate to home screen
-        // Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomeScreen()));
       }
     } catch (e) {
       if (mounted) {
