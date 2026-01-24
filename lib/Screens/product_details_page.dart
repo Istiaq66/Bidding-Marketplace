@@ -557,10 +557,7 @@ class _ProductDetailsState extends State<ProductDetails> {
                           fontFamily: 'SourceSans3',
                         ),
                       ),
-                      const SizedBox(height: 12),
                       _buildBidsList(),
-
-                      const SizedBox(height: 100), // Space for bottom button
                     ],
                   ),
                 ),
@@ -667,13 +664,13 @@ class _ProductDetailsState extends State<ProductDetails> {
         }
 
         return ListView.separated(
+          padding: const EdgeInsets.symmetric(vertical: 12),
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           itemCount: snapshot.data!.docs.length,
-          separatorBuilder: (context, index) => Divider(
-            color: colorToken.divider,
-            height: 1,
-          ),
+          separatorBuilder: (BuildContext context, int index) {
+            return const SizedBox(height: 10);
+          },
           itemBuilder: (context, index) {
             final bid = snapshot.data!.docs[index].data() as Map<String, dynamic>;
             final bidAmount = bid['Bid Amount'] ?? '0';
@@ -683,7 +680,7 @@ class _ProductDetailsState extends State<ProductDetails> {
               padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
               decoration: BoxDecoration(
                 color: index == 0
-                    ? colorToken.success.withOpacity(0.1)
+                    ? colorToken.success.withValues(alpha: 0.1)
                     : colorToken.surface,
                 borderRadius: BorderRadius.circular(8),
               ),

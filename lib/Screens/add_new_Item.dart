@@ -567,7 +567,7 @@ class _NewItemState extends State<NewItem> {
                     child: ElevatedButton(
                       onPressed: _isLoading ? null : _submitAuction,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.black,
+                        backgroundColor: colorToken.primary,
                         foregroundColor: Colors.white,
                         disabledBackgroundColor: colorToken.textSecondary,
                         shape: RoundedRectangleBorder(
