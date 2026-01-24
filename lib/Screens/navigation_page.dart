@@ -18,7 +18,7 @@ class _NavigationPageState extends State<NavigationPage> {
   final screens = [
     const Home(),
     const Dashboard(),
-    Profile(),
+    const Profile(),
   ];
 
   // Get dynamic AppBar based on current page
