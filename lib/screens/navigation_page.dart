@@ -1,6 +1,6 @@
-import 'package:app/Screens/dashboard.dart';
-import 'package:app/Screens/home.dart';
-import 'package:app/Screens/profile.dart';
+import 'package:app/screens/dashboard.dart';
+import 'package:app/screens/home.dart';
+import 'package:app/screens/profile.dart';
 import 'package:app/providers/theme_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -422,7 +422,7 @@ class _NavigationPageState extends State<NavigationPage> {
           bottomNavigationBar: NavigationBarTheme(
             data: NavigationBarThemeData(
               backgroundColor: colorToken.surface,
-              indicatorColor: colorToken.primary.withOpacity(0.1),
+              indicatorColor: colorToken.primary.withValues(alpha:0.1),
               labelTextStyle: WidgetStateProperty.resolveWith((states) {
                 if (states.contains(WidgetState.selected)) {
                   return TextStyle(

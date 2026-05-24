@@ -1,4 +1,4 @@
-import 'package:app/Services/new_user.dart';
+import 'package:app/services/new_user.dart';
 import 'package:app/providers/theme_provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -156,7 +156,7 @@ class MyBids extends StatelessWidget {
             trailing: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: colorToken.bidActive.withOpacity(0.1),
+                color: colorToken.bidActive.withValues(alpha:0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Row(

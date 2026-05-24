@@ -1,6 +1,6 @@
-import 'package:app/Components/my_button.dart';
-import 'package:app/Components/my_textfield.dart';
-import 'package:app/Services/auth_service.dart';
+import 'package:app/components/my_button.dart';
+import 'package:app/components/my_textfield.dart';
+import 'package:app/services/auth_service.dart';
 import 'package:flutter/material.dart';
 
 class LoginRegister extends StatefulWidget {
@@ -113,8 +113,6 @@ class _LoginRegisterState extends State<LoginRegister> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Registration successful!')),
         );
-        // Navigate to home screen
-        // Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomeScreen()));
       }
     } catch (e) {
       if (mounted) {

@@ -1,6 +1,6 @@
-import 'package:app/Components/custom_image_holder.dart';
-import 'package:app/Screens/product_details_page.dart';
-import 'package:app/Services/new_user.dart';
+import 'package:app/components/custom_image_holder.dart';
+import 'package:app/screens/product_details_page.dart';
+import 'package:app/services/new_user.dart';
 import 'package:app/providers/theme_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -571,7 +571,7 @@ class MinimalisticProductCard extends StatelessWidget {
                           begin: Alignment.bottomCenter,
                           end: Alignment.topCenter,
                           colors: [
-                            Colors.black.withOpacity(0.15),
+                            Colors.black.withValues(alpha:0.15),
                             Colors.transparent,
                           ],
                         ),

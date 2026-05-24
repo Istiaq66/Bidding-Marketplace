@@ -1,4 +1,4 @@
-import 'package:app/Screens/auth_page.dart';
+import 'package:app/screens/auth_page.dart';
 import 'package:app/providers/theme_provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';

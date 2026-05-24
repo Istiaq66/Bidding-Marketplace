@@ -19,3 +19,17 @@
 .dart_tool
 .idea
 build
+
+# Firebase config (do not commit)
+# NOTE: android/app/google-services.json is currently tracked; remove with
+# `git rm --cached android/app/google-services.json` after team alignment.
+**/android/app/google-services.json
+**/ios/Runner/GoogleService-Info.plist
+**/ios/firebase_app_id_file.json
+lib/firebase_options.dart
+
+# Secrets / credentials
+.env
+.env.*
+*.keystore
+

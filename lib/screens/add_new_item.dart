@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'package:app/Services/new_auction_item.dart';
+import 'package:app/services/new_auction_item.dart';
 import 'package:app/providers/theme_provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';

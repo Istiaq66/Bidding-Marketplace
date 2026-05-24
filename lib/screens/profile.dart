@@ -1,11 +1,11 @@
 
-import 'package:app/Components/custom_image_holder.dart';
-import 'package:app/Screens/edit_profile_page.dart';
-import 'package:app/Screens/my_auction_page.dart';
-import 'package:app/Screens/my_bids_page.dart';
-import 'package:app/Screens/watch_list_page.dart';
-import 'package:app/Services/auth_service.dart';
-import 'package:app/Services/new_user.dart';
+import 'package:app/components/custom_image_holder.dart';
+import 'package:app/screens/edit_profile_page.dart';
+import 'package:app/screens/my_auction_page.dart';
+import 'package:app/screens/my_bids_page.dart';
+import 'package:app/screens/watch_list_page.dart';
+import 'package:app/services/auth_service.dart';
+import 'package:app/services/new_user.dart';
 import 'package:app/providers/theme_provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -307,7 +307,7 @@ class _ProfileState extends State<Profile> {
                         title: 'Help & Support',
                         subtitle: 'Get help with auctions',
                         iconColor: colorToken.info,
-                        iconBg: colorToken.info.withOpacity(0.1),
+                        iconBg: colorToken.info.withValues(alpha:0.1),
                         colorToken: colorToken,
                         onTap: () {
                           // Navigate to help

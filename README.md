@@ -1,29 +1,46 @@
-# auction_app
+# Bidding Marketplace
 
-A new Flutter project.
+Cross-platform Flutter auction app. Users register, list items with images, place bids, manage a watchlist, and view their auctions and bid history.
 
-## Getting Started
+## Tech Stack
 
-This project is a starting point for a Flutter application.
+- Flutter 3.7+ / Dart 3
+- Material 3 with custom light/dark theme tokens
+- State: `provider` 6.x
+- Auth: Firebase Auth (email/password) + Google Sign-In
+- Data: Cloud Firestore
+- Storage: Firebase Storage (product and profile images)
+- Local prefs: `shared_preferences` (theme persistence)
 
-# Step 1:
-## Used Packages:
+## Project Layout
 
-firebase_core: A Flutter plugin to use the Firebase Core API, which enables connecting to multiple Firebase apps.
-firebase_auth: enabling Android and iOS authentication using passwords, phone numbers and identity providers like Google, Facebook and Twitter.  
-google_sign_in: a secure authentication system for signing in with a Google account on Android and iOS.  
-flutter/material.dart: Flutter SDK library.  
+```
+lib/
+  components/    Shared widgets (buttons, text fields, image holder)
+  screens/       App screens (auth, home, dashboard, profile, product details, etc.)
+  services/      Firebase wrappers (auth, user bootstrap, auction creation)
+  providers/     Provider-based state (theme)
+  util/          Design tokens (colors)
+  main.dart      App entry point
+```
 
-### Challenges:
-I faced a error after setting up the firebase with my project the error was -->  Multidex support is required for your android app to build since the number of methods has exceeded 64k. See https://docs.flutter.dev/deployment/android#enabling-multidex-support 
+Firestore collections: `users`, `products`, `bids`, `watchlist`.
 
-I solved it by adding this 'multiDexEnabled true' to my android/app/build.gradle file inside defaultConfig  
+## Setup
 
+1. Install Flutter `>= 3.7.0`.
+2. `flutter pub get`
+3. Configure Firebase for Android and iOS (see https://firebase.flutter.dev/docs/overview):
+   - Add `android/app/google-services.json`
+   - Add `ios/Runner/GoogleService-Info.plist`
+   - These files are gitignored — request them from a project admin.
+4. Replace the Google Sign-In `serverClientId` in `lib/services/auth_service.dart` with your own OAuth client ID.
+5. `flutter run`
 
-# Step 2:
-## Used Packages:
+## Android Notes
 
-firebase_storage: It allows to interact with Storage using the default Firebase App.
-firebase_database: It allows to access data from firebase. I used it to store images as Firestore can't store images.
+Multidex is enabled in `android/app/build.gradle` (`multiDexEnabled true`) — required because Firebase pushes the method count past the 64k limit.
 
-image_picker: It is used for picking image from device gallery.
+## Status
+
+Active development. See `PROMPT.md` for the engineering plan and phased PR sequence.

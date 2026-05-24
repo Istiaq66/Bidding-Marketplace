@@ -1,4 +1,4 @@
-import 'package:app/Services/new_user.dart';
+import 'package:app/services/new_user.dart';
 import 'package:app/providers/theme_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -331,7 +331,7 @@ class _ProductDetailsState extends State<ProductDetails> {
                   icon: Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: colorToken.surface.withOpacity(0.9),
+                      color: colorToken.surface.withValues(alpha:0.9),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
@@ -347,7 +347,7 @@ class _ProductDetailsState extends State<ProductDetails> {
                       icon: Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: colorToken.surface.withOpacity(0.9),
+                          color: colorToken.surface.withValues(alpha:0.9),
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
@@ -363,7 +363,7 @@ class _ProductDetailsState extends State<ProductDetails> {
                     icon: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: colorToken.surface.withOpacity(0.9),
+                        color: colorToken.surface.withValues(alpha:0.9),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
