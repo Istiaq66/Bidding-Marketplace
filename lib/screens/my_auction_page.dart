@@ -1,3 +1,4 @@
+import 'package:app/screens/add_new_item.dart';
 import 'package:app/services/new_user.dart';
 import 'package:app/providers/theme_provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -34,7 +35,10 @@ class MyAuctionsPage extends StatelessWidget {
           IconButton(
             icon: Icon(Icons.add, color: colorToken.textPrimary),
             onPressed: () {
-              // Navigate to create auction
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const NewItem()),
+              );
             },
             tooltip: 'Create Auction',
           ),
@@ -132,7 +136,10 @@ class MyAuctionsPage extends StatelessWidget {
                 const SizedBox(height: 16),
                 ElevatedButton.icon(
                   onPressed: () {
-                    // Navigate to create auction
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const NewItem()),
+                    );
                   },
                   icon: const Icon(Icons.add, size: 20),
                   label: const Text('Create Auction'),
@@ -343,7 +350,12 @@ class MyAuctionsPage extends StatelessWidget {
                     Expanded(
                       child: OutlinedButton.icon(
                         onPressed: () {
-                          // Edit auction
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Editing auctions — coming soon'),
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
                         },
                         icon: const Icon(Icons.edit, size: 18),
                         label: const Text('Edit'),

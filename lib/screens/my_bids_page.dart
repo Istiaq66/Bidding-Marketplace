@@ -1,3 +1,4 @@
+import 'package:app/screens/product_details_page.dart';
 import 'package:app/services/new_user.dart';
 import 'package:app/providers/theme_provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -176,7 +177,11 @@ class MyBids extends StatelessWidget {
               ),
             ),
             onTap: () {
-              // Navigate to auction details
+              if (productId.isEmpty) return;
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => ProductDetails(docId: productId)),
+              );
             },
           ),
         );

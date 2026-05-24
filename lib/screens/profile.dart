@@ -1,6 +1,7 @@
 
 import 'package:app/components/custom_image_holder.dart';
 import 'package:app/screens/edit_profile_page.dart';
+import 'package:app/screens/help_page.dart';
 import 'package:app/screens/my_auction_page.dart';
 import 'package:app/screens/my_bids_page.dart';
 import 'package:app/screens/watch_list_page.dart';
@@ -193,7 +194,12 @@ class _ProfileState extends State<Profile> {
                           Expanded(
                             child: ElevatedButton(
                               onPressed: () {
-                                // Share profile
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Share — coming soon'),
+                                    behavior: SnackBarBehavior.floating,
+                                  ),
+                                );
                               },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: colorToken.buttonSecondary,
@@ -288,7 +294,10 @@ class _ProfileState extends State<Profile> {
                         iconBg: theme.getStatusBackgroundColor('active'),
                         colorToken: colorToken,
                         onTap: () {
-                          // Navigate to history
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => const MyAuctionsPage()),
+                          );
                         },
                       ),
                       _buildMenuItem(
@@ -299,7 +308,12 @@ class _ProfileState extends State<Profile> {
                         iconBg: theme.getStatusBackgroundColor('won'),
                         colorToken: colorToken,
                         onTap: () {
-                          // Navigate to payment
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Payment methods — coming soon'),
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
                         },
                       ),
                       _buildMenuItem(
@@ -310,7 +324,10 @@ class _ProfileState extends State<Profile> {
                         iconBg: colorToken.info.withValues(alpha:0.1),
                         colorToken: colorToken,
                         onTap: () {
-                          // Navigate to help
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => const HelpPage()),
+                          );
                         },
                       ),
                       _buildMenuItem(

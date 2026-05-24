@@ -372,7 +372,12 @@ class _ProductDetailsState extends State<ProductDetails> {
                       ),
                     ),
                     onPressed: () {
-                      // Share functionality
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Share — coming soon'),
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
                     },
                   ),
                 ],

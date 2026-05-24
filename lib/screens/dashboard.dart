@@ -1,4 +1,5 @@
 import 'package:app/screens/add_new_item.dart';
+import 'package:app/screens/product_details_page.dart';
 import 'package:app/services/new_user.dart';
 import 'package:app/providers/theme_provider.dart';
 import 'package:flutter/material.dart';
@@ -6,7 +7,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 
 class Dashboard extends StatelessWidget {
-  const Dashboard({Key? key}) : super(key: key);
+  final VoidCallback? onBrowse;
+
+  const Dashboard({super.key, this.onBrowse});
 
   @override
   Widget build(BuildContext context) {
@@ -127,9 +130,7 @@ class Dashboard extends StatelessWidget {
                     'Browse Items',
                     Icons.search,
                     colorToken.info,
-                    () {
-                      // Navigate to browse
-                    },
+                    () => onBrowse?.call(),
                   ),
                 ),
               ],
@@ -375,7 +376,10 @@ class Dashboard extends StatelessWidget {
         ),
         trailing: Icon(Icons.chevron_right, color: colorToken.textSecondary),
         onTap: () {
-          // Navigate to auction details
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => ProductDetails(docId: doc.id)),
+          );
         },
       ),
     );

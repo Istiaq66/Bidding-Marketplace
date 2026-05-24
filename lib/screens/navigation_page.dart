@@ -1,6 +1,11 @@
 import 'package:app/screens/dashboard.dart';
+import 'package:app/screens/edit_profile_page.dart';
+import 'package:app/screens/help_page.dart';
 import 'package:app/screens/home.dart';
+import 'package:app/screens/privacy_page.dart';
 import 'package:app/screens/profile.dart';
+import 'package:app/screens/settings_page.dart';
+import 'package:app/services/auth_service.dart';
 import 'package:app/providers/theme_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -15,11 +20,20 @@ class NavigationPage extends StatefulWidget {
 class _NavigationPageState extends State<NavigationPage> {
   int index = 0;
 
-  final screens = [
+  List<Widget> get _screens => [
     const Home(),
-    const Dashboard(),
+    Dashboard(onBrowse: () => setState(() => index = 0)),
     const Profile(),
   ];
+
+  void _showComingSoon(String label) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('$label — coming soon'),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
 
   // Get dynamic AppBar based on current page
   PreferredSizeWidget _getAppBar(BuildContext context, int currentIndex) {
@@ -42,15 +56,11 @@ class _NavigationPageState extends State<NavigationPage> {
           actions: [
             IconButton(
               icon: Icon(Icons.search, color: colorToken.textPrimary),
-              onPressed: () {
-                // Navigate to search
-              },
+              onPressed: () => _showComingSoon('Search'),
             ),
             IconButton(
               icon: Icon(Icons.notifications_outlined, color: colorToken.textPrimary),
-              onPressed: () {
-                // Navigate to notifications
-              },
+              onPressed: () => _showComingSoon('Notifications'),
             ),
             const SizedBox(width: 8),
           ],
@@ -188,7 +198,7 @@ class _NavigationPageState extends State<NavigationPage> {
       trailing: isSelected ? Icon(Icons.check, color: colorToken.primary) : null,
       onTap: () {
         Navigator.pop(context);
-        // Apply filter
+        _showComingSoon('Filtering');
       },
     );
   }
@@ -228,7 +238,7 @@ class _NavigationPageState extends State<NavigationPage> {
               ),
               onTap: () {
                 Navigator.pop(context);
-                // Refresh data
+                setState(() {});
               },
             ),
             ListTile(
@@ -242,7 +252,7 @@ class _NavigationPageState extends State<NavigationPage> {
               ),
               onTap: () {
                 Navigator.pop(context);
-                // Show sort options
+                _showComingSoon('Sort options');
               },
             ),
             ListTile(
@@ -256,7 +266,10 @@ class _NavigationPageState extends State<NavigationPage> {
               ),
               onTap: () {
                 Navigator.pop(context);
-                // Navigate to settings
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const SettingsPage()),
+                );
               },
             ),
             const SizedBox(height: 20),
@@ -301,7 +314,10 @@ class _NavigationPageState extends State<NavigationPage> {
               ),
               onTap: () {
                 Navigator.pop(context);
-                // Navigate to edit profile
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const EditProfilePage()),
+                );
               },
             ),
             ListTile(
@@ -315,7 +331,10 @@ class _NavigationPageState extends State<NavigationPage> {
               ),
               onTap: () {
                 Navigator.pop(context);
-                // Navigate to privacy settings
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const PrivacyPage()),
+                );
               },
             ),
             ListTile(
@@ -329,7 +348,10 @@ class _NavigationPageState extends State<NavigationPage> {
               ),
               onTap: () {
                 Navigator.pop(context);
-                // Navigate to help
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const HelpPage()),
+                );
               },
             ),
             const SizedBox(height: 8),
@@ -389,11 +411,9 @@ class _NavigationPageState extends State<NavigationPage> {
             ),
           ),
           TextButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(context);
-              // Implement logout
-              // AuthService.signOut();
-              // Navigate to login
+              await AuthService.signOut();
             },
             child: Text(
               'Logout',
@@ -418,7 +438,7 @@ class _NavigationPageState extends State<NavigationPage> {
         return Scaffold(
           backgroundColor: colorToken.background,
           appBar: _getAppBar(context, index), // Dynamic AppBar
-          body: screens[index],
+          body: _screens[index],
           bottomNavigationBar: NavigationBarTheme(
             data: NavigationBarThemeData(
               backgroundColor: colorToken.surface,
