@@ -1,6 +1,6 @@
 import 'package:app/components/my_button.dart';
 import 'package:app/components/my_textfield.dart';
-import 'package:app/services/auth_service.dart';
+import 'package:app/repositories/auth_repository.dart';
 import 'package:flutter/material.dart';
 
 class LoginRegister extends StatefulWidget {
@@ -26,7 +26,7 @@ class _LoginRegisterState extends State<LoginRegister> {
     });
 
     try {
-      await AuthService.signInWithEmail(
+      await AuthRepository.signInWithEmail(
         email: emailController.text.trim(),
         password: passwordController.text,
       );
@@ -104,7 +104,7 @@ class _LoginRegisterState extends State<LoginRegister> {
     });
 
     try {
-      await AuthService.signUpWithEmail(
+      await AuthRepository.signUpWithEmail(
         email: emailController.text.trim(),
         password: passwordController.text,
       );
@@ -159,7 +159,7 @@ class _LoginRegisterState extends State<LoginRegister> {
     }
 
     try {
-      await AuthService.resetPassword(emailController.text.trim());
+      await AuthRepository.resetPassword(emailController.text.trim());
       if (mounted) {
         showDialog(
           context: context,
@@ -347,29 +347,27 @@ class _LoginRegisterState extends State<LoginRegister> {
                 // Google sign in button
                 GestureDetector(
                   onTap: () async {
+                    final messenger = ScaffoldMessenger.of(context);
                     try {
-                      await AuthService.signInWithGoogle();
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Google sign in successful!')),
-                        );
-                      }
+                      await AuthRepository.signInWithGoogle();
+                      messenger.showSnackBar(
+                        const SnackBar(content: Text('Google sign in successful!')),
+                      );
                     } catch (e) {
-                      if (mounted) {
-                        showDialog(
-                          context: context,
-                          builder: (context) => AlertDialog(
-                            title: const Text('Sign In Failed'),
-                            content: Text(e.toString().replaceAll('Exception: ', '')),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context),
-                                child: const Text('OK'),
-                              ),
-                            ],
-                          ),
-                        );
-                      }
+                      if (!context.mounted) return;
+                      showDialog(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: const Text('Sign In Failed'),
+                          content: Text(e.toString().replaceAll('Exception: ', '')),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: const Text('OK'),
+                            ),
+                          ],
+                        ),
+                      );
                     }
                   },
                   child: Container(

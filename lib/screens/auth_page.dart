@@ -1,3 +1,4 @@
+import 'package:app/repositories/auth_repository.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'login.dart';
@@ -10,13 +11,12 @@ class AuthPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: StreamBuilder<User?>(
-        stream: FirebaseAuth.instance.authStateChanges(),
+        stream: AuthRepository.authStateChanges,
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             return const NavigationPage();
-          } else {
-            return const LoginRegister();
           }
+          return const LoginRegister();
         },
       ),
     );

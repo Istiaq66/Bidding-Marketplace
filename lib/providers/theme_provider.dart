@@ -364,7 +364,7 @@ class _DarkColorToken extends ColorToken {
   Color get onButtonSecondary => AppColors.neutral200;
 }
 
-const String THEME_KEY = "auction_theme";
+const String _themeKey = "auction_theme";
 
 class ThemeProvider with ChangeNotifier {
   bool isLightTheme = true;
@@ -389,12 +389,12 @@ class ThemeProvider with ChangeNotifier {
     isLightTheme = isLight;
     _colorToken = isLightTheme ? _LightColorToken() : _DarkColorToken();
 
-    await sharedPreferences.setBool(THEME_KEY, isLightTheme);
+    await sharedPreferences.setBool(_themeKey, isLightTheme);
     notifyListeners();
   }
 
   Future<void> loadTheme() async {
-    isLightTheme = sharedPreferences.getBool(THEME_KEY) ?? true;
+    isLightTheme = sharedPreferences.getBool(_themeKey) ?? true;
     _colorToken = isLightTheme ? _LightColorToken() : _DarkColorToken();
 
     notifyListeners();

@@ -1,10 +1,12 @@
+import 'package:app/models/bid.dart';
+import 'package:app/models/product.dart';
+import 'package:app/repositories/auth_repository.dart';
+import 'package:app/repositories/bid_repository.dart';
+import 'package:app/repositories/product_repository.dart';
 import 'package:app/screens/add_new_item.dart';
 import 'package:app/screens/product_details_page.dart';
-import 'package:app/services/new_user.dart';
 import 'package:app/providers/theme_provider.dart';
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:intl/intl.dart';
 
 class Dashboard extends StatelessWidget {
   final VoidCallback? onBrowse;
@@ -15,7 +17,7 @@ class Dashboard extends StatelessWidget {
   Widget build(BuildContext context) {
     final themeProvider = ThemeProvider.of(context, listen: false);
     final colorToken = themeProvider.colorToken;
-    final userId = NewUser().existingUser?.uid;
+    final userId = AuthRepository.currentUserId;
 
     return SafeArea(
       child: SingleChildScrollView(
@@ -23,38 +25,21 @@ class Dashboard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            StreamBuilder<QuerySnapshot>(
-              stream:
-                  FirebaseFirestore.instance
-                      .collection('products')
-                      .where('User Id', isEqualTo: userId)
-                      .snapshots(),
+            StreamBuilder<List<Product>>(
+              stream: userId == null
+                  ? const Stream.empty()
+                  : ProductRepository.watchByUser(userId),
               builder: (context, productSnapshot) {
-                return StreamBuilder<QuerySnapshot>(
-                  stream:
-                      FirebaseFirestore.instance
-                          .collection('bids')
-                          .where('Bidder Id', isEqualTo: userId)
-                          .snapshots(),
+                return StreamBuilder<List<Bid>>(
+                  stream: userId == null
+                      ? const Stream.empty()
+                      : BidRepository.watchByBidder(userId),
                   builder: (context, bidSnapshot) {
-                    int totalAuctions =
-                        productSnapshot.hasData
-                            ? productSnapshot.data!.docs.length
-                            : 0;
-                    int totalBids =
-                        bidSnapshot.hasData ? bidSnapshot.data!.docs.length : 0;
-                    int activeAuctions = 0;
-
-                    if (productSnapshot.hasData) {
-                      activeAuctions =
-                          productSnapshot.data!.docs.where((doc) {
-                            final date = doc['Date'] as String;
-                            final auctionDate = DateFormat(
-                              'yyyy-MM-dd',
-                            ).parse(date);
-                            return auctionDate.isAfter(DateTime.now());
-                          }).length;
-                    }
+                    final products = productSnapshot.data ?? const <Product>[];
+                    final bids = bidSnapshot.data ?? const <Bid>[];
+                    final totalAuctions = products.length;
+                    final totalBids = bids.length;
+                    final activeAuctions = products.where((p) => p.isActive).length;
 
                     return Row(
                       children: [
@@ -160,14 +145,10 @@ class Dashboard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
-            StreamBuilder<QuerySnapshot>(
-              stream:
-                  FirebaseFirestore.instance
-                      .collection('products')
-                      .where('User Id', isEqualTo: userId)
-                      .orderBy('Date', descending: true)
-                      .limit(3)
-                      .snapshots(),
+            StreamBuilder<List<Product>>(
+              stream: userId == null
+                  ? const Stream.empty()
+                  : ProductRepository.watchRecentByUser(userId),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return Center(
@@ -175,7 +156,8 @@ class Dashboard extends StatelessWidget {
                   );
                 }
 
-                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                final products = snapshot.data ?? const <Product>[];
+                if (products.isEmpty) {
                   return _buildEmptyState(
                     context,
                     'No auctions yet',
@@ -184,10 +166,7 @@ class Dashboard extends StatelessWidget {
                 }
 
                 return Column(
-                  children:
-                      snapshot.data!.docs.map((doc) {
-                        return _buildAuctionCard(context, doc);
-                      }).toList(),
+                  children: products.map((p) => _buildAuctionCard(context, p)).toList(),
                 );
               },
             ),
@@ -308,13 +287,12 @@ class Dashboard extends StatelessWidget {
     );
   }
 
-  Widget _buildAuctionCard(BuildContext context, DocumentSnapshot doc) {
+  Widget _buildAuctionCard(BuildContext context, Product product) {
     final colorToken = ThemeProvider.of(context).colorToken;
-    final data = doc.data() as Map<String, dynamic>;
-    final imageUrl = data['Image Url'] ?? '';
-    final productName = data['Product Name'] ?? 'Unknown';
-    final minBidPrice = data['Minimum Bid Price'] ?? '0';
-    final date = data['Date'] ?? '';
+    final imageUrl = product.imageUrl;
+    final productName = product.name;
+    final minBidPrice = product.minBidPrice;
+    final date = product.date;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -378,7 +356,7 @@ class Dashboard extends StatelessWidget {
         onTap: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (_) => ProductDetails(docId: doc.id)),
+            MaterialPageRoute(builder: (_) => ProductDetails(docId: product.id)),
           );
         },
       ),

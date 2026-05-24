@@ -1,25 +1,25 @@
+import 'package:app/models/bid.dart';
+import 'package:app/models/product.dart';
+import 'package:app/repositories/auth_repository.dart';
+import 'package:app/repositories/bid_repository.dart';
+import 'package:app/repositories/product_repository.dart';
 import 'package:app/screens/product_details_page.dart';
-import 'package:app/services/new_user.dart';
 import 'package:app/providers/theme_provider.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 class MyBids extends StatelessWidget {
-  const MyBids({Key? key}) : super(key: key);
+  const MyBids({super.key});
 
   @override
   Widget build(BuildContext context) {
     final colorToken = ThemeProvider.of(context).colorToken;
-    final userId = NewUser().existingUser?.uid;
-
+    final userId = AuthRepository.currentUserId;
 
     return Scaffold(
-      body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance
-            .collection('bids')
-            .where('Bidder Id', isEqualTo: userId)
-            .orderBy('Bid Time', descending: true)
-            .snapshots(),
+      body: StreamBuilder<List<Bid>>(
+        stream: userId == null
+            ? const Stream.empty()
+            : BidRepository.watchByBidder(userId),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(
@@ -27,7 +27,8 @@ class MyBids extends StatelessWidget {
             );
           }
 
-          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+          final bids = snapshot.data ?? const <Bid>[];
+          if (bids.isEmpty) {
             return Container(
               color: colorToken.background,
               child: Center(
@@ -59,13 +60,8 @@ class MyBids extends StatelessWidget {
             color: colorToken.background,
             child: ListView.builder(
               padding: const EdgeInsets.all(16),
-              itemCount: snapshot.data!.docs.length,
-              itemBuilder: (context, index) {
-                final doc = snapshot.data!.docs[index];
-                final data = doc.data() as Map<String, dynamic>;
-
-                return _buildBidItem(context, data);
-              },
+              itemCount: bids.length,
+              itemBuilder: (context, index) => _buildBidItem(context, bids[index]),
             ),
           );
         },
@@ -73,26 +69,22 @@ class MyBids extends StatelessWidget {
     );
   }
 
-  Widget _buildBidItem(BuildContext context, Map<String, dynamic> data) {
+  Widget _buildBidItem(BuildContext context, Bid bid) {
     final colorToken = ThemeProvider.of(context).colorToken;
-    final productId = data['Product Id'] ?? '';
-    final bidAmount = data['Bid Amount'] ?? '0';
-    final bidTime = data['Bid Time'] ?? '';
+    final productId = bid.productId;
+    final bidAmount = bid.amount;
+    final bidTime = bid.bidTime;
 
-    return FutureBuilder<DocumentSnapshot>(
-      future: FirebaseFirestore.instance.collection('products').doc(productId).get(),
+    return FutureBuilder<Product?>(
+      future: productId.isEmpty ? Future.value(null) : ProductRepository.getById(productId),
       builder: (context, productSnapshot) {
-        if (!productSnapshot.hasData) {
+        final product = productSnapshot.data;
+        if (product == null) {
           return const SizedBox();
         }
 
-        final productData = productSnapshot.data!.data() as Map<String, dynamic>?;
-        if (productData == null) {
-          return const SizedBox();
-        }
-
-        final productName = productData['Product Name'] ?? 'Unknown';
-        final imageUrl = productData['Image Url'] ?? '';
+        final productName = product.name;
+        final imageUrl = product.imageUrl;
 
         return Card(
           margin: const EdgeInsets.only(bottom: 12),

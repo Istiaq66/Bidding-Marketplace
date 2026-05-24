@@ -1,24 +1,22 @@
-import 'package:app/services/new_user.dart';
+import 'package:app/models/watchlist_entry.dart';
 import 'package:app/providers/theme_provider.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:app/repositories/auth_repository.dart';
+import 'package:app/repositories/watchlist_repository.dart';
 import 'package:flutter/material.dart';
 
 class WatchList extends StatelessWidget {
-
-  const WatchList({Key? key}) : super(key: key);
+  const WatchList({super.key});
 
   @override
   Widget build(BuildContext context) {
     final colorToken = ThemeProvider.of(context).colorToken;
-    final userId = NewUser().existingUser?.uid;
-
+    final userId = AuthRepository.currentUserId;
 
     return Scaffold(
-      body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance
-            .collection('watchlist')
-            .where('User Id', isEqualTo: userId)
-            .snapshots(),
+      body: StreamBuilder<List<WatchlistEntry>>(
+        stream: userId == null
+            ? const Stream.empty()
+            : WatchlistRepository.watchByUser(userId),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(
@@ -26,7 +24,8 @@ class WatchList extends StatelessWidget {
             );
           }
 
-          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+          final entries = snapshot.data ?? const <WatchlistEntry>[];
+          if (entries.isEmpty) {
             return Container(
               color: colorToken.background,
               child: Center(
@@ -45,7 +44,7 @@ class WatchList extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Save items you\'re interested in',
+                      "Save items you're interested in",
                       style: TextStyle(color: colorToken.textSecondary),
                     ),
                   ],
@@ -58,15 +57,9 @@ class WatchList extends StatelessWidget {
             color: colorToken.background,
             child: ListView.builder(
               padding: const EdgeInsets.all(16),
-              itemCount: snapshot.data!.docs.length,
-              itemBuilder: (context, index) {
-                final doc = snapshot.data!.docs[index];
-                return _buildWatchlistItem(
-                  context,
-                  doc.id,
-                  doc.data() as Map<String, dynamic>,
-                );
-              },
+              itemCount: entries.length,
+              itemBuilder: (context, index) =>
+                  _buildWatchlistItem(context, entries[index]),
             ),
           );
         },
@@ -74,7 +67,7 @@ class WatchList extends StatelessWidget {
     );
   }
 
-  Widget _buildWatchlistItem(BuildContext context, String docId, Map<String, dynamic> data) {
+  Widget _buildWatchlistItem(BuildContext context, WatchlistEntry entry) {
     final colorToken = ThemeProvider.of(context).colorToken;
 
     return Card(
@@ -104,12 +97,11 @@ class WatchList extends StatelessWidget {
         trailing: IconButton(
           icon: Icon(Icons.favorite, color: colorToken.watchlist),
           onPressed: () {
-            // Remove from watchlist
-            FirebaseFirestore.instance.collection('watchlist').doc(docId).delete();
+            WatchlistRepository.deleteById(entry.id);
           },
         ),
         onTap: () {
-          // Navigate to product details
+          // PR5 — push ProductDetails by joining entry.productId
         },
       ),
     );

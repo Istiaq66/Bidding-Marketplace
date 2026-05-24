@@ -1,13 +1,16 @@
-import 'package:app/services/new_user.dart';
+import 'package:app/models/bid.dart';
+import 'package:app/models/product.dart';
+import 'package:app/repositories/auth_repository.dart';
+import 'package:app/repositories/bid_repository.dart';
+import 'package:app/repositories/product_repository.dart';
+import 'package:app/repositories/watchlist_repository.dart';
 import 'package:app/providers/theme_provider.dart';
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:intl/intl.dart';
 
 class ProductDetails extends StatefulWidget {
   final String docId;
 
-  const ProductDetails({Key? key, required this.docId}) : super(key: key);
+  const ProductDetails({super.key, required this.docId});
 
   @override
   State<ProductDetails> createState() => _ProductDetailsState();
@@ -26,26 +29,20 @@ class _ProductDetailsState extends State<ProductDetails> {
   }
 
   Future<void> _checkWatchlistStatus() async {
-    final userId = NewUser().existingUser?.uid;
+    final userId = AuthRepository.currentUserId;
     if (userId == null) return;
 
     try {
-      final doc = await FirebaseFirestore.instance
-          .collection('watchlist')
-          .where('User Id', isEqualTo: userId)
-          .where('Product Id', isEqualTo: widget.docId)
-          .get();
-
-      setState(() {
-        _isWatchlisted = doc.docs.isNotEmpty;
-      });
-    } catch (e) {
-      // Handle error silently
+      final watched = await WatchlistRepository.isWatched(userId, widget.docId);
+      if (!mounted) return;
+      setState(() => _isWatchlisted = watched);
+    } catch (_) {
+      // ignored — UI just shows un-watchlisted state
     }
   }
 
   Future<void> _toggleWatchlist() async {
-    final userId = NewUser().existingUser?.uid;
+    final userId = AuthRepository.currentUserId;
     if (userId == null) {
       _showErrorSnackbar('Please login to add to watchlist');
       return;
@@ -53,31 +50,15 @@ class _ProductDetailsState extends State<ProductDetails> {
 
     try {
       if (_isWatchlisted) {
-        // Remove from watchlist
-        final doc = await FirebaseFirestore.instance
-            .collection('watchlist')
-            .where('User Id', isEqualTo: userId)
-            .where('Product Id', isEqualTo: widget.docId)
-            .get();
-
-        for (var d in doc.docs) {
-          await d.reference.delete();
-        }
+        await WatchlistRepository.removeByUserAndProduct(userId, widget.docId);
         _showSuccessSnackbar('Removed from watchlist');
       } else {
-        // Add to watchlist
-        await FirebaseFirestore.instance.collection('watchlist').add({
-          'User Id': userId,
-          'Product Id': widget.docId,
-          'Added At': FieldValue.serverTimestamp(),
-        });
+        await WatchlistRepository.add(userId, widget.docId);
         _showSuccessSnackbar('Added to watchlist');
       }
-
-      setState(() {
-        _isWatchlisted = !_isWatchlisted;
-      });
-    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isWatchlisted = !_isWatchlisted);
+    } catch (_) {
       _showErrorSnackbar('Failed to update watchlist');
     }
   }
@@ -85,7 +66,7 @@ class _ProductDetailsState extends State<ProductDetails> {
   Future<void> _placeBid(String minBidPrice) async {
     if (!_formKey.currentState!.validate()) return;
 
-    final userId = NewUser().existingUser?.uid;
+    final userId = AuthRepository.currentUserId;
     if (userId == null) {
       _showErrorSnackbar('Please login to place a bid');
       return;
@@ -100,23 +81,22 @@ class _ProductDetailsState extends State<ProductDetails> {
     }
 
     setState(() => _isLoading = true);
+    final navigator = Navigator.of(context);
 
     try {
-      await FirebaseFirestore.instance.collection('bids').add({
-        'Bidder Id': userId,
-        'Product Id': widget.docId,
-        'Bid Amount': _bidController.text.trim(),
-        'Bid Time': DateFormat('yyyy-MM-dd HH:mm').format(DateTime.now()),
-        'Created At': FieldValue.serverTimestamp(),
-      });
+      await BidRepository.place(
+        productId: widget.docId,
+        bidderId: userId,
+        amount: _bidController.text.trim(),
+      );
 
       _showSuccessSnackbar('Bid placed successfully!');
       _bidController.clear();
-      Navigator.pop(context); // Close bid dialog
-    } catch (e) {
+      navigator.pop();
+    } catch (_) {
       _showErrorSnackbar('Failed to place bid');
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -272,11 +252,8 @@ class _ProductDetailsState extends State<ProductDetails> {
 
     return Scaffold(
       backgroundColor: colorToken.background,
-      body: FutureBuilder<DocumentSnapshot>(
-        future: FirebaseFirestore.instance
-            .collection('products')
-            .doc(widget.docId)
-            .get(),
+      body: FutureBuilder<Product?>(
+        future: ProductRepository.getById(widget.docId),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(
@@ -284,7 +261,7 @@ class _ProductDetailsState extends State<ProductDetails> {
             );
           }
 
-          if (!snapshot.hasData || !snapshot.data!.exists) {
+          if (!snapshot.hasData || snapshot.data == null) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -309,15 +286,15 @@ class _ProductDetailsState extends State<ProductDetails> {
             );
           }
 
-          final data = snapshot.data!.data() as Map<String, dynamic>;
-          final imageUrl = data['Image Url'] ?? '';
-          final productName = data['Product Name'] ?? 'Unknown';
-          final description = data['Product Description'] ?? '';
-          final minBidPrice = data['Minimum Bid Price'] ?? '0';
-          final endDate = data['Date'] ?? '';
-          final sellerId = data['User Id'] ?? '';
+          final product = snapshot.data!;
+          final imageUrl = product.imageUrl;
+          final productName = product.name;
+          final description = product.description;
+          final minBidPrice = product.minBidPrice;
+          final endDate = product.date;
+          final sellerId = product.sellerId;
 
-          final currentUserId = NewUser().existingUser?.uid;
+          final currentUserId = AuthRepository.currentUserId;
           final isOwnProduct = currentUserId == sellerId;
 
           return CustomScrollView(
@@ -571,18 +548,15 @@ class _ProductDetailsState extends State<ProductDetails> {
           );
         },
       ),
-      bottomNavigationBar: FutureBuilder<DocumentSnapshot>(
-        future: FirebaseFirestore.instance
-            .collection('products')
-            .doc(widget.docId)
-            .get(),
+      bottomNavigationBar: FutureBuilder<Product?>(
+        future: ProductRepository.getById(widget.docId),
         builder: (context, snapshot) {
-          if (!snapshot.hasData) return const SizedBox();
+          final product = snapshot.data;
+          if (product == null) return const SizedBox();
 
-          final data = snapshot.data!.data() as Map<String, dynamic>;
-          final minBidPrice = data['Minimum Bid Price'] ?? '0';
-          final sellerId = data['User Id'] ?? '';
-          final currentUserId = NewUser().existingUser?.uid;
+          final minBidPrice = product.minBidPrice;
+          final sellerId = product.sellerId;
+          final currentUserId = AuthRepository.currentUserId;
           final isOwnProduct = currentUserId == sellerId;
 
           if (isOwnProduct) return const SizedBox();
@@ -632,13 +606,8 @@ class _ProductDetailsState extends State<ProductDetails> {
   Widget _buildBidsList() {
     final colorToken = ThemeProvider.of(context).colorToken;
 
-    return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection('bids')
-          .where('Product Id', isEqualTo: widget.docId)
-          .orderBy('Created At', descending: true)
-          .limit(5)
-          .snapshots(),
+    return StreamBuilder<List<Bid>>(
+      stream: BidRepository.watchByProduct(widget.docId),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Center(
@@ -649,7 +618,8 @@ class _ProductDetailsState extends State<ProductDetails> {
           );
         }
 
-        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+        final bids = snapshot.data ?? const <Bid>[];
+        if (bids.isEmpty) {
           return Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
@@ -672,14 +642,14 @@ class _ProductDetailsState extends State<ProductDetails> {
           padding: const EdgeInsets.symmetric(vertical: 12),
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          itemCount: snapshot.data!.docs.length,
+          itemCount: bids.length,
           separatorBuilder: (BuildContext context, int index) {
             return const SizedBox(height: 10);
           },
           itemBuilder: (context, index) {
-            final bid = snapshot.data!.docs[index].data() as Map<String, dynamic>;
-            final bidAmount = bid['Bid Amount'] ?? '0';
-            final bidTime = bid['Bid Time'] ?? '';
+            final bid = bids[index];
+            final bidAmount = bid.amount;
+            final bidTime = bid.bidTime;
 
             return Container(
               padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),

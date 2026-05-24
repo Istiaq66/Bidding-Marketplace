@@ -1,7 +1,7 @@
 import 'dart:io';
-import 'package:app/services/new_auction_item.dart';
+import 'package:app/repositories/auth_repository.dart';
+import 'package:app/repositories/product_repository.dart';
 import 'package:app/providers/theme_provider.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
@@ -15,7 +15,7 @@ class NewItem extends StatefulWidget {
 }
 
 class _NewItemState extends State<NewItem> {
-  final currentUser = FirebaseAuth.instance.currentUser;
+  final String? _sellerId = AuthRepository.currentUserId;
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
@@ -65,12 +65,12 @@ class _NewItemState extends State<NewItem> {
       );
 
       if (pickedFile == null) return;
+      if (!mounted) return;
 
       setState(() {
         _image = File(pickedFile.path);
       });
 
-      // Close bottom sheet if open
       if (Navigator.canPop(context)) {
         Navigator.pop(context);
       }
@@ -167,14 +167,21 @@ class _NewItemState extends State<NewItem> {
 
     setState(() => _isLoading = true);
 
+    final sellerId = _sellerId;
+    if (sellerId == null) {
+      _showErrorSnackbar('You must be signed in to create an auction');
+      setState(() => _isLoading = false);
+      return;
+    }
+
     try {
-      await NewAuctionItem().addItem(
-        _nameController.text.trim(),
-        _minBidPriceController.text.trim(),
-        _descriptionController.text.trim(),
-        DateFormat('yyyy-MM-dd').format(_selectedDate),
-        _image!,
-        currentUser!.uid,
+      await ProductRepository.create(
+        sellerId: sellerId,
+        name: _nameController.text.trim(),
+        description: _descriptionController.text.trim(),
+        minBidPrice: _minBidPriceController.text.trim(),
+        date: DateFormat('yyyy-MM-dd').format(_selectedDate),
+        image: _image!,
       );
 
       _showSuccessSnackbar('Auction created successfully!');

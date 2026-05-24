@@ -1,17 +1,17 @@
+import 'package:app/models/product.dart';
+import 'package:app/repositories/auth_repository.dart';
+import 'package:app/repositories/product_repository.dart';
 import 'package:app/screens/add_new_item.dart';
-import 'package:app/services/new_user.dart';
 import 'package:app/providers/theme_provider.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 class MyAuctionsPage extends StatelessWidget {
-  const MyAuctionsPage({Key? key}) : super(key: key);
+  const MyAuctionsPage({super.key});
 
   @override
   Widget build(BuildContext context) {
     final colorToken = ThemeProvider.of(context).colorToken;
-    final userId = NewUser().existingUser?.uid;
+    final userId = AuthRepository.currentUserId;
 
     return Scaffold(
       backgroundColor: colorToken.background,
@@ -92,12 +92,12 @@ class MyAuctionsPage extends StatelessWidget {
   Widget _buildAuctionsList(BuildContext context, String filter, {String? userId}) {
     final colorToken = ThemeProvider.of(context).colorToken;
 
-    Query query = FirebaseFirestore.instance
-        .collection('products')
-        .where('User Id', isEqualTo: userId);
+    if (userId == null) {
+      return const SizedBox.shrink();
+    }
 
-    return StreamBuilder<QuerySnapshot>(
-      stream: query.snapshots(),
+    return StreamBuilder<List<Product>>(
+      stream: ProductRepository.watchByUser(userId),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Center(
@@ -105,7 +105,8 @@ class MyAuctionsPage extends StatelessWidget {
           );
         }
 
-        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+        final all = snapshot.data ?? const <Product>[];
+        if (all.isEmpty) {
           return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -160,17 +161,13 @@ class MyAuctionsPage extends StatelessWidget {
           );
         }
 
-        final docs = snapshot.data!.docs.where((doc) {
+        final products = all.where((p) {
           if (filter == 'all') return true;
-
-          final date = doc['Date'] as String;
-          final auctionDate = DateFormat('yyyy-MM-dd').parse(date);
-          final isActive = auctionDate.isAfter(DateTime.now());
-
-          return filter == 'active' ? isActive : !isActive;
+          if (filter == 'active') return p.isActive;
+          return !p.isActive;
         }).toList();
 
-        if (docs.isEmpty) {
+        if (products.isEmpty) {
           return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -197,26 +194,21 @@ class MyAuctionsPage extends StatelessWidget {
 
         return ListView.builder(
           padding: const EdgeInsets.all(16),
-          itemCount: docs.length,
-          itemBuilder: (context, index) {
-            final doc = docs[index];
-            final data = doc.data() as Map<String, dynamic>;
-
-            return _buildAuctionItem(context, doc.id, data);
-          },
+          itemCount: products.length,
+          itemBuilder: (context, index) => _buildAuctionItem(context, products[index]),
         );
       },
     );
   }
 
-  Widget _buildAuctionItem(BuildContext context, String docId, Map<String, dynamic> data) {
+  Widget _buildAuctionItem(BuildContext context, Product product) {
     final colorToken = ThemeProvider.of(context).colorToken;
     final themeProvider = ThemeProvider.of(context);
-    final imageUrl = data['Image Url'] ?? '';
-    final productName = data['Product Name'] ?? 'Unknown';
-    final description = data['Product Description'] ?? '';
-    final minBidPrice = data['Minimum Bid Price'] ?? '0';
-    final date = data['Date'] ?? '';
+    final imageUrl = product.imageUrl;
+    final productName = product.name;
+    final description = product.description;
+    final minBidPrice = product.minBidPrice;
+    final date = product.date;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -373,7 +365,7 @@ class MyAuctionsPage extends StatelessWidget {
                     Expanded(
                       child: OutlinedButton.icon(
                         onPressed: () {
-                          _deleteAuction(context, docId);
+                          _deleteAuction(context, product.id);
                         },
                         icon: const Icon(Icons.delete, size: 18),
                         label: const Text('Delete'),
@@ -435,12 +427,11 @@ class MyAuctionsPage extends StatelessWidget {
           ),
           TextButton(
             onPressed: () async {
-              await FirebaseFirestore.instance
-                  .collection('products')
-                  .doc(docId)
-                  .delete();
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
+              final navigator = Navigator.of(context);
+              final messenger = ScaffoldMessenger.of(context);
+              await ProductRepository.deleteById(docId);
+              navigator.pop();
+              messenger.showSnackBar(
                 SnackBar(
                   content: const Text('Auction deleted successfully'),
                   backgroundColor: colorToken.success,

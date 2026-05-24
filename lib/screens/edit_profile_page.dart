@@ -1,13 +1,12 @@
 import 'dart:io';
-import 'package:app/services/new_user.dart';
+import 'package:app/repositories/auth_repository.dart';
+import 'package:app/repositories/user_repository.dart';
 import 'package:app/providers/theme_provider.dart';
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
 
 class EditProfilePage extends StatefulWidget {
-  const EditProfilePage({Key? key}) : super(key: key);
+  const EditProfilePage({super.key});
 
   @override
   State<EditProfilePage> createState() => _EditProfilePageState();
@@ -25,7 +24,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   String? _currentImageUrl;
   bool _isLoading = false;
   bool _isUploading = false;
-  final userId = NewUser().existingUser?.uid;
+  final String? userId = AuthRepository.currentUserId;
 
   @override
   void initState() {
@@ -34,26 +33,23 @@ class _EditProfilePageState extends State<EditProfilePage> {
   }
 
   Future<void> _loadUserData() async {
+    final uid = userId;
+    if (uid == null) return;
     setState(() => _isLoading = true);
     try {
-      final doc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(userId)
-          .get();
-
-      if (doc.exists) {
-        final data = doc.data() as Map<String, dynamic>;
-        _nameController.text = data['name'] ?? '';
-        _emailController.text = data['email'] ?? '';
-        _phoneController.text = data['phone'] ?? '';
-        _bioController.text = data['bio'] ?? '';
-        _addressController.text = data['address'] ?? '';
-        _currentImageUrl = data['profileImage'];
+      final user = await UserRepository.getById(uid);
+      if (user != null) {
+        _nameController.text = user.name ?? '';
+        _emailController.text = user.email ?? '';
+        _phoneController.text = user.phone ?? '';
+        _bioController.text = user.bio ?? '';
+        _addressController.text = user.address ?? '';
+        _currentImageUrl = user.profileImage;
       }
-    } catch (e) {
+    } catch (_) {
       _showErrorSnackbar('Failed to load profile data');
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -161,55 +157,46 @@ class _EditProfilePageState extends State<EditProfilePage> {
   }
 
   Future<String?> _uploadImage() async {
-    if (_imageFile == null) return _currentImageUrl;
+    final uid = userId;
+    if (_imageFile == null || uid == null) return _currentImageUrl;
 
     try {
       setState(() => _isUploading = true);
-
-      final fileName =
-          'profile_${userId}_${DateTime.now().millisecondsSinceEpoch}.jpg';
-      final ref =
-      FirebaseStorage.instance.ref().child('profile_images/$fileName');
-
-      final uploadTask = ref.putFile(_imageFile!);
-      final snapshot = await uploadTask.whenComplete(() => {});
-      final downloadUrl = await snapshot.ref.getDownloadURL();
-
-      return downloadUrl;
-    } catch (e) {
+      return await UserRepository.uploadProfileImage(uid, _imageFile!);
+    } catch (_) {
       _showErrorSnackbar('Failed to upload image');
       return null;
     } finally {
-      setState(() => _isUploading = false);
+      if (mounted) setState(() => _isUploading = false);
     }
   }
 
   Future<void> _saveProfile() async {
     if (!_formKey.currentState!.validate()) return;
+    final uid = userId;
+    if (uid == null) return;
 
     setState(() => _isLoading = true);
+    final navigator = Navigator.of(context);
 
     try {
-      // Upload image if changed
       final imageUrl = await _uploadImage();
-
-      // Update Firestore
-      await FirebaseFirestore.instance.collection('users').doc(userId).set({
-        'name': _nameController.text.trim(),
-        'email': _emailController.text.trim(),
-        'phone': _phoneController.text.trim(),
-        'bio': _bioController.text.trim(),
-        'address': _addressController.text.trim(),
-        'profileImage': imageUrl,
-        'updatedAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
+      await UserRepository.updateProfile(
+        uid: uid,
+        name: _nameController.text.trim(),
+        email: _emailController.text.trim(),
+        phone: _phoneController.text.trim(),
+        bio: _bioController.text.trim(),
+        address: _addressController.text.trim(),
+        profileImageUrl: imageUrl,
+      );
 
       _showSuccessSnackbar('Profile updated successfully');
-      Navigator.pop(context, true);
-    } catch (e) {
+      navigator.pop(true);
+    } catch (_) {
       _showErrorSnackbar('Failed to update profile');
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 

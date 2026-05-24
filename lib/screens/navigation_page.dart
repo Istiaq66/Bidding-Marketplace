@@ -5,7 +5,7 @@ import 'package:app/screens/home.dart';
 import 'package:app/screens/privacy_page.dart';
 import 'package:app/screens/profile.dart';
 import 'package:app/screens/settings_page.dart';
-import 'package:app/services/auth_service.dart';
+import 'package:app/repositories/auth_repository.dart';
 import 'package:app/providers/theme_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -413,7 +413,7 @@ class _NavigationPageState extends State<NavigationPage> {
           TextButton(
             onPressed: () async {
               Navigator.pop(context);
-              await AuthService.signOut();
+              await AuthRepository.signOut();
             },
             child: Text(
               'Logout',

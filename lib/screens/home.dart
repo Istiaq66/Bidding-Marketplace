@@ -1,9 +1,10 @@
 import 'package:app/components/custom_image_holder.dart';
+import 'package:app/models/product.dart';
+import 'package:app/repositories/product_repository.dart';
+import 'package:app/repositories/user_repository.dart';
 import 'package:app/screens/product_details_page.dart';
-import 'package:app/services/new_user.dart';
 import 'package:app/providers/theme_provider.dart';
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -18,8 +19,8 @@ class _HomeState extends State<Home> {
 
   @override
   void initState() {
-    NewUser().checkUserExistence();
     super.initState();
+    UserRepository.ensureUserDocument();
   }
 
   Future<void> _handleRefresh() async {
@@ -174,28 +175,24 @@ class _HomeState extends State<Home> {
     );
   }
 
-  List<DocumentSnapshot> _filterAndSortProducts(List<DocumentSnapshot> docs) {
-    // Filter by search query
-    var filtered = docs.where((doc) {
+  List<Product> _filterAndSortProducts(List<Product> products) {
+    var filtered = products.where((p) {
       if (_searchQuery.isEmpty) return true;
-      final data = doc.data() as Map<String, dynamic>;
-      final name = (data['Product Name'] ?? '').toString().toLowerCase();
-      return name.contains(_searchQuery.toLowerCase());
+      return p.name.toLowerCase().contains(_searchQuery.toLowerCase());
     }).toList();
 
-    // Sort based on selected filter
     switch (_selectedFilter) {
       case 'Price: Low to High':
         filtered.sort((a, b) {
-          final aPrice = double.tryParse((a.data() as Map)['Minimum Bid Price'] ?? '0') ?? 0;
-          final bPrice = double.tryParse((b.data() as Map)['Minimum Bid Price'] ?? '0') ?? 0;
+          final aPrice = double.tryParse(a.minBidPrice) ?? 0;
+          final bPrice = double.tryParse(b.minBidPrice) ?? 0;
           return aPrice.compareTo(bPrice);
         });
         break;
       case 'Price: High to Low':
         filtered.sort((a, b) {
-          final aPrice = double.tryParse((a.data() as Map)['Minimum Bid Price'] ?? '0') ?? 0;
-          final bPrice = double.tryParse((b.data() as Map)['Minimum Bid Price'] ?? '0') ?? 0;
+          final aPrice = double.tryParse(a.minBidPrice) ?? 0;
+          final bPrice = double.tryParse(b.minBidPrice) ?? 0;
           return bPrice.compareTo(aPrice);
         });
         break;
@@ -334,8 +331,8 @@ class _HomeState extends State<Home> {
             child: RefreshIndicator(
               onRefresh: _handleRefresh,
               color: colorToken.primary,
-              child: FutureBuilder<QuerySnapshot<Map<String, dynamic>>>(
-                future: FirebaseFirestore.instance.collection('products').get(),
+              child: StreamBuilder<List<Product>>(
+                stream: ProductRepository.watchAll(),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return Center(
@@ -378,7 +375,7 @@ class _HomeState extends State<Home> {
                     );
                   }
 
-                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                  if (!snapshot.hasData || snapshot.data!.isEmpty) {
                     return Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -411,9 +408,9 @@ class _HomeState extends State<Home> {
                     );
                   }
 
-                  final filteredDocs = _filterAndSortProducts(snapshot.data!.docs);
+                  final filtered = _filterAndSortProducts(snapshot.data!);
 
-                  if (filteredDocs.isEmpty) {
+                  if (filtered.isEmpty) {
                     return Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -454,17 +451,15 @@ class _HomeState extends State<Home> {
                       crossAxisSpacing: 12,
                       mainAxisSpacing: 12,
                     ),
-                    itemCount: filteredDocs.length,
+                    itemCount: filtered.length,
                     itemBuilder: (context, index) {
-                      final doc = filteredDocs[index];
-                      final documentData = doc.data() as Map<String, dynamic>;
-
+                      final product = filtered[index];
                       return MinimalisticProductCard(
-                        name: documentData['Product Name'] ?? 'Unknown',
-                        minPrice: documentData['Minimum Bid Price'] ?? '0',
-                        imageUrl: documentData['Image Url'] ?? '',
-                        description: documentData['Product Description'] ?? '',
-                        docId: doc.id,
+                        name: product.name,
+                        minPrice: product.minBidPrice,
+                        imageUrl: product.imageUrl,
+                        description: product.description,
+                        docId: product.id,
                       );
                     },
                   );
@@ -486,13 +481,13 @@ class MinimalisticProductCard extends StatelessWidget {
   final String? description; // Added optional description
 
   const MinimalisticProductCard({
-    Key? key,
+    super.key,
     required this.name,
     required this.minPrice,
     required this.imageUrl,
     required this.docId,
-    this.description, // Optional parameter
-  }) : super(key: key);
+    this.description,
+  });
 
   @override
   Widget build(BuildContext context) {

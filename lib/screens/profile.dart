@@ -1,14 +1,13 @@
 
 import 'package:app/components/custom_image_holder.dart';
+import 'package:app/repositories/auth_repository.dart';
+import 'package:app/repositories/user_repository.dart';
 import 'package:app/screens/edit_profile_page.dart';
 import 'package:app/screens/help_page.dart';
 import 'package:app/screens/my_auction_page.dart';
 import 'package:app/screens/my_bids_page.dart';
 import 'package:app/screens/watch_list_page.dart';
-import 'package:app/services/auth_service.dart';
-import 'package:app/services/new_user.dart';
 import 'package:app/providers/theme_provider.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -22,8 +21,8 @@ class Profile extends StatefulWidget {
 }
 
 class _ProfileState extends State<Profile> {
-  final User? user = NewUser().existingUser;
-  late String _currentImageUrl = '';
+  final User? user = AuthRepository.currentUser;
+  String? _currentImageUrl;
 
   @override
   void initState() {
@@ -32,24 +31,17 @@ class _ProfileState extends State<Profile> {
   }
 
   Future<void> _loadUserProfile() async {
+    final uid = user?.uid;
+    if (uid == null) return;
     try {
-      final doc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user?.uid)
-          .get();
-
-      if (doc.exists) {
-        final data = doc.data() as Map<String, dynamic>;
-
-        setState(() {
-          final profileUrl = data['profileImage'];
-          _currentImageUrl = (profileUrl != null && profileUrl.toString().isNotEmpty)
-              ? profileUrl
-              : null; // fallback to null if empty
-        });
-      }
-    } catch (e) {
-       debugPrint('Failed to load profile data');
+      final appUser = await UserRepository.getById(uid);
+      if (!mounted) return;
+      setState(() {
+        final image = appUser?.profileImage;
+        _currentImageUrl = (image != null && image.isNotEmpty) ? image : null;
+      });
+    } catch (_) {
+      // ignored — UI falls back to placeholder
     }
   }
 
@@ -91,7 +83,7 @@ class _ProfileState extends State<Profile> {
                               ),
                               child: ClipOval(
                                 child: CustomImageHolder(
-                                  imageUrl:  _currentImageUrl,
+                                  imageUrl: _currentImageUrl ?? '',
                                   height: 100,
                                   width: 100,
                                 ),
@@ -471,7 +463,7 @@ class _ProfileState extends State<Profile> {
             ElevatedButton(
               onPressed: () {
                 Navigator.of(context).pop();
-                AuthService.signOut();
+                AuthRepository.signOut();
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: colorToken.error,
