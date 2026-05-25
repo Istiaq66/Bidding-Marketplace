@@ -1,4 +1,5 @@
 import 'package:app/providers/theme_provider.dart';
+import 'package:app/screens/delete_account_page.dart';
 import 'package:flutter/material.dart';
 
 class SettingsPage extends StatelessWidget {
@@ -48,6 +49,32 @@ class SettingsPage extends StatelessWidget {
           _comingSoonTile(context, Icons.notifications, 'Notifications', colorToken),
           _comingSoonTile(context, Icons.lock_outline, 'Privacy & Security', colorToken),
           _comingSoonTile(context, Icons.payment, 'Payment methods', colorToken),
+          _sectionHeader('Danger zone', colorToken),
+          ListTile(
+            leading: Icon(Icons.delete_forever, color: colorToken.error),
+            title: Text(
+              'Delete account',
+              style: TextStyle(
+                color: colorToken.error,
+                fontFamily: 'SourceSans3',
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            subtitle: Text(
+              'Permanently remove your profile and data',
+              style: TextStyle(
+                color: colorToken.textSecondary,
+                fontFamily: 'SourceSans3',
+              ),
+            ),
+            trailing: Icon(Icons.chevron_right, color: colorToken.textSecondary),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const DeleteAccountPage()),
+              );
+            },
+          ),
           _sectionHeader('About', colorToken),
           ListTile(
             leading: Icon(Icons.info_outline, color: colorToken.textPrimary),

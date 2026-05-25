@@ -8,6 +8,7 @@ import 'package:app/screens/my_auction_page.dart';
 import 'package:app/screens/my_bids_page.dart';
 import 'package:app/screens/watch_list_page.dart';
 import 'package:app/providers/theme_provider.dart';
+import 'package:app/util/share.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -185,14 +186,9 @@ class _ProfileState extends State<Profile> {
                           const SizedBox(width: 12),
                           Expanded(
                             child: ElevatedButton(
-                              onPressed: () {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Share — coming soon'),
-                                    behavior: SnackBarBehavior.floating,
-                                  ),
-                                );
-                              },
+                              onPressed: () => ShareUtil.shareProfile(
+                                userName: user?.displayName,
+                              ),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: colorToken.buttonSecondary,
                                 foregroundColor: colorToken.onButtonSecondary,

@@ -37,6 +37,14 @@ class WatchlistRepository {
     await _watchlist.doc(id).delete();
   }
 
+  static Future<void> deleteAllByUser(String userId) async {
+    final snap =
+        await _watchlist.where('User Id', isEqualTo: userId).get();
+    for (final doc in snap.docs) {
+      await doc.reference.delete();
+    }
+  }
+
   static Stream<List<WatchlistEntry>> watchByUser(String userId) {
     return _watchlist
         .where('User Id', isEqualTo: userId)

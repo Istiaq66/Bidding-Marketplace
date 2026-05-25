@@ -98,4 +98,20 @@ class BidRepository {
         .snapshots()
         .map((snap) => snap.docs.map(Bid.fromFirestore).toList());
   }
+
+  /// Best-effort delete of every bid placed by [bidderId]. Security rules
+  /// block bid deletion (`allow update, delete: if false`) — this exists so
+  /// that, when rules are later relaxed for the account-deletion path, the
+  /// repository already has the entry point.
+  static Future<int> deleteAllByBidder(String bidderId) async {
+    final snap = await _bids.where('Bidder Id', isEqualTo: bidderId).get();
+    int deleted = 0;
+    for (final doc in snap.docs) {
+      try {
+        await doc.reference.delete();
+        deleted++;
+      } catch (_) {}
+    }
+    return deleted;
+  }
 }

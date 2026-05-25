@@ -2,6 +2,7 @@ import 'package:app/models/product.dart';
 import 'package:app/repositories/auth_repository.dart';
 import 'package:app/repositories/product_repository.dart';
 import 'package:app/screens/add_new_item.dart';
+import 'package:app/screens/edit_auction_page.dart';
 import 'package:app/providers/theme_provider.dart';
 import 'package:flutter/material.dart';
 
@@ -341,14 +342,26 @@ class MyAuctionsPage extends StatelessWidget {
                   children: [
                     Expanded(
                       child: OutlinedButton.icon(
-                        onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Editing auctions — coming soon'),
-                              behavior: SnackBarBehavior.floating,
-                            ),
-                          );
-                        },
+                        onPressed: product.bidCount == 0
+                            ? () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) =>
+                                        EditAuctionPage(product: product),
+                                  ),
+                                );
+                              }
+                            : () {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      'Auctions with bids cannot be edited',
+                                    ),
+                                    behavior: SnackBarBehavior.floating,
+                                  ),
+                                );
+                              },
                         icon: const Icon(Icons.edit, size: 18),
                         label: const Text('Edit'),
                         style: OutlinedButton.styleFrom(

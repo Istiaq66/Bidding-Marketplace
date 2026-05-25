@@ -7,6 +7,7 @@ import 'package:app/repositories/bid_repository.dart';
 import 'package:app/repositories/product_repository.dart';
 import 'package:app/repositories/watchlist_repository.dart';
 import 'package:app/providers/theme_provider.dart';
+import 'package:app/util/share.dart';
 import 'package:flutter/material.dart';
 
 class ProductDetails extends StatefulWidget {
@@ -311,14 +312,10 @@ class _ProductDetailsState extends State<ProductDetails> {
                     ),
                     child: Icon(Icons.share, color: colorToken.textPrimary),
                   ),
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Share — coming soon'),
-                        behavior: SnackBarBehavior.floating,
-                      ),
-                    );
-                  },
+                  onPressed: () => ShareUtil.shareAuction(
+                    productId: widget.docId,
+                    productName: _product?.name,
+                  ),
                 ),
               ],
               flexibleSpace: FlexibleSpaceBar(

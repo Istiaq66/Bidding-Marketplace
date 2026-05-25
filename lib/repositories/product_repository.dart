@@ -117,6 +117,61 @@ class ProductRepository {
     await _products.doc(id).delete();
   }
 
+  /// Updates the editable fields on a product. The transaction asserts the
+  /// auction has not yet received any bids — matching the security rule that
+  /// only allows this update when `bidCount == 0`.
+  static Future<void> updateEditable({
+    required String id,
+    required String description,
+    required String date,
+    required String minBidPrice,
+  }) async {
+    final ref = _products.doc(id);
+    final minPrice = double.tryParse(minBidPrice) ?? 0;
+
+    Timestamp? endsAt;
+    try {
+      final parsed = DateTime.parse(date);
+      endsAt = Timestamp.fromDate(
+        DateTime(parsed.year, parsed.month, parsed.day, 23, 59, 59),
+      );
+    } catch (_) {}
+
+    await _db.runTransaction((tx) async {
+      final snap = await tx.get(ref);
+      if (!snap.exists) throw Exception('Auction not found');
+      final data = snap.data()!;
+      final bidCount = (data['bidCount'] as int?) ?? 0;
+      if (bidCount > 0) {
+        throw Exception('Cannot edit an auction that has bids');
+      }
+
+      tx.update(ref, {
+        'Product Description': description,
+        'Date': date,
+        'Minimum Bid Price': minBidPrice,
+        if (endsAt != null) 'endsAt': endsAt,
+        'currentBid': minPrice,
+      });
+    });
+  }
+
+  /// Deletes every product owned by [userId] whose `bidCount` is zero.
+  /// Returns the number of products deleted.
+  static Future<int> deleteAllByUser(String userId) async {
+    final snap =
+        await _products.where('User Id', isEqualTo: userId).get();
+    int deleted = 0;
+    for (final doc in snap.docs) {
+      final bidCount = (doc.data()['bidCount'] as int?) ?? 0;
+      if (bidCount == 0) {
+        await doc.reference.delete();
+        deleted++;
+      }
+    }
+    return deleted;
+  }
+
   /// Prefix-query search on `nameLower`. Falls back to client-side contains
   /// for legacy docs that haven't been backfilled yet.
   static Future<List<Product>> search(String query, {int limit = 20}) async {
