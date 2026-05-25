@@ -7,8 +7,9 @@ import 'package:path/path.dart' as p;
 class ProductRepository {
   ProductRepository._();
 
+  static final _db = FirebaseFirestore.instance;
   static final CollectionReference<Map<String, dynamic>> _products =
-      FirebaseFirestore.instance.collection('products');
+      _db.collection('products');
 
   static Future<DocumentReference<Map<String, dynamic>>> create({
     required String sellerId,
@@ -18,10 +19,30 @@ class ProductRepository {
     required String date,
     required File image,
   }) async {
+    // Fetch seller info for denormalization
+    final sellerSnap = await _db.collection('users').doc(sellerId).get();
+    final sellerData = sellerSnap.data() ?? {};
+    final sellerName = (sellerData['name'] as String?) ?? '';
+    final sellerPhoto = (sellerData['profileImage'] as String?) ??
+        (sellerData['photo'] as String?) ??
+        '';
+
+    // Upload image
     final fileName = p.basename(image.path);
     final ref = FirebaseStorage.instance.ref().child('files/$fileName');
     final snapshot = await ref.putFile(image);
     final imageUrl = await snapshot.ref.getDownloadURL();
+
+    // Compute endsAt at 23:59:59 local time on the selected date
+    Timestamp? endsAt;
+    try {
+      final parsed = DateTime.parse(date);
+      endsAt = Timestamp.fromDate(
+        DateTime(parsed.year, parsed.month, parsed.day, 23, 59, 59),
+      );
+    } catch (_) {}
+
+    final minPrice = double.tryParse(minBidPrice) ?? 0;
 
     return _products.add({
       'User Id': sellerId,
@@ -30,6 +51,15 @@ class ProductRepository {
       'Minimum Bid Price': minBidPrice,
       'Date': date,
       'Image Url': imageUrl,
+      'nameLower': name.toLowerCase(),
+      'endsAt': endsAt,
+      'currentBid': minPrice,
+      'bidCount': 0,
+      'status': 'active',
+      'winnerId': null,
+      'sellerName': sellerName,
+      'sellerPhoto': sellerPhoto,
+      'createdAt': FieldValue.serverTimestamp(),
     });
   }
 
@@ -37,6 +67,14 @@ class ProductRepository {
     return _products.snapshots().map(
           (snap) => snap.docs.map(Product.fromFirestore).toList(),
         );
+  }
+
+  static Stream<List<Product>> watchActive() {
+    return _products
+        .where('status', isEqualTo: 'active')
+        .orderBy('endsAt')
+        .snapshots()
+        .map((snap) => snap.docs.map(Product.fromFirestore).toList());
   }
 
   static Future<List<Product>> getAll() async {
@@ -51,10 +89,13 @@ class ProductRepository {
         .map((snap) => snap.docs.map(Product.fromFirestore).toList());
   }
 
-  static Stream<List<Product>> watchRecentByUser(String userId, {int limit = 3}) {
+  static Stream<List<Product>> watchRecentByUser(
+      String userId, {
+      int limit = 3,
+    }) {
     return _products
         .where('User Id', isEqualTo: userId)
-        .orderBy('Date', descending: true)
+        .orderBy('createdAt', descending: true)
         .limit(limit)
         .snapshots()
         .map((snap) => snap.docs.map(Product.fromFirestore).toList());

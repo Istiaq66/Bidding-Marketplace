@@ -1,0 +1,71 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Users ────────────────────────────────────────────────────────────────
+    match /users/{uid} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // ── Products ─────────────────────────────────────────────────────────────
+    match /products/{productId} {
+      allow read: if true;
+
+      allow create: if request.auth != null
+        && request.resource.data['User Id'] == request.auth.uid;
+
+      // Bid transaction: only currentBid ↑, bidCount +1, highestBidderId set.
+      // Seller lifecycle: status / winnerId updates (Cloud Functions mirror this).
+      allow update: if request.auth != null
+        && (isBidUpdate(resource, request) || isSellerUpdate(resource, request));
+
+      allow delete: if request.auth != null
+        && request.auth.uid == resource.data['User Id']
+        && resource.data.get('bidCount', 0) == 0;
+    }
+
+    // ── Bids ─────────────────────────────────────────────────────────────────
+    match /bids/{bidId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null
+        && request.resource.data['Bidder Id'] == request.auth.uid;
+      allow update, delete: if false;
+    }
+
+    // ── Watchlist ─────────────────────────────────────────────────────────────
+    match /watchlist/{entryId} {
+      allow read: if request.auth != null
+        && resource.data['User Id'] == request.auth.uid;
+      allow create: if request.auth != null
+        && request.resource.data['User Id'] == request.auth.uid;
+      allow delete: if request.auth != null
+        && resource.data['User Id'] == request.auth.uid;
+      allow update: if false;
+    }
+
+    // ── Notifications ─────────────────────────────────────────────────────────
+    match /notifications/{uid}/items/{itemId} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow write: if false; // written only by Cloud Functions
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+    function isBidUpdate(resource, request) {
+      let changed = request.resource.data.diff(resource.data).affectedKeys();
+      return changed.hasOnly(['currentBid', 'bidCount', 'highestBidderId'])
+        && request.resource.data.currentBid > resource.data.get('currentBid', 0)
+        && request.resource.data.bidCount
+           == resource.data.get('bidCount', 0) + 1
+        && request.auth.uid != resource.data['User Id'];
+    }
+
+    function isSellerUpdate(resource, request) {
+      let changed = request.resource.data.diff(resource.data).affectedKeys();
+      return request.auth.uid == resource.data['User Id']
+        && changed.hasOnly(
+             ['status', 'winnerId', 'currentBid', 'bidCount', 'highestBidderId']
+           );
+    }
+  }
+}
