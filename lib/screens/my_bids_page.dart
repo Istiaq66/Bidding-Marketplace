@@ -61,7 +61,8 @@ class MyBids extends StatelessWidget {
             child: ListView.builder(
               padding: const EdgeInsets.all(16),
               itemCount: bids.length,
-              itemBuilder: (context, index) => _buildBidItem(context, bids[index]),
+              itemBuilder: (context, index) =>
+                  _buildBidItem(context, bids[index], userId),
             ),
           );
         },
@@ -69,22 +70,23 @@ class MyBids extends StatelessWidget {
     );
   }
 
-  Widget _buildBidItem(BuildContext context, Bid bid) {
+  Widget _buildBidItem(BuildContext context, Bid bid, String? currentUserId) {
     final colorToken = ThemeProvider.of(context).colorToken;
     final productId = bid.productId;
-    final bidAmount = bid.amount;
+    final bidAmount = (double.tryParse(bid.amount.toString()) ?? 0)
+        .toStringAsFixed(2);
     final bidTime = bid.bidTime;
 
     return FutureBuilder<Product?>(
-      future: productId.isEmpty ? Future.value(null) : ProductRepository.getById(productId),
+      future: productId.isEmpty
+          ? Future.value(null)
+          : ProductRepository.getById(productId),
       builder: (context, productSnapshot) {
         final product = productSnapshot.data;
-        if (product == null) {
-          return const SizedBox();
-        }
+        if (product == null) return const SizedBox();
 
-        final productName = product.name;
-        final imageUrl = product.imageUrl;
+        final isLeading = product.highestBidderId != null &&
+            product.highestBidderId == bid.bidderId;
 
         return Card(
           margin: const EdgeInsets.only(bottom: 12),
@@ -93,33 +95,34 @@ class MyBids extends StatelessWidget {
           child: ListTile(
             leading: ClipRRect(
               borderRadius: BorderRadius.circular(8),
-              child: imageUrl.isNotEmpty
+              child: product.imageUrl.isNotEmpty
                   ? Image.network(
-                imageUrl,
-                width: 60,
-                height: 60,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stack) {
-                  return Container(
-                    width: 60,
-                    height: 60,
-                    color: colorToken.surfaceVariant,
-                    child: Icon(
-                      Icons.image_not_supported,
-                      color: colorToken.textSecondary,
-                    ),
-                  );
-                },
-              )
+                      product.imageUrl,
+                      width: 60,
+                      height: 60,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stack) {
+                        return Container(
+                          width: 60,
+                          height: 60,
+                          color: colorToken.surfaceVariant,
+                          child: Icon(
+                            Icons.image_not_supported,
+                            color: colorToken.textSecondary,
+                          ),
+                        );
+                      },
+                    )
                   : Container(
-                width: 60,
-                height: 60,
-                color: colorToken.surfaceVariant,
-                child: Icon(Icons.shopping_bag, color: colorToken.textSecondary),
-              ),
+                      width: 60,
+                      height: 60,
+                      color: colorToken.surfaceVariant,
+                      child: Icon(Icons.shopping_bag,
+                          color: colorToken.textSecondary),
+                    ),
             ),
             title: Text(
-              productName,
+              product.name,
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 color: colorToken.textPrimary,
@@ -147,21 +150,30 @@ class MyBids extends StatelessWidget {
               ],
             ),
             trailing: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: colorToken.bidActive.withValues(alpha:0.1),
+                color: isLeading
+                    ? colorToken.bidActive.withValues(alpha: 0.1)
+                    : colorToken.error.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.trending_up, size: 16, color: colorToken.bidActive),
+                  Icon(
+                    isLeading ? Icons.trending_up : Icons.trending_down,
+                    size: 16,
+                    color: isLeading ? colorToken.bidActive : colorToken.error,
+                  ),
                   const SizedBox(width: 4),
                   Text(
-                    'Leading',
+                    isLeading ? 'Leading' : 'Outbid',
                     style: TextStyle(
                       fontSize: 12,
-                      color: colorToken.bidActive,
+                      color: isLeading
+                          ? colorToken.bidActive
+                          : colorToken.error,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -172,7 +184,8 @@ class MyBids extends StatelessWidget {
               if (productId.isEmpty) return;
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => ProductDetails(docId: productId)),
+                MaterialPageRoute(
+                    builder: (_) => ProductDetails(docId: productId)),
               );
             },
           ),

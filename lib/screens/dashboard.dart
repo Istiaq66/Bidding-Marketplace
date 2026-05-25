@@ -132,7 +132,7 @@ class Dashboard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
-            _buildRecentActivity(context),
+            _buildRecentActivity(context, userId),
 
             const SizedBox(height: 24),
 
@@ -251,39 +251,116 @@ class Dashboard extends StatelessWidget {
     );
   }
 
-  Widget _buildRecentActivity(BuildContext context) {
+  Widget _buildRecentActivity(BuildContext context, String? userId) {
     final colorToken = ThemeProvider.of(context).colorToken;
 
-    return Card(
-      elevation: 2,
-      color: colorToken.cardBackground,
-      child: ListView.separated(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        itemCount: 3,
-        separatorBuilder:
-            (context, index) => Divider(height: 1, color: colorToken.divider),
-        itemBuilder: (context, index) {
-          return ListTile(
-            leading: CircleAvatar(
-              backgroundColor: colorToken.primary.withValues(alpha: 0.1),
-              child: Icon(Icons.notifications, color: colorToken.primary),
-            ),
-            title: Text(
-              'New bid on your item',
-              style: TextStyle(color: colorToken.textPrimary),
-            ),
-            subtitle: Text(
-              '2 hours ago',
-              style: TextStyle(color: colorToken.textSecondary),
-            ),
-            trailing: Icon(
-              Icons.chevron_right,
-              color: colorToken.textSecondary,
-            ),
+    if (userId == null) {
+      return _buildEmptyState(
+        context,
+        'Not signed in',
+        'Sign in to see your recent activity',
+      );
+    }
+
+    return StreamBuilder<List<Bid>>(
+      stream: BidRepository.watchRecentByBidder(userId, limit: 5),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Center(
+            child: CircularProgressIndicator(color: colorToken.primary),
           );
-        },
-      ),
+        }
+
+        final bids = snapshot.data ?? const <Bid>[];
+        if (bids.isEmpty) {
+          return _buildEmptyState(
+            context,
+            'No recent activity',
+            'Your bid history will appear here',
+          );
+        }
+
+        return Card(
+          elevation: 2,
+          color: colorToken.cardBackground,
+          child: ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: bids.length,
+            separatorBuilder: (context, index) =>
+                Divider(height: 1, color: colorToken.divider),
+            itemBuilder: (context, index) {
+              final bid = bids[index];
+              return FutureBuilder<Product?>(
+                future: bid.productId.isEmpty
+                    ? Future.value(null)
+                    : ProductRepository.getById(bid.productId),
+                builder: (context, productSnapshot) {
+                  final product = productSnapshot.data;
+                  final amount = (double.tryParse(bid.amount.toString()) ?? 0)
+                      .toStringAsFixed(2);
+                  return ListTile(
+                    leading: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: product != null && product.imageUrl.isNotEmpty
+                          ? Image.network(
+                              product.imageUrl,
+                              width: 44,
+                              height: 44,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => Container(
+                                width: 44,
+                                height: 44,
+                                color: colorToken.surfaceVariant,
+                                child: Icon(Icons.shopping_bag,
+                                    color: colorToken.textSecondary, size: 20),
+                              ),
+                            )
+                          : Container(
+                              width: 44,
+                              height: 44,
+                              color: colorToken.surfaceVariant,
+                              child: Icon(Icons.shopping_bag,
+                                  color: colorToken.textSecondary, size: 20),
+                            ),
+                    ),
+                    title: Text(
+                      product?.name ?? 'Loading...',
+                      style: TextStyle(
+                        color: colorToken.textPrimary,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    subtitle: Text(
+                      'Bid \$$amount • ${bid.bidTime}',
+                      style: TextStyle(
+                        color: colorToken.textSecondary,
+                        fontSize: 12,
+                      ),
+                    ),
+                    trailing: Icon(
+                      Icons.chevron_right,
+                      color: colorToken.textSecondary,
+                    ),
+                    onTap: () {
+                      if (bid.productId.isEmpty) return;
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              ProductDetails(docId: bid.productId),
+                        ),
+                      );
+                    },
+                  );
+                },
+              );
+            },
+          ),
+        );
+      },
     );
   }
 

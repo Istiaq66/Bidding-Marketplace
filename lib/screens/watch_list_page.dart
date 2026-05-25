@@ -1,7 +1,11 @@
+import 'package:app/components/custom_image_holder.dart';
+import 'package:app/models/product.dart';
 import 'package:app/models/watchlist_entry.dart';
 import 'package:app/providers/theme_provider.dart';
 import 'package:app/repositories/auth_repository.dart';
+import 'package:app/repositories/product_repository.dart';
 import 'package:app/repositories/watchlist_repository.dart';
+import 'package:app/screens/product_details_page.dart';
 import 'package:flutter/material.dart';
 
 class WatchList extends StatelessWidget {
@@ -32,7 +36,8 @@ class WatchList extends StatelessWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.favorite_border, size: 64, color: colorToken.textSecondary),
+                    Icon(Icons.favorite_border,
+                        size: 64, color: colorToken.textSecondary),
                     const SizedBox(height: 16),
                     Text(
                       'No items in watchlist',
@@ -70,40 +75,72 @@ class WatchList extends StatelessWidget {
   Widget _buildWatchlistItem(BuildContext context, WatchlistEntry entry) {
     final colorToken = ThemeProvider.of(context).colorToken;
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      color: colorToken.cardBackground,
-      child: ListTile(
-        leading: Container(
-          width: 50,
-          height: 50,
-          decoration: BoxDecoration(
-            color: colorToken.surfaceVariant,
-            borderRadius: BorderRadius.circular(8),
+    return FutureBuilder<Product?>(
+      future: entry.productId.isEmpty
+          ? Future.value(null)
+          : ProductRepository.getById(entry.productId),
+      builder: (context, productSnapshot) {
+        final product = productSnapshot.data;
+
+        return Card(
+          margin: const EdgeInsets.only(bottom: 12),
+          color: colorToken.cardBackground,
+          child: ListTile(
+            leading: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: product != null && product.imageUrl.isNotEmpty
+                  ? CustomImageHolder(
+                      imageUrl: product.imageUrl,
+                      width: 56,
+                      height: 56,
+                    )
+                  : Container(
+                      width: 56,
+                      height: 56,
+                      color: colorToken.surfaceVariant,
+                      child: Icon(
+                        Icons.shopping_bag,
+                        size: 28,
+                        color: colorToken.textSecondary,
+                      ),
+                    ),
+            ),
+            title: Text(
+              product?.name ?? 'Loading...',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: colorToken.textPrimary,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            subtitle: product == null
+                ? Text(
+                    '—',
+                    style: TextStyle(color: colorToken.textSecondary),
+                  )
+                : Text(
+                    '\$${product.currentBid.toStringAsFixed(2)} • Ends ${product.date}',
+                    style: TextStyle(color: colorToken.textSecondary),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+            trailing: IconButton(
+              icon: Icon(Icons.favorite, color: colorToken.watchlist),
+              onPressed: () => WatchlistRepository.deleteById(entry.id),
+            ),
+            onTap: () {
+              if (entry.productId.isEmpty) return;
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => ProductDetails(docId: entry.productId),
+                ),
+              );
+            },
           ),
-          child: Icon(Icons.shopping_bag, size: 28, color: colorToken.textSecondary),
-        ),
-        title: Text(
-          'Product Name',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: colorToken.textPrimary,
-          ),
-        ),
-        subtitle: Text(
-          '\$100 • Ends in 2 days',
-          style: TextStyle(color: colorToken.textSecondary),
-        ),
-        trailing: IconButton(
-          icon: Icon(Icons.favorite, color: colorToken.watchlist),
-          onPressed: () {
-            WatchlistRepository.deleteById(entry.id);
-          },
-        ),
-        onTap: () {
-          // PR5 — push ProductDetails by joining entry.productId
-        },
-      ),
+        );
+      },
     );
   }
 }

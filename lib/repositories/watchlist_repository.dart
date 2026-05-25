@@ -40,6 +40,7 @@ class WatchlistRepository {
   static Stream<List<WatchlistEntry>> watchByUser(String userId) {
     return _watchlist
         .where('User Id', isEqualTo: userId)
+        .orderBy('Added At', descending: true)
         .snapshots()
         .map((snap) => snap.docs.map(WatchlistEntry.fromFirestore).toList());
   }

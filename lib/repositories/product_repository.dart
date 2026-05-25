@@ -116,4 +116,19 @@ class ProductRepository {
   static Future<void> deleteById(String id) async {
     await _products.doc(id).delete();
   }
+
+  /// Fetches a page of products for infinite-scroll pagination.
+  /// Returns the products and the cursor snapshot for the next page.
+  static Future<(List<Product>, QueryDocumentSnapshot<Map<String, dynamic>>?)>
+      fetchPage({
+    int limit = 20,
+    QueryDocumentSnapshot<Map<String, dynamic>>? after,
+  }) async {
+    var q = _products.limit(limit);
+    if (after != null) q = q.startAfterDocument(after);
+    final snap = await q.get();
+    final products = snap.docs.map(Product.fromFirestore).toList();
+    final cursor = snap.docs.isNotEmpty ? snap.docs.last : null;
+    return (products, cursor);
+  }
 }

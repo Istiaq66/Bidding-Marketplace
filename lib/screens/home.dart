@@ -4,6 +4,7 @@ import 'package:app/repositories/product_repository.dart';
 import 'package:app/repositories/user_repository.dart';
 import 'package:app/screens/product_details_page.dart';
 import 'package:app/providers/theme_provider.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 class Home extends StatefulWidget {
@@ -14,19 +15,87 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
+  static const _pageSize = 20;
+
+  final _scrollController = ScrollController();
+
   String _searchQuery = '';
   String _selectedFilter = 'All';
+
+  List<Product> _products = [];
+  QueryDocumentSnapshot<Map<String, dynamic>>? _cursor;
+  bool _isLoading = true;
+  bool _isLoadingMore = false;
+  bool _hasMore = true;
+  String? _error;
 
   @override
   void initState() {
     super.initState();
     UserRepository.ensureUserDocument();
+    _scrollController.addListener(_onScroll);
+    _loadFirstPage();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 300) {
+      _loadMore();
+    }
+  }
+
+  Future<void> _loadFirstPage() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+      _products = [];
+      _cursor = null;
+      _hasMore = true;
+    });
+    try {
+      final (products, cursor) =
+          await ProductRepository.fetchPage(limit: _pageSize, after: null);
+      setState(() {
+        _products = products;
+        _cursor = cursor;
+        _hasMore = products.length >= _pageSize;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _error = e.toString();
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _loadMore() async {
+    if (_isLoadingMore || !_hasMore || _cursor == null) return;
+    setState(() => _isLoadingMore = true);
+    try {
+      final (products, cursor) = await ProductRepository.fetchPage(
+        limit: _pageSize,
+        after: _cursor,
+      );
+      setState(() {
+        _products.addAll(products);
+        _cursor = cursor;
+        _hasMore = products.length >= _pageSize;
+        _isLoadingMore = false;
+      });
+    } catch (_) {
+      setState(() => _isLoadingMore = false);
+    }
   }
 
   Future<void> _handleRefresh() async {
-    await Future.delayed(const Duration(seconds: 1), () {
-      setState(() {});
-    });
+    await _loadFirstPage();
   }
 
   void _showSearchDialog() {
@@ -165,9 +234,7 @@ class _HomeState extends State<Home> {
           fontFamily: 'SourceSans3',
         ),
       ),
-      trailing: isSelected
-          ? Icon(Icons.check, color: colorToken.primary)
-          : null,
+      trailing: isSelected ? Icon(Icons.check, color: colorToken.primary) : null,
       onTap: () {
         setState(() => _selectedFilter = title);
         Navigator.pop(context);
@@ -183,18 +250,10 @@ class _HomeState extends State<Home> {
 
     switch (_selectedFilter) {
       case 'Price: Low to High':
-        filtered.sort((a, b) {
-          final aPrice = double.tryParse(a.minBidPrice) ?? 0;
-          final bPrice = double.tryParse(b.minBidPrice) ?? 0;
-          return aPrice.compareTo(bPrice);
-        });
+        filtered.sort((a, b) => a.currentBid.compareTo(b.currentBid));
         break;
       case 'Price: High to Low':
-        filtered.sort((a, b) {
-          final aPrice = double.tryParse(a.minBidPrice) ?? 0;
-          final bPrice = double.tryParse(b.minBidPrice) ?? 0;
-          return bPrice.compareTo(aPrice);
-        });
+        filtered.sort((a, b) => b.currentBid.compareTo(a.currentBid));
         break;
       case 'Newest First':
         filtered = filtered.reversed.toList();
@@ -218,7 +277,6 @@ class _HomeState extends State<Home> {
             color: colorToken.surface,
             child: Row(
               children: [
-                // Search Bar
                 Expanded(
                   child: GestureDetector(
                     onTap: _showSearchDialog,
@@ -233,11 +291,8 @@ class _HomeState extends State<Home> {
                       ),
                       child: Row(
                         children: [
-                          Icon(
-                            Icons.search,
-                            color: colorToken.textSecondary,
-                            size: 20,
-                          ),
+                          Icon(Icons.search,
+                              color: colorToken.textSecondary, size: 20),
                           const SizedBox(width: 12),
                           Text(
                             _searchQuery.isEmpty
@@ -257,7 +312,6 @@ class _HomeState extends State<Home> {
                   ),
                 ),
                 const SizedBox(width: 12),
-                // Filter Button
                 GestureDetector(
                   onTap: _showFilterSheet,
                   child: Container(
@@ -266,18 +320,15 @@ class _HomeState extends State<Home> {
                       color: colorToken.surfaceVariant,
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Icon(
-                      Icons.tune,
-                      color: colorToken.textPrimary,
-                      size: 20,
-                    ),
+                    child: Icon(Icons.tune,
+                        color: colorToken.textPrimary, size: 20),
                   ),
                 ),
               ],
             ),
           ),
 
-          // Active Filter Chip
+          // Active Filter Chips
           if (_searchQuery.isNotEmpty || _selectedFilter != 'All')
             Container(
               width: double.infinity,
@@ -296,11 +347,8 @@ class _HomeState extends State<Home> {
                           fontFamily: 'SourceSans3',
                         ),
                       ),
-                      deleteIcon: Icon(
-                        Icons.close,
-                        size: 16,
-                        color: colorToken.textSecondary,
-                      ),
+                      deleteIcon: Icon(Icons.close,
+                          size: 16, color: colorToken.textSecondary),
                       onDeleted: () => setState(() => _searchQuery = ''),
                       backgroundColor: colorToken.surfaceVariant,
                     ),
@@ -314,12 +362,10 @@ class _HomeState extends State<Home> {
                           fontFamily: 'SourceSans3',
                         ),
                       ),
-                      deleteIcon: Icon(
-                        Icons.close,
-                        size: 16,
-                        color: colorToken.textSecondary,
-                      ),
-                      onDeleted: () => setState(() => _selectedFilter = 'All'),
+                      deleteIcon: Icon(Icons.close,
+                          size: 16, color: colorToken.textSecondary),
+                      onDeleted: () =>
+                          setState(() => _selectedFilter = 'All'),
                       backgroundColor: colorToken.surfaceVariant,
                     ),
                 ],
@@ -331,144 +377,162 @@ class _HomeState extends State<Home> {
             child: RefreshIndicator(
               onRefresh: _handleRefresh,
               color: colorToken.primary,
-              child: StreamBuilder<List<Product>>(
-                stream: ProductRepository.watchAll(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return Center(
-                      child: CircularProgressIndicator(
-                        color: colorToken.primary,
-                      ),
-                    );
-                  }
-
-                  if (snapshot.hasError) {
-                    return Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.error_outline,
-                            size: 64,
-                            color: colorToken.error,
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'Something went wrong',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: colorToken.textPrimary,
-                              fontFamily: 'SourceSans3',
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Please try again later',
-                            style: TextStyle(
-                              color: colorToken.textSecondary,
-                              fontFamily: 'SourceSans3',
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }
-
-                  if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                    return Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.inventory_2_outlined,
-                            size: 64,
-                            color: colorToken.textSecondary,
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'No auctions available',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: colorToken.textPrimary,
-                              fontFamily: 'SourceSans3',
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Check back later for new items',
-                            style: TextStyle(
-                              color: colorToken.textSecondary,
-                              fontFamily: 'SourceSans3',
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }
-
-                  final filtered = _filterAndSortProducts(snapshot.data!);
-
-                  if (filtered.isEmpty) {
-                    return Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.search_off,
-                            size: 64,
-                            color: colorToken.textSecondary,
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'No results found',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: colorToken.textPrimary,
-                              fontFamily: 'SourceSans3',
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Try adjusting your search or filters',
-                            style: TextStyle(
-                              color: colorToken.textSecondary,
-                              fontFamily: 'SourceSans3',
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }
-
-                  return GridView.builder(
-                    padding: const EdgeInsets.all(16),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      childAspectRatio: 0.7,
-                      crossAxisSpacing: 12,
-                      mainAxisSpacing: 12,
-                    ),
-                    itemCount: filtered.length,
-                    itemBuilder: (context, index) {
-                      final product = filtered[index];
-                      return MinimalisticProductCard(
-                        name: product.name,
-                        minPrice: product.minBidPrice,
-                        imageUrl: product.imageUrl,
-                        description: product.description,
-                        docId: product.id,
-                      );
-                    },
-                  );
-                },
-              ),
+              child: _buildBody(colorToken),
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildBody(colorToken) {
+    if (_isLoading) {
+      return Center(
+        child: CircularProgressIndicator(color: colorToken.primary),
+      );
+    }
+
+    if (_error != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline, size: 64, color: colorToken.error),
+            const SizedBox(height: 16),
+            Text(
+              'Something went wrong',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: colorToken.textPrimary,
+                fontFamily: 'SourceSans3',
+              ),
+            ),
+            const SizedBox(height: 8),
+            TextButton(
+              onPressed: _loadFirstPage,
+              child: Text('Retry',
+                  style: TextStyle(color: colorToken.primary)),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (_products.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.inventory_2_outlined,
+                size: 64, color: colorToken.textSecondary),
+            const SizedBox(height: 16),
+            Text(
+              'No auctions available',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: colorToken.textPrimary,
+                fontFamily: 'SourceSans3',
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Check back later for new items',
+              style: TextStyle(
+                color: colorToken.textSecondary,
+                fontFamily: 'SourceSans3',
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final filtered = _filterAndSortProducts(_products);
+
+    if (filtered.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.search_off, size: 64, color: colorToken.textSecondary),
+            const SizedBox(height: 16),
+            Text(
+              'No results found',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: colorToken.textPrimary,
+                fontFamily: 'SourceSans3',
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Try adjusting your search or filters',
+              style: TextStyle(
+                color: colorToken.textSecondary,
+                fontFamily: 'SourceSans3',
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return CustomScrollView(
+      controller: _scrollController,
+      slivers: [
+        SliverPadding(
+          padding: const EdgeInsets.all(16),
+          sliver: SliverGrid(
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              childAspectRatio: 0.7,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+            ),
+            delegate: SliverChildBuilderDelegate(
+              (context, index) {
+                final product = filtered[index];
+                return MinimalisticProductCard(
+                  name: product.name,
+                  minPrice: product.currentBid.toStringAsFixed(2),
+                  imageUrl: product.imageUrl,
+                  description: product.description,
+                  docId: product.id,
+                );
+              },
+              childCount: filtered.length,
+            ),
+          ),
+        ),
+        SliverToBoxAdapter(
+          child: _isLoadingMore
+              ? Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Center(
+                    child:
+                        CircularProgressIndicator(color: colorToken.primary),
+                  ),
+                )
+              : _hasMore
+                  ? const SizedBox(height: 80)
+                  : Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Center(
+                        child: Text(
+                          'All ${filtered.length} items loaded',
+                          style: TextStyle(
+                            color: colorToken.textSecondary,
+                            fontFamily: 'SourceSans3',
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                    ),
+        ),
+      ],
     );
   }
 }
@@ -478,7 +542,7 @@ class MinimalisticProductCard extends StatelessWidget {
   final String minPrice;
   final String imageUrl;
   final String docId;
-  final String? description; // Added optional description
+  final String? description;
 
   const MinimalisticProductCard({
     super.key,
@@ -508,7 +572,7 @@ class MinimalisticProductCard extends StatelessWidget {
           color: themeProvider.isLightTheme
               ? colorToken.surface
               : colorToken.surfaceVariant,
-          borderRadius: BorderRadius.circular(16), // Increased radius for softer look
+          borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
               color: themeProvider.isLightTheme
@@ -522,7 +586,6 @@ class MinimalisticProductCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Image Section
             Expanded(
               flex: 5,
               child: Stack(
@@ -534,27 +597,26 @@ class MinimalisticProductCard extends StatelessWidget {
                     child: imageUrl.isNotEmpty && imageUrl != ''
                         ? CustomImageHolder(imageUrl: imageUrl)
                         : Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            colorToken.surfaceVariant,
-                            colorToken.surface,
-                          ],
-                        ),
-                      ),
-                      child: Center(
-                        child: Icon(
-                          Icons.shopping_bag_outlined,
-                          size: 40,
-                          color: colorToken.textSecondary.withValues(alpha: 0.5),
-                        ),
-                      ),
-                    ),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  colorToken.surfaceVariant,
+                                  colorToken.surface,
+                                ],
+                              ),
+                            ),
+                            child: Center(
+                              child: Icon(
+                                Icons.shopping_bag_outlined,
+                                size: 40,
+                                color: colorToken.textSecondary
+                                    .withValues(alpha: 0.5),
+                              ),
+                            ),
+                          ),
                   ),
-
-                  // Subtle gradient overlay at bottom
                   Positioned(
                     bottom: 0,
                     left: 0,
@@ -566,7 +628,7 @@ class MinimalisticProductCard extends StatelessWidget {
                           begin: Alignment.bottomCenter,
                           end: Alignment.topCenter,
                           colors: [
-                            Colors.black.withValues(alpha:0.15),
+                            Colors.black.withValues(alpha: 0.15),
                             Colors.transparent,
                           ],
                         ),
@@ -576,16 +638,13 @@ class MinimalisticProductCard extends StatelessWidget {
                 ],
               ),
             ),
-
-            // Content Section
             Expanded(
-              flex: 4, // Increased content area
+              flex: 4,
               child: Padding(
                 padding: const EdgeInsets.all(12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Product Name
                     Text(
                       name,
                       maxLines: 1,
@@ -598,8 +657,6 @@ class MinimalisticProductCard extends StatelessWidget {
                         letterSpacing: -0.2,
                       ),
                     ),
-
-                    // Product Description (if available)
                     if (description != null && description!.isNotEmpty) ...[
                       const SizedBox(height: 4),
                       Expanded(
