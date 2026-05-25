@@ -166,51 +166,32 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 padding: const EdgeInsets.symmetric(vertical: 32),
                 child: Column(
                   children: [
-                    Builder(builder: (context) {
-                      final url = _imageUrlController.text.trim();
-                      return CircleAvatar(
-                        radius: 60,
-                        backgroundColor: colorToken.surfaceVariant,
-                        backgroundImage:
-                            url.isNotEmpty ? NetworkImage(url) : null,
-                        onBackgroundImageError: url.isEmpty
-                            ? null
-                            : (_, __) {/* fallback rendered via child */},
-                        child: url.isEmpty
-                            ? Icon(
-                                Icons.person,
-                                size: 60,
-                                color: colorToken.textSecondary,
-                              )
-                            : null,
-                      );
-                    }),
+                    ValueListenableBuilder<TextEditingValue>(
+                      valueListenable: _imageUrlController,
+                      builder: (_, value, __) {
+                        final url = value.text.trim();
+                        return CircleAvatar(
+                          radius: 60,
+                          backgroundColor: colorToken.surfaceVariant,
+                          backgroundImage:
+                              url.isNotEmpty ? NetworkImage(url) : null,
+                          child: url.isEmpty
+                              ? Icon(
+                                  Icons.person,
+                                  size: 60,
+                                  color: colorToken.textSecondary,
+                                )
+                              : null,
+                        );
+                      },
+                    ),
                     const SizedBox(height: 12),
                     Text(
-                      'Paste an image URL below',
+                      'Paste an image URL in the field below',
                       style: TextStyle(
                         color: colorToken.textSecondary,
                         fontSize: 14,
                         fontFamily: 'SourceSans3',
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: _buildTextField(
-                        controller: _imageUrlController,
-                        label: 'Image URL',
-                        icon: Icons.link,
-                        keyboardType: TextInputType.url,
-                        validator: (value) {
-                          final v = value?.trim() ?? '';
-                          if (v.isEmpty) return null;
-                          final uri = Uri.tryParse(v);
-                          if (uri == null || uri.host.isEmpty) {
-                            return 'Enter a valid URL (https://...)';
-                          }
-                          return null;
-                        },
                       ),
                     ),
                   ],
@@ -226,6 +207,24 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     // Personal Information Section
                     _buildSectionHeader(context, 'Personal Information'),
                     const SizedBox(height: 12),
+
+                    _buildTextField(
+                      controller: _imageUrlController,
+                      label: 'Profile Image URL',
+                      icon: Icons.link,
+                      keyboardType: TextInputType.url,
+                      validator: (value) {
+                        final v = value?.trim() ?? '';
+                        if (v.isEmpty) return null;
+                        final uri = Uri.tryParse(v);
+                        if (uri == null || uri.host.isEmpty) {
+                          return 'Enter a valid URL (https://...)';
+                        }
+                        return null;
+                      },
+                    ),
+
+                    const SizedBox(height: 16),
 
                     _buildTextField(
                       controller: _nameController,

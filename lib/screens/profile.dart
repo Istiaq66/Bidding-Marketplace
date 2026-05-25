@@ -157,13 +157,14 @@ class _ProfileState extends State<Profile> {
                           Expanded(
                             flex: 2,
                             child: ElevatedButton(
-                              onPressed: () {
-                                Navigator.push(
+                              onPressed: () async {
+                                await Navigator.push(
                                   context,
                                   MaterialPageRoute(
                                     builder: (context) => const EditProfilePage(),
                                   ),
                                 );
+                                if (mounted) await _loadUserProfile();
                               },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: colorToken.primary,
