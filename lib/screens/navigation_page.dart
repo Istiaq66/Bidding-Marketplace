@@ -1,11 +1,15 @@
+import 'dart:async';
 import 'package:app/screens/dashboard.dart';
 import 'package:app/screens/edit_profile_page.dart';
 import 'package:app/screens/help_page.dart';
 import 'package:app/screens/home.dart';
+import 'package:app/screens/notifications_page.dart';
 import 'package:app/screens/privacy_page.dart';
 import 'package:app/screens/profile.dart';
+import 'package:app/screens/search_page.dart';
 import 'package:app/screens/settings_page.dart';
 import 'package:app/repositories/auth_repository.dart';
+import 'package:app/repositories/notification_repository.dart';
 import 'package:app/providers/theme_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -19,6 +23,26 @@ class NavigationPage extends StatefulWidget {
 
 class _NavigationPageState extends State<NavigationPage> {
   int index = 0;
+  int _unreadCount = 0;
+  StreamSubscription<int>? _unreadSub;
+
+  @override
+  void initState() {
+    super.initState();
+    final userId = AuthRepository.currentUserId;
+    if (userId != null) {
+      _unreadSub = NotificationRepository.watchUnreadCount(userId)
+          .listen((count) {
+        if (mounted) setState(() => _unreadCount = count);
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _unreadSub?.cancel();
+    super.dispose();
+  }
 
   List<Widget> get _screens => [
     const Home(),
@@ -56,11 +80,27 @@ class _NavigationPageState extends State<NavigationPage> {
           actions: [
             IconButton(
               icon: Icon(Icons.search, color: colorToken.textPrimary),
-              onPressed: () => _showComingSoon('Search'),
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const SearchPage()),
+              ),
             ),
             IconButton(
-              icon: Icon(Icons.notifications_outlined, color: colorToken.textPrimary),
-              onPressed: () => _showComingSoon('Notifications'),
+              icon: Badge(
+                isLabelVisible: _unreadCount > 0,
+                label: Text(
+                  _unreadCount > 99 ? '99+' : '$_unreadCount',
+                  style: const TextStyle(fontSize: 10),
+                ),
+                child: Icon(
+                  Icons.notifications_outlined,
+                  color: colorToken.textPrimary,
+                ),
+              ),
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const NotificationsPage()),
+              ),
             ),
             const SizedBox(width: 8),
           ],

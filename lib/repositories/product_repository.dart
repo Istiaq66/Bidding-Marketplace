@@ -117,6 +117,31 @@ class ProductRepository {
     await _products.doc(id).delete();
   }
 
+  /// Prefix-query search on `nameLower`. Falls back to client-side contains
+  /// for legacy docs that haven't been backfilled yet.
+  static Future<List<Product>> search(String query, {int limit = 20}) async {
+    final q = query.toLowerCase().trim();
+    if (q.isEmpty) return [];
+
+    final snap = await _products
+        .where('nameLower', isGreaterThanOrEqualTo: q)
+        .where('nameLower', isLessThan: '$q')
+        .limit(limit)
+        .get();
+
+    if (snap.docs.isNotEmpty) {
+      return snap.docs.map(Product.fromFirestore).toList();
+    }
+
+    // Fallback for docs without nameLower (pre-backfill)
+    final fallback = await _products.limit(100).get();
+    return fallback.docs
+        .map(Product.fromFirestore)
+        .where((p) => p.name.toLowerCase().contains(q))
+        .take(limit)
+        .toList();
+  }
+
   /// Fetches a page of products for infinite-scroll pagination.
   /// Returns the products and the cursor snapshot for the next page.
   static Future<(List<Product>, QueryDocumentSnapshot<Map<String, dynamic>>?)>
