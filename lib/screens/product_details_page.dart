@@ -266,25 +266,42 @@ class _ProductDetailsState extends State<ProductDetails> {
 
     return Scaffold(
       backgroundColor: colorToken.background,
-      body: CustomScrollView(
-        slivers: [
-          SliverAppBar(
-            expandedHeight: 300,
-            pinned: true,
-            backgroundColor: colorToken.surface,
-            leading: IconButton(
-              icon: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: colorToken.surface.withValues(alpha: 0.9),
-                  shape: BoxShape.circle,
+      body: SafeArea(
+        child: CustomScrollView(
+          slivers: [
+            SliverAppBar(
+              expandedHeight: 300,
+              pinned: true,
+              backgroundColor: colorToken.surface,
+              leading: IconButton(
+                icon: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: colorToken.surface.withValues(alpha: 0.9),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(Icons.arrow_back, color: colorToken.textPrimary),
                 ),
-                child: Icon(Icons.arrow_back, color: colorToken.textPrimary),
+                onPressed: () => Navigator.pop(context),
               ),
-              onPressed: () => Navigator.pop(context),
-            ),
-            actions: [
-              if (!isOwnProduct)
+              actions: [
+                if (!isOwnProduct)
+                  IconButton(
+                    icon: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: colorToken.surface.withValues(alpha: 0.9),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        _isWatchlisted ? Icons.favorite : Icons.favorite_border,
+                        color: _isWatchlisted
+                            ? colorToken.error
+                            : colorToken.textPrimary,
+                      ),
+                    ),
+                    onPressed: _toggleWatchlist,
+                  ),
                 IconButton(
                   icon: Container(
                     padding: const EdgeInsets.all(8),
@@ -292,229 +309,214 @@ class _ProductDetailsState extends State<ProductDetails> {
                       color: colorToken.surface.withValues(alpha: 0.9),
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(
-                      _isWatchlisted ? Icons.favorite : Icons.favorite_border,
-                      color: _isWatchlisted
-                          ? colorToken.error
-                          : colorToken.textPrimary,
-                    ),
+                    child: Icon(Icons.share, color: colorToken.textPrimary),
                   ),
-                  onPressed: _toggleWatchlist,
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Share — coming soon'),
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  },
                 ),
-              IconButton(
-                icon: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: colorToken.surface.withValues(alpha: 0.9),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(Icons.share, color: colorToken.textPrimary),
-                ),
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Share — coming soon'),
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
-                },
+              ],
+              flexibleSpace: FlexibleSpaceBar(
+                background: product.imageUrl.isNotEmpty
+                    ? CustomImageHolder(
+                        imageUrl: product.imageUrl,
+                        height: double.infinity,
+                        width: double.infinity,
+                      )
+                    : Container(
+                        color: colorToken.surfaceVariant,
+                        child: Icon(
+                          Icons.shopping_bag_outlined,
+                          size: 64,
+                          color: colorToken.textSecondary,
+                        ),
+                      ),
               ),
-            ],
-            flexibleSpace: FlexibleSpaceBar(
-              background: product.imageUrl.isNotEmpty
-                  ? CustomImageHolder(
-                      imageUrl: product.imageUrl,
-                      height: double.infinity,
-                      width: double.infinity,
-                    )
-                  : Container(
-                      color: colorToken.surfaceVariant,
-                      child: Icon(
-                        Icons.shopping_bag_outlined,
-                        size: 64,
-                        color: colorToken.textSecondary,
+            ),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Auction ended badge
+                    if (!product.isActive)
+                      Container(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: colorToken.error.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.lock_clock,
+                                size: 16, color: colorToken.error),
+                            const SizedBox(width: 6),
+                            Text(
+                              'Auction Ended',
+                              style: TextStyle(
+                                color: colorToken.error,
+                                fontWeight: FontWeight.bold,
+                                fontFamily: 'SourceSans3',
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                    Text(
+                      product.name,
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: colorToken.textPrimary,
+                        fontFamily: 'SourceSans3',
                       ),
                     ),
-            ),
-          ),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Auction ended badge
-                  if (!product.isActive)
+
+                    const SizedBox(height: 16),
+
+                    // Price and Date Card
                     Container(
-                      margin: const EdgeInsets.only(bottom: 12),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
+                      padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: colorToken.error.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(8),
+                        color: colorToken.surface,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: colorToken.divider),
                       ),
                       child: Row(
-                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Icon(Icons.lock_clock,
-                              size: 16, color: colorToken.error),
-                          const SizedBox(width: 6),
-                          Text(
-                            'Auction Ended',
-                            style: TextStyle(
-                              color: colorToken.error,
-                              fontWeight: FontWeight.bold,
-                              fontFamily: 'SourceSans3',
-                            ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                product.bidCount > 0
+                                    ? 'Current Bid'
+                                    : 'Starting Bid',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: colorToken.textSecondary,
+                                  fontFamily: 'SourceSans3',
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.attach_money,
+                                    color: colorToken.success,
+                                    size: 24,
+                                  ),
+                                  Text(
+                                    product.currentBid.toStringAsFixed(2),
+                                    style: TextStyle(
+                                      fontSize: 28,
+                                      fontWeight: FontWeight.bold,
+                                      color: colorToken.textPrimary,
+                                      fontFamily: 'SourceSans3',
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              if (product.bidCount > 0)
+                                Text(
+                                  '${product.bidCount} bid${product.bidCount == 1 ? '' : 's'}',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: colorToken.textSecondary,
+                                    fontFamily: 'SourceSans3',
+                                  ),
+                                ),
+                            ],
+                          ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text(
+                                'Ends On',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: colorToken.textSecondary,
+                                  fontFamily: 'SourceSans3',
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.calendar_today,
+                                    color: colorToken.textSecondary,
+                                    size: 16,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    product.date,
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      color: colorToken.textPrimary,
+                                      fontFamily: 'SourceSans3',
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
                           ),
                         ],
                       ),
                     ),
 
-                  Text(
-                    product.name,
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: colorToken.textPrimary,
-                      fontFamily: 'SourceSans3',
-                    ),
-                  ),
+                    const SizedBox(height: 24),
 
-                  const SizedBox(height: 16),
-
-                  // Price and Date Card
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: colorToken.surface,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: colorToken.divider),
+                    Text(
+                      'Description',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: colorToken.textPrimary,
+                        fontFamily: 'SourceSans3',
+                      ),
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              product.bidCount > 0
-                                  ? 'Current Bid'
-                                  : 'Starting Bid',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: colorToken.textSecondary,
-                                fontFamily: 'SourceSans3',
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Row(
-                              children: [
-                                Icon(
-                                  Icons.attach_money,
-                                  color: colorToken.success,
-                                  size: 24,
-                                ),
-                                Text(
-                                  product.currentBid.toStringAsFixed(2),
-                                  style: TextStyle(
-                                    fontSize: 28,
-                                    fontWeight: FontWeight.bold,
-                                    color: colorToken.textPrimary,
-                                    fontFamily: 'SourceSans3',
-                                  ),
-                                ),
-                              ],
-                            ),
-                            if (product.bidCount > 0)
-                              Text(
-                                '${product.bidCount} bid${product.bidCount == 1 ? '' : 's'}',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: colorToken.textSecondary,
-                                  fontFamily: 'SourceSans3',
-                                ),
-                              ),
-                          ],
-                        ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(
-                              'Ends On',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: colorToken.textSecondary,
-                                fontFamily: 'SourceSans3',
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Row(
-                              children: [
-                                Icon(
-                                  Icons.calendar_today,
-                                  color: colorToken.textSecondary,
-                                  size: 16,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  product.date,
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                    color: colorToken.textPrimary,
-                                    fontFamily: 'SourceSans3',
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ],
+                    const SizedBox(height: 12),
+                    Text(
+                      product.description,
+                      style: TextStyle(
+                        fontSize: 16,
+                        height: 1.5,
+                        color: colorToken.textSecondary,
+                        fontFamily: 'SourceSans3',
+                      ),
                     ),
-                  ),
 
-                  const SizedBox(height: 24),
+                    const SizedBox(height: 24),
 
-                  Text(
-                    'Description',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: colorToken.textPrimary,
-                      fontFamily: 'SourceSans3',
+                    Text(
+                      'Recent Bids',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: colorToken.textPrimary,
+                        fontFamily: 'SourceSans3',
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    product.description,
-                    style: TextStyle(
-                      fontSize: 16,
-                      height: 1.5,
-                      color: colorToken.textSecondary,
-                      fontFamily: 'SourceSans3',
-                    ),
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  Text(
-                    'Recent Bids',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: colorToken.textPrimary,
-                      fontFamily: 'SourceSans3',
-                    ),
-                  ),
-                  _buildBidsList(),
-                ],
+                    _buildBidsList(),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
       bottomNavigationBar:
           isOwnProduct ? null : _buildBottomBar(product, colorToken),
