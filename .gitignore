@@ -33,3 +33,11 @@ lib/firebase_options.dart
 .env.*
 *.keystore
 
+# Cloud Functions
+functions/node_modules/
+functions/lib/
+.firebaserc
+firebase-debug.log
+firebase-debug.*.log
+.firebase/
+
