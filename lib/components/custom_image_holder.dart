@@ -11,6 +11,20 @@ class CustomImageHolder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (imageUrl.isEmpty) {
+      return Container(
+        width: width,
+        height: height,
+        color: ThemeProvider.of(context, listen: false).colorToken.surface,
+        child: Icon(
+          Icons.image_outlined,
+          size: 50,
+          color:
+              ThemeProvider.of(context, listen: false).colorToken.surfaceVariant,
+        ),
+      );
+    }
+
     return CachedNetworkImage(
       imageUrl: imageUrl,
       width: width,

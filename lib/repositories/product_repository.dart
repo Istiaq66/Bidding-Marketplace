@@ -1,9 +1,6 @@
-import 'dart:io';
 import 'package:app/models/product.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
-import 'package:path/path.dart' as p;
 
 class ProductRepository {
   ProductRepository._();
@@ -24,7 +21,7 @@ class ProductRepository {
     required String description,
     required String minBidPrice,
     required String date,
-    required File image,
+    required String imageUrl,
   }) async {
     // Fetch seller info for denormalization
     final sellerSnap = await _db.collection('users').doc(sellerId).get();
@@ -33,12 +30,6 @@ class ProductRepository {
     final sellerPhoto = (sellerData['profileImage'] as String?) ??
         (sellerData['photo'] as String?) ??
         '';
-
-    // Upload image
-    final fileName = p.basename(image.path);
-    final ref = FirebaseStorage.instance.ref().child('files/$fileName');
-    final snapshot = await ref.putFile(image);
-    final imageUrl = await snapshot.ref.getDownloadURL();
 
     // Compute endsAt at 23:59:59 local time on the selected date
     Timestamp? endsAt;

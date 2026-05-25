@@ -1,9 +1,7 @@
-import 'dart:io';
 import 'package:app/repositories/auth_repository.dart';
 import 'package:app/repositories/user_repository.dart';
 import 'package:app/providers/theme_provider.dart';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 
 class EditProfilePage extends StatefulWidget {
   const EditProfilePage({super.key});
@@ -19,11 +17,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
   final _phoneController = TextEditingController();
   final _bioController = TextEditingController();
   final _addressController = TextEditingController();
+  final _imageUrlController = TextEditingController();
 
-  File? _imageFile;
-  String? _currentImageUrl;
   bool _isLoading = false;
-  bool _isUploading = false;
   final String? userId = AuthRepository.currentUserId;
 
   @override
@@ -44,130 +40,12 @@ class _EditProfilePageState extends State<EditProfilePage> {
         _phoneController.text = user.phone ?? '';
         _bioController.text = user.bio ?? '';
         _addressController.text = user.address ?? '';
-        _currentImageUrl = user.profileImage;
+        _imageUrlController.text = user.profileImage ?? '';
       }
     } catch (_) {
       _showErrorSnackbar('Failed to load profile data');
     } finally {
       if (mounted) setState(() => _isLoading = false);
-    }
-  }
-
-  Future<void> _pickImage(ImageSource source) async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(
-      source: source,
-      maxWidth: 1024,
-      maxHeight: 1024,
-      imageQuality: 85,
-    );
-
-    if (pickedFile != null) {
-      setState(() {
-        _imageFile = File(pickedFile.path);
-      });
-    }
-  }
-
-  void _showImageSourceDialog() {
-    final colorToken = ThemeProvider.of(context).colorToken;
-
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: colorToken.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 40,
-                height: 4,
-                margin: const EdgeInsets.only(bottom: 20),
-                decoration: BoxDecoration(
-                  color: colorToken.divider,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              Text(
-                'Choose Photo Source',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: colorToken.textPrimary,
-                  fontFamily: 'SourceSans3',
-                ),
-              ),
-              const SizedBox(height: 20),
-              ListTile(
-                leading: Icon(Icons.camera_alt, color: colorToken.primary),
-                title: Text(
-                  'Camera',
-                  style: TextStyle(
-                    color: colorToken.textPrimary,
-                    fontFamily: 'SourceSans3',
-                  ),
-                ),
-                onTap: () {
-                  Navigator.pop(context);
-                  _pickImage(ImageSource.camera);
-                },
-              ),
-              ListTile(
-                leading: Icon(Icons.photo_library, color: colorToken.primary),
-                title: Text(
-                  'Gallery',
-                  style: TextStyle(
-                    color: colorToken.textPrimary,
-                    fontFamily: 'SourceSans3',
-                  ),
-                ),
-                onTap: () {
-                  Navigator.pop(context);
-                  _pickImage(ImageSource.gallery);
-                },
-              ),
-              if (_currentImageUrl != null || _imageFile != null)
-                ListTile(
-                  leading: Icon(Icons.delete, color: colorToken.error),
-                  title: Text(
-                    'Remove Photo',
-                    style: TextStyle(
-                      color: colorToken.error,
-                      fontFamily: 'SourceSans3',
-                    ),
-                  ),
-                  onTap: () {
-                    Navigator.pop(context);
-                    setState(() {
-                      _imageFile = null;
-                      _currentImageUrl = null;
-                    });
-                  },
-                ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Future<String?> _uploadImage() async {
-    final uid = userId;
-    if (_imageFile == null || uid == null) return _currentImageUrl;
-
-    try {
-      setState(() => _isUploading = true);
-      return await UserRepository.uploadProfileImage(uid, _imageFile!);
-    } catch (_) {
-      _showErrorSnackbar('Failed to upload image');
-      return null;
-    } finally {
-      if (mounted) setState(() => _isUploading = false);
     }
   }
 
@@ -180,7 +58,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     final navigator = Navigator.of(context);
 
     try {
-      final imageUrl = await _uploadImage();
+      final imageUrl = _imageUrlController.text.trim();
       await UserRepository.updateProfile(
         uid: uid,
         name: _nameController.text.trim(),
@@ -188,7 +66,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
         phone: _phoneController.text.trim(),
         bio: _bioController.text.trim(),
         address: _addressController.text.trim(),
-        profileImageUrl: imageUrl,
+        profileImageUrl: imageUrl.isEmpty ? null : imageUrl,
       );
 
       _showSuccessSnackbar('Profile updated successfully');
@@ -229,6 +107,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     _phoneController.dispose();
     _bioController.dispose();
     _addressController.dispose();
+    _imageUrlController.dispose();
     super.dispose();
   }
 
@@ -287,73 +166,51 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 padding: const EdgeInsets.symmetric(vertical: 32),
                 child: Column(
                   children: [
-                    Stack(
-                      children: [
-                        // Profile Image
-                        CircleAvatar(
-                          radius: 60,
-                          backgroundColor: colorToken.surfaceVariant,
-                          backgroundImage: _imageFile != null
-                              ? FileImage(_imageFile!)
-                              : _currentImageUrl != null
-                              ? NetworkImage(_currentImageUrl!)
-                          as ImageProvider
-                              : null,
-                          child: _imageFile == null &&
-                              _currentImageUrl == null
-                              ? Icon(
-                            Icons.person,
-                            size: 60,
-                            color: colorToken.textSecondary,
-                          )
-                              : null,
-                        ),
-
-                        // Upload indicator
-                        if (_isUploading)
-                          Positioned.fill(
-                            child: CircleAvatar(
-                              radius: 60,
-                              backgroundColor: Colors.black54,
-                              child: CircularProgressIndicator(
-                                color: colorToken.surface,
-                              ),
-                            ),
-                          ),
-
-                        // Camera button
-                        Positioned(
-                          bottom: 0,
-                          right: 0,
-                          child: GestureDetector(
-                            onTap: _showImageSourceDialog,
-                            child: Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: Colors.black,
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: colorToken.surface,
-                                  width: 3,
-                                ),
-                              ),
-                              child: const Icon(
-                                Icons.camera_alt,
-                                color: Colors.white,
-                                size: 20,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+                    Builder(builder: (context) {
+                      final url = _imageUrlController.text.trim();
+                      return CircleAvatar(
+                        radius: 60,
+                        backgroundColor: colorToken.surfaceVariant,
+                        backgroundImage:
+                            url.isNotEmpty ? NetworkImage(url) : null,
+                        onBackgroundImageError: url.isEmpty
+                            ? null
+                            : (_, __) {/* fallback rendered via child */},
+                        child: url.isEmpty
+                            ? Icon(
+                                Icons.person,
+                                size: 60,
+                                color: colorToken.textSecondary,
+                              )
+                            : null,
+                      );
+                    }),
                     const SizedBox(height: 12),
                     Text(
-                      'Tap to change photo',
+                      'Paste an image URL below',
                       style: TextStyle(
                         color: colorToken.textSecondary,
                         fontSize: 14,
                         fontFamily: 'SourceSans3',
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: _buildTextField(
+                        controller: _imageUrlController,
+                        label: 'Image URL',
+                        icon: Icons.link,
+                        keyboardType: TextInputType.url,
+                        validator: (value) {
+                          final v = value?.trim() ?? '';
+                          if (v.isEmpty) return null;
+                          final uri = Uri.tryParse(v);
+                          if (uri == null || uri.host.isEmpty) {
+                            return 'Enter a valid URL (https://...)';
+                          }
+                          return null;
+                        },
                       ),
                     ),
                   ],

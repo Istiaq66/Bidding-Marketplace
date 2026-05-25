@@ -1,8 +1,6 @@
-import 'dart:io';
 import 'package:app/models/app_user.dart';
 import 'package:app/repositories/auth_repository.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 
 class UserRepository {
@@ -64,10 +62,4 @@ class UserRepository {
     }, SetOptions(merge: true));
   }
 
-  static Future<String> uploadProfileImage(String uid, File image) async {
-    final fileName = 'profile_${uid}_${DateTime.now().millisecondsSinceEpoch}.jpg';
-    final ref = FirebaseStorage.instance.ref().child('profile_images/$fileName');
-    final snapshot = await ref.putFile(image);
-    return snapshot.ref.getDownloadURL();
-  }
 }
