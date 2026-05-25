@@ -1,11 +1,19 @@
 import 'package:app/models/watchlist_entry.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 
 class WatchlistRepository {
   WatchlistRepository._();
 
-  static final CollectionReference<Map<String, dynamic>> _watchlist =
-      FirebaseFirestore.instance.collection('watchlist');
+  static FirebaseFirestore _db = FirebaseFirestore.instance;
+  static CollectionReference<Map<String, dynamic>> get _watchlist =>
+      _db.collection('watchlist');
+
+  @visibleForTesting
+  static set firestoreForTesting(FirebaseFirestore db) => _db = db;
+
+  @visibleForTesting
+  static void resetForTesting() => _db = FirebaseFirestore.instance;
 
   static Query<Map<String, dynamic>> _userProductQuery(String userId, String productId) {
     return _watchlist

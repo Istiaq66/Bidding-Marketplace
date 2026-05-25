@@ -3,12 +3,20 @@ import 'package:app/models/app_user.dart';
 import 'package:app/repositories/auth_repository.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/foundation.dart';
 
 class UserRepository {
   UserRepository._();
 
-  static final CollectionReference<Map<String, dynamic>> _users =
-      FirebaseFirestore.instance.collection('users');
+  static FirebaseFirestore _db = FirebaseFirestore.instance;
+  static CollectionReference<Map<String, dynamic>> get _users =>
+      _db.collection('users');
+
+  @visibleForTesting
+  static set firestoreForTesting(FirebaseFirestore db) => _db = db;
+
+  @visibleForTesting
+  static void resetForTesting() => _db = FirebaseFirestore.instance;
 
   static Future<void> ensureUserDocument() async {
     final user = AuthRepository.currentUser;

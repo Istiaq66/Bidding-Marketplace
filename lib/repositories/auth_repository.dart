@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 class AuthRepository {
@@ -7,7 +8,10 @@ class AuthRepository {
   static const String _googleServerClientId =
       '122106600540-359hu91sqgrthmeq10746vic85uouq6a.apps.googleusercontent.com';
 
-  static final FirebaseAuth _auth = FirebaseAuth.instance;
+  static FirebaseAuth _auth = FirebaseAuth.instance;
+
+  @visibleForTesting
+  static set authForTesting(FirebaseAuth auth) => _auth = auth;
 
   static User? get currentUser => _auth.currentUser;
 

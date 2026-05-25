@@ -1,13 +1,20 @@
 import 'package:app/models/bid.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
 
 class BidRepository {
   BidRepository._();
 
-  static final _db = FirebaseFirestore.instance;
-  static final CollectionReference<Map<String, dynamic>> _bids =
+  static FirebaseFirestore _db = FirebaseFirestore.instance;
+  static CollectionReference<Map<String, dynamic>> get _bids =>
       _db.collection('bids');
+
+  @visibleForTesting
+  static set firestoreForTesting(FirebaseFirestore db) => _db = db;
+
+  @visibleForTesting
+  static void resetForTesting() => _db = FirebaseFirestore.instance;
 
   /// Places a bid inside a Firestore transaction.
   ///

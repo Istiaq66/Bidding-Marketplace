@@ -2,14 +2,21 @@ import 'dart:io';
 import 'package:app/models/product.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 
 class ProductRepository {
   ProductRepository._();
 
-  static final _db = FirebaseFirestore.instance;
-  static final CollectionReference<Map<String, dynamic>> _products =
+  static FirebaseFirestore _db = FirebaseFirestore.instance;
+  static CollectionReference<Map<String, dynamic>> get _products =>
       _db.collection('products');
+
+  @visibleForTesting
+  static set firestoreForTesting(FirebaseFirestore db) => _db = db;
+
+  @visibleForTesting
+  static void resetForTesting() => _db = FirebaseFirestore.instance;
 
   static Future<DocumentReference<Map<String, dynamic>>> create({
     required String sellerId,
