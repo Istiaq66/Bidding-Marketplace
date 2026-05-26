@@ -99,6 +99,11 @@ class ProductRepository {
         .map((snap) => snap.docs.map(Product.fromFirestore).toList());
   }
 
+  static Future<int> countWonByUser(String userId) async {
+    final snap = await _products.where('winnerId', isEqualTo: userId).count().get();
+    return snap.count ?? 0;
+  }
+
   static Future<Product?> getById(String id) async {
     final snap = await _products.doc(id).get();
     if (!snap.exists) return null;

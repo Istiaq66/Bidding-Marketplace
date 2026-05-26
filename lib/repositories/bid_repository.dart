@@ -80,18 +80,23 @@ class BidRepository {
   static Stream<List<Bid>> watchByProduct(String productId, {int limit = 5}) {
     return _bids
         .where('Product Id', isEqualTo: productId)
-        .orderBy('Bid Amount', descending: true)
-        .limit(limit)
         .snapshots()
-        .map((snap) => snap.docs.map(Bid.fromFirestore).toList());
+        .map((snap) {
+          final list = snap.docs.map(Bid.fromFirestore).toList()
+            ..sort((a, b) {
+              final ad = double.tryParse(a.amount) ?? 0;
+              final bd = double.tryParse(b.amount) ?? 0;
+              return bd.compareTo(ad);
+            });
+          return list.take(limit).toList();
+        });
   }
 
   static Stream<List<Bid>> watchByBidder(String bidderId) {
     return _bids
         .where('Bidder Id', isEqualTo: bidderId)
-        .orderBy('Created At', descending: true)
         .snapshots()
-        .map((snap) => snap.docs.map(Bid.fromFirestore).toList());
+        .map((snap) => _sortByCreatedDesc(snap.docs.map(Bid.fromFirestore).toList()));
   }
 
   static Stream<List<Bid>> watchRecentByBidder(
@@ -100,10 +105,28 @@ class BidRepository {
   }) {
     return _bids
         .where('Bidder Id', isEqualTo: bidderId)
-        .orderBy('Created At', descending: true)
-        .limit(limit)
         .snapshots()
-        .map((snap) => snap.docs.map(Bid.fromFirestore).toList());
+        .map((snap) {
+          final list = _sortByCreatedDesc(snap.docs.map(Bid.fromFirestore).toList());
+          return list.take(limit).toList();
+        });
+  }
+
+  static List<Bid> _sortByCreatedDesc(List<Bid> list) {
+    list.sort((a, b) {
+      final ac = a.createdAt;
+      final bc = b.createdAt;
+      if (ac == null && bc == null) return 0;
+      if (ac == null) return 1;
+      if (bc == null) return -1;
+      return bc.compareTo(ac);
+    });
+    return list;
+  }
+
+  static Future<int> countByBidder(String bidderId) async {
+    final snap = await _bids.where('Bidder Id', isEqualTo: bidderId).count().get();
+    return snap.count ?? 0;
   }
 
   /// Best-effort delete of every bid placed by [bidderId]. Security rules

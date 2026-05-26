@@ -56,8 +56,23 @@ class WatchlistRepository {
   static Stream<List<WatchlistEntry>> watchByUser(String userId) {
     return _watchlist
         .where('User Id', isEqualTo: userId)
-        .orderBy('Added At', descending: true)
         .snapshots()
-        .map((snap) => snap.docs.map(WatchlistEntry.fromFirestore).toList());
+        .map((snap) {
+          final list = snap.docs.map(WatchlistEntry.fromFirestore).toList()
+            ..sort((a, b) {
+              final ac = a.addedAt;
+              final bc = b.addedAt;
+              if (ac == null && bc == null) return 0;
+              if (ac == null) return 1;
+              if (bc == null) return -1;
+              return bc.compareTo(ac);
+            });
+          return list;
+        });
+  }
+
+  static Future<int> countByUser(String userId) async {
+    final snap = await _watchlist.where('User Id', isEqualTo: userId).count().get();
+    return snap.count ?? 0;
   }
 }

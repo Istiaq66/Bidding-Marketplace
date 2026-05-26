@@ -1,7 +1,10 @@
 
 import 'package:app/components/custom_image_holder.dart';
 import 'package:app/repositories/auth_repository.dart';
+import 'package:app/repositories/bid_repository.dart';
+import 'package:app/repositories/product_repository.dart';
 import 'package:app/repositories/user_repository.dart';
+import 'package:app/repositories/watchlist_repository.dart';
 import 'package:app/screens/edit_profile_page.dart';
 import 'package:app/screens/help_page.dart';
 import 'package:app/screens/my_auction_page.dart';
@@ -24,11 +27,15 @@ class Profile extends StatefulWidget {
 class _ProfileState extends State<Profile> {
   final User? user = AuthRepository.currentUser;
   String? _currentImageUrl;
+  int? _itemsWon;
+  int? _activeBids;
+  int? _watchlistCount;
 
   @override
   void initState() {
     super.initState();
     _loadUserProfile();
+    _loadStats();
   }
 
   Future<void> _loadUserProfile() async {
@@ -43,6 +50,31 @@ class _ProfileState extends State<Profile> {
       });
     } catch (_) {
       // ignored — UI falls back to placeholder
+    }
+  }
+
+  Future<void> _loadStats() async {
+    final uid = user?.uid;
+    if (uid == null) return;
+    try {
+      final results = await Future.wait([
+        ProductRepository.countWonByUser(uid),
+        BidRepository.countByBidder(uid),
+        WatchlistRepository.countByUser(uid),
+      ]);
+      if (!mounted) return;
+      setState(() {
+        _itemsWon = results[0];
+        _activeBids = results[1];
+        _watchlistCount = results[2];
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _itemsWon ??= 0;
+        _activeBids ??= 0;
+        _watchlistCount ??= 0;
+      });
     }
   }
 
@@ -144,9 +176,9 @@ class _ProfileState extends State<Profile> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
-                          _buildStatItem('23', 'Items Won', colorToken),
-                          _buildStatItem('47', 'Active Bids', colorToken),
-                          _buildStatItem('156', 'Watchlist', colorToken),
+                          _buildStatItem(_itemsWon?.toString() ?? '—', 'Items Won', colorToken),
+                          _buildStatItem(_activeBids?.toString() ?? '—', 'Active Bids', colorToken),
+                          _buildStatItem(_watchlistCount?.toString() ?? '—', 'Watchlist', colorToken),
                         ],
                       ),
                       const SizedBox(height: 24),
@@ -164,7 +196,10 @@ class _ProfileState extends State<Profile> {
                                     builder: (context) => const EditProfilePage(),
                                   ),
                                 );
-                                if (mounted) await _loadUserProfile();
+                                if (mounted) {
+                                  await _loadUserProfile();
+                                  await _loadStats();
+                                }
                               },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: colorToken.primary,

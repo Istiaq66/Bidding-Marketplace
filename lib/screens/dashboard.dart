@@ -271,6 +271,14 @@ class Dashboard extends StatelessWidget {
           );
         }
 
+        if (snapshot.hasError) {
+          return _buildEmptyState(
+            context,
+            'Failed to load activity',
+            '${snapshot.error}',
+          );
+        }
+
         final bids = snapshot.data ?? const <Bid>[];
         if (bids.isEmpty) {
           return _buildEmptyState(

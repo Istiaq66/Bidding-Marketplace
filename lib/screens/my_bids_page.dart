@@ -27,6 +27,20 @@ class MyBids extends StatelessWidget {
             );
           }
 
+          if (snapshot.hasError) {
+            return Container(
+              color: colorToken.background,
+              padding: const EdgeInsets.all(24),
+              child: Center(
+                child: Text(
+                  'Failed to load bids: ${snapshot.error}',
+                  style: TextStyle(color: colorToken.error),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            );
+          }
+
           final bids = snapshot.data ?? const <Bid>[];
           if (bids.isEmpty) {
             return Container(

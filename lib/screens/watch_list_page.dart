@@ -28,6 +28,20 @@ class WatchList extends StatelessWidget {
             );
           }
 
+          if (snapshot.hasError) {
+            return Container(
+              color: colorToken.background,
+              padding: const EdgeInsets.all(24),
+              child: Center(
+                child: Text(
+                  'Failed to load watchlist: ${snapshot.error}',
+                  style: TextStyle(color: colorToken.error),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            );
+          }
+
           final entries = snapshot.data ?? const <WatchlistEntry>[];
           if (entries.isEmpty) {
             return Container(
