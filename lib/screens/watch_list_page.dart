@@ -17,7 +17,15 @@ class WatchList extends StatelessWidget {
     final userId = AuthRepository.currentUserId;
 
     return Scaffold(
-      body: StreamBuilder<List<WatchlistEntry>>(
+      backgroundColor: colorToken.background,
+      appBar: AppBar(
+        title: const Text('Watchlist'),
+        backgroundColor: colorToken.cardBackground,
+        foregroundColor: colorToken.textPrimary,
+        elevation: 0,
+      ),
+      body: SafeArea(
+        child: StreamBuilder<List<WatchlistEntry>>(
         stream: userId == null
             ? const Stream.empty()
             : WatchlistRepository.watchByUser(userId),
@@ -82,6 +90,7 @@ class WatchList extends StatelessWidget {
             ),
           );
         },
+        ),
       ),
     );
   }

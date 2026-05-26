@@ -16,7 +16,15 @@ class MyBids extends StatelessWidget {
     final userId = AuthRepository.currentUserId;
 
     return Scaffold(
-      body: StreamBuilder<List<Bid>>(
+      backgroundColor: colorToken.background,
+      appBar: AppBar(
+        title: const Text('My Bids'),
+        backgroundColor: colorToken.cardBackground,
+        foregroundColor: colorToken.textPrimary,
+        elevation: 0,
+      ),
+      body: SafeArea(
+        child: StreamBuilder<List<Bid>>(
         stream: userId == null
             ? const Stream.empty()
             : BidRepository.watchByBidder(userId),
@@ -80,6 +88,7 @@ class MyBids extends StatelessWidget {
             ),
           );
         },
+        ),
       ),
     );
   }
