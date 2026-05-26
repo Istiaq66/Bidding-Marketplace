@@ -33,8 +33,17 @@ jobs:
       - name: Install Dependencies
         run: flutter pub get
 
-      # 5. Build APK (release)
+      # 5a. Decode release keystore
+      - name: Decode Keystore
+        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android/app/upload-keystore.jks
+
+      # 5b. Build APK (release)
       - name: Build APK
+        env:
+          KEYSTORE_PATH: upload-keystore.jks
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: flutter build apk --release
 
       # 6. Upload APK as artifact

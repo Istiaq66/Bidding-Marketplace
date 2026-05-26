@@ -64,10 +64,22 @@ android {
         jvmTarget = JavaVersion.VERSION_17
     }
 
+    signingConfigs {
+        release {
+            def keystorePath = System.getenv("KEYSTORE_PATH")
+            if (keystorePath != null) {
+                keyAlias System.getenv("KEY_ALIAS")
+                keyPassword System.getenv("KEY_PASSWORD")
+                storeFile file(keystorePath)
+                storePassword System.getenv("KEYSTORE_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         release {
             minifyEnabled true
-            signingConfig signingConfigs.debug
+            signingConfig System.getenv("KEYSTORE_PATH") != null ? signingConfigs.release : signingConfigs.debug
         }
     }
 }
