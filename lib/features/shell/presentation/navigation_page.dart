@@ -10,6 +10,7 @@ import 'package:app/features/auctions/presentation/search_page.dart';
 import 'package:app/features/profile/presentation/settings_page.dart';
 import 'package:app/features/auth/data/auth_repository.dart';
 import 'package:app/features/notifications/data/notification_repository.dart';
+import 'package:app/core/services/fcm_service.dart';
 import 'package:app/core/theme/theme_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -35,6 +36,7 @@ class _NavigationPageState extends State<NavigationPage> {
           .listen((count) {
         if (mounted) setState(() => _unreadCount = count);
       });
+      FcmService.registerToken(userId);
     }
   }
 
@@ -453,6 +455,8 @@ class _NavigationPageState extends State<NavigationPage> {
           TextButton(
             onPressed: () async {
               Navigator.pop(context);
+              final uid = AuthRepository.currentUserId;
+              if (uid != null) await FcmService.unregisterToken(uid);
               await AuthRepository.signOut();
             },
             child: Text(

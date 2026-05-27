@@ -62,4 +62,41 @@ class UserRepository {
     }, SetOptions(merge: true));
   }
 
+  /// Registers an FCM device token for push delivery. Stored as an array so a
+  /// user can receive pushes on multiple devices.
+  static Future<void> addFcmToken(String uid, String token) async {
+    await _users.doc(uid).set({
+      'fcmTokens': FieldValue.arrayUnion([token]),
+    }, SetOptions(merge: true));
+  }
+
+  /// Removes an FCM token (logout / token invalidation).
+  static Future<void> removeFcmToken(String uid, String token) async {
+    await _users.doc(uid).set({
+      'fcmTokens': FieldValue.arrayRemove([token]),
+    }, SetOptions(merge: true));
+  }
+
+  /// Persists the per-category push mute preferences. Keys:
+  /// `sellerUpdates`, `outbid`, `endingSoon`, `newAuction`, `results`.
+  static Future<void> updateNotificationPrefs(
+    String uid,
+    Map<String, bool> prefs,
+  ) async {
+    await _users.doc(uid).set({
+      'notificationPrefs': prefs,
+    }, SetOptions(merge: true));
+  }
+
+  /// Streams the raw notification preference map (empty when unset → all on).
+  static Stream<Map<String, bool>> watchNotificationPrefs(String uid) {
+    return _users.doc(uid).snapshots().map((snap) {
+      final data = snap.data();
+      final raw = data?['notificationPrefs'];
+      if (raw is Map) {
+        return raw.map((k, v) => MapEntry(k.toString(), v == true));
+      }
+      return <String, bool>{};
+    });
+  }
 }

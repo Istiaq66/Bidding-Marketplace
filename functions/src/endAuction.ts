@@ -6,6 +6,7 @@ import {
   Timestamp,
   getFirestore,
 } from 'firebase-admin/firestore';
+import { sendPush } from './push';
 
 const REGION = 'us-central1';
 const BATCH_LIMIT = 50;
@@ -14,6 +15,14 @@ interface BidDoc {
   'Bidder Id': string;
   'Bid Amount': number;
   'Product Id': string;
+}
+
+interface ClosePlan {
+  sellerId: string;
+  productName: string;
+  winnerId: string | null;
+  amount: number | null;
+  loserIds: string[];
 }
 
 /**
@@ -90,15 +99,15 @@ async function closeAuction(db: Firestore, productId: string): Promise<void> {
 
   const productRef = db.collection('products').doc(productId);
 
-  await db.runTransaction(async (tx) => {
+  const plan = await db.runTransaction<ClosePlan | null>(async (tx) => {
     const fresh = await tx.get(productRef);
-    if (!fresh.exists) return;
+    if (!fresh.exists) return null;
 
     const data = fresh.data() as Record<string, unknown>;
-    if (data.status !== 'active') return;
+    if (data.status !== 'active') return null;
 
     const endsAt = data.endsAt as Timestamp | undefined;
-    if (endsAt && endsAt.toMillis() > Date.now()) return;
+    if (endsAt && endsAt.toMillis() > Date.now()) return null;
 
     const winnerId = topBid?.['Bidder Id'] ?? null;
 
@@ -147,8 +156,10 @@ async function closeAuction(db: Firestore, productId: string): Promise<void> {
     }
 
     // Notify every bidder who did not win.
+    const loserIds: string[] = [];
     for (const loserId of bidderIds) {
       if (loserId === winnerId) continue;
+      loserIds.push(loserId);
       const loserRef = db
         .collection('notifications')
         .doc(loserId)
@@ -164,5 +175,37 @@ async function closeAuction(db: Firestore, productId: string): Promise<void> {
         createdAt: FieldValue.serverTimestamp(),
       });
     }
+
+    return {
+      sellerId,
+      productName,
+      winnerId,
+      amount: topBid?.['Bid Amount'] ?? null,
+      loserIds,
+    };
   });
+
+  // Pushes go out after the transaction commits (sending FCM inside a
+  // transaction risks duplicate sends on retry).
+  if (plan) {
+    const tasks: Promise<void>[] = [];
+    if (plan.sellerId) {
+      tasks.push(
+        sendPush(db, plan.sellerId, 'auction_ended_seller', plan.productName,
+          productId, plan.amount),
+      );
+    }
+    if (plan.winnerId) {
+      tasks.push(
+        sendPush(db, plan.winnerId, 'auction_won', plan.productName, productId,
+          plan.amount),
+      );
+    }
+    for (const loserId of plan.loserIds) {
+      tasks.push(
+        sendPush(db, loserId, 'auction_lost', plan.productName, productId),
+      );
+    }
+    await Promise.all(tasks);
+  }
 }

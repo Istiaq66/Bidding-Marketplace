@@ -6,6 +6,7 @@ import {
   Timestamp,
   getFirestore,
 } from 'firebase-admin/firestore';
+import { sendPush } from './push';
 
 const REGION = 'us-central1';
 const BATCH_LIMIT = 50;
@@ -110,4 +111,10 @@ async function notifyEndingSoon(
   });
 
   await batch.commit();
+
+  await Promise.all(
+    [...recipients].map((uid) =>
+      sendPush(db, uid, 'auction_ending_soon', productName, productId),
+    ),
+  );
 }

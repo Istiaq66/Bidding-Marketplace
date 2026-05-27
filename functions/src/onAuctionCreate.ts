@@ -1,6 +1,7 @@
 import { onDocumentCreated } from 'firebase-functions/v2/firestore';
 import { logger } from 'firebase-functions/v2';
 import { FieldValue, getFirestore } from 'firebase-admin/firestore';
+import { sendPush } from './push';
 
 const REGION = 'us-central1';
 
@@ -32,7 +33,7 @@ export const onAuctionCreate = onDocumentCreated(
     if (followers.empty) return;
 
     const batch = db.batch();
-    let count = 0;
+    const followerIds: string[] = [];
     followers.forEach((d) => {
       const followerId = d.data()['followerId'] as string | undefined;
       if (!followerId || followerId === sellerId) return;
@@ -50,12 +51,19 @@ export const onAuctionCreate = onDocumentCreated(
         read: false,
         createdAt: FieldValue.serverTimestamp(),
       });
-      count++;
+      followerIds.push(followerId);
     });
 
-    if (count > 0) {
+    if (followerIds.length > 0) {
       await batch.commit();
-      logger.info(`onAuctionCreate: notified ${count} follower(s) of ${sellerId}`);
+      await Promise.all(
+        followerIds.map((id) =>
+          sendPush(db, id, 'new_auction', productName, productId),
+        ),
+      );
+      logger.info(
+        `onAuctionCreate: notified ${followerIds.length} follower(s) of ${sellerId}`,
+      );
     }
   },
 );

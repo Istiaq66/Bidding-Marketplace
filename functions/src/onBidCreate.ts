@@ -1,6 +1,7 @@
 import { onDocumentCreated } from 'firebase-functions/v2/firestore';
 import { logger } from 'firebase-functions/v2';
 import { FieldValue, getFirestore } from 'firebase-admin/firestore';
+import { sendPush } from './push';
 
 const REGION = 'us-central1';
 
@@ -64,6 +65,9 @@ export const onBidCreate = onDocumentCreated(
           createdAt: FieldValue.serverTimestamp(),
         }),
       );
+      writes.push(
+        sendPush(db, sellerId, 'bid_placed', productName, productId, amount),
+      );
     }
 
     // Find the previous high bidder: order all bids on this product by amount
@@ -94,6 +98,9 @@ export const onBidCreate = onDocumentCreated(
             read: false,
             createdAt: FieldValue.serverTimestamp(),
           }),
+        );
+        writes.push(
+          sendPush(db, prevBidder, 'outbid', productName, productId, amount),
         );
       }
     }

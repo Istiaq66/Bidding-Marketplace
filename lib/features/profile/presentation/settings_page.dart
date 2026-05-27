@@ -1,5 +1,6 @@
 import 'package:app/core/theme/theme_provider.dart';
 import 'package:app/features/profile/presentation/delete_account_page.dart';
+import 'package:app/features/profile/presentation/notification_settings_page.dart';
 import 'package:flutter/material.dart';
 
 class SettingsPage extends StatelessWidget {
@@ -46,7 +47,21 @@ class SettingsPage extends StatelessWidget {
             activeColor: colorToken.primary,
           ),
           _sectionHeader('Account', colorToken),
-          _comingSoonTile(context, Icons.notifications, 'Notifications', colorToken),
+          ListTile(
+            leading: Icon(Icons.notifications, color: colorToken.textPrimary),
+            title: Text(
+              'Notifications',
+              style: TextStyle(
+                  color: colorToken.textPrimary, fontFamily: 'SourceSans3'),
+            ),
+            trailing:
+                Icon(Icons.chevron_right, color: colorToken.textSecondary),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (_) => const NotificationSettingsPage()),
+            ),
+          ),
           _comingSoonTile(context, Icons.lock_outline, 'Privacy & Security', colorToken),
           _comingSoonTile(context, Icons.payment, 'Payment methods', colorToken),
           _sectionHeader('Danger zone', colorToken),
