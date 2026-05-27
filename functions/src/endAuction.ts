@@ -75,6 +75,19 @@ async function closeAuction(db: Firestore, productId: string): Promise<void> {
     ? null
     : (topBidSnap.docs[0].data() as BidDoc);
 
+  // Distinct bidders on this auction — used to notify the losers once the
+  // winner is known. Read outside the transaction (queries aren't allowed
+  // inside one).
+  const allBidsSnap = await db
+    .collection('bids')
+    .where('Product Id', '==', productId)
+    .get();
+  const bidderIds = new Set<string>();
+  allBidsSnap.forEach((d) => {
+    const bidderId = (d.data() as BidDoc)['Bidder Id'];
+    if (bidderId) bidderIds.add(bidderId);
+  });
+
   const productRef = db.collection('products').doc(productId);
 
   await db.runTransaction(async (tx) => {
@@ -128,6 +141,25 @@ async function closeAuction(db: Firestore, productId: string): Promise<void> {
         productName,
         productImage,
         amount: topBid['Bid Amount'],
+        read: false,
+        createdAt: FieldValue.serverTimestamp(),
+      });
+    }
+
+    // Notify every bidder who did not win.
+    for (const loserId of bidderIds) {
+      if (loserId === winnerId) continue;
+      const loserRef = db
+        .collection('notifications')
+        .doc(loserId)
+        .collection('items')
+        .doc();
+      tx.set(loserRef, {
+        type: 'auction_lost',
+        productId,
+        productName,
+        productImage,
+        amount: topBid?.['Bid Amount'] ?? null,
         read: false,
         createdAt: FieldValue.serverTimestamp(),
       });

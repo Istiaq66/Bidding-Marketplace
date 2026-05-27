@@ -6,6 +6,8 @@ enum NotificationType {
   auctionWon,
   auctionLost,
   auctionEndedSeller,
+  auctionEndingSoon,
+  newAuction,
   unknown,
 }
 
@@ -21,6 +23,10 @@ NotificationType _parseType(String? raw) {
       return NotificationType.auctionLost;
     case 'auction_ended_seller':
       return NotificationType.auctionEndedSeller;
+    case 'auction_ending_soon':
+      return NotificationType.auctionEndingSoon;
+    case 'new_auction':
+      return NotificationType.newAuction;
     default:
       return NotificationType.unknown;
   }

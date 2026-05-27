@@ -6,6 +6,7 @@ import 'package:app/features/auth/data/auth_repository.dart';
 import 'package:app/features/bids/data/bid_repository.dart';
 import 'package:app/features/auctions/data/product_repository.dart';
 import 'package:app/features/watchlist/data/watchlist_repository.dart';
+import 'package:app/features/profile/data/follow_repository.dart';
 import 'package:app/core/theme/theme_provider.dart';
 import 'package:app/core/utils/share.dart';
 import 'package:flutter/material.dart';
@@ -476,6 +477,13 @@ class _ProductDetailsState extends State<ProductDetails> {
 
                     const SizedBox(height: 24),
 
+                    if (!isOwnProduct &&
+                        currentUserId != null &&
+                        product.sellerId.isNotEmpty) ...[
+                      _sellerCard(product, colorToken, currentUserId),
+                      const SizedBox(height: 24),
+                    ],
+
                     Text(
                       'Description',
                       style: TextStyle(
@@ -518,6 +526,111 @@ class _ProductDetailsState extends State<ProductDetails> {
       bottomNavigationBar:
           isOwnProduct ? null : _buildBottomBar(product, colorToken),
     );
+  }
+
+  Widget _sellerCard(Product product, colorToken, String currentUserId) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: colorToken.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: colorToken.divider),
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 22,
+            backgroundColor: colorToken.surfaceVariant,
+            backgroundImage: product.sellerPhoto.isNotEmpty
+                ? NetworkImage(product.sellerPhoto)
+                : null,
+            child: product.sellerPhoto.isEmpty
+                ? Icon(Icons.person, color: colorToken.textSecondary)
+                : null,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Seller',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: colorToken.textSecondary,
+                    fontFamily: 'SourceSans3',
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  product.sellerName.isNotEmpty
+                      ? product.sellerName
+                      : 'Unknown seller',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: colorToken.textPrimary,
+                    fontFamily: 'SourceSans3',
+                  ),
+                ),
+              ],
+            ),
+          ),
+          StreamBuilder<bool>(
+            stream: FollowRepository.watchIsFollowing(
+                currentUserId, product.sellerId),
+            builder: (context, snap) {
+              final following = snap.data ?? false;
+              return OutlinedButton.icon(
+                onPressed: () => _toggleFollow(
+                    currentUserId, product.sellerId, following),
+                icon: Icon(
+                  following ? Icons.check : Icons.add,
+                  size: 18,
+                  color:
+                      following ? colorToken.textSecondary : colorToken.primary,
+                ),
+                label: Text(
+                  following ? 'Following' : 'Follow',
+                  style: TextStyle(
+                    color: following
+                        ? colorToken.textSecondary
+                        : colorToken.primary,
+                    fontFamily: 'SourceSans3',
+                  ),
+                ),
+                style: OutlinedButton.styleFrom(
+                  side: BorderSide(
+                    color:
+                        following ? colorToken.divider : colorToken.primary,
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _toggleFollow(
+      String followerId, String sellerId, bool following) async {
+    try {
+      if (following) {
+        await FollowRepository.unfollow(followerId, sellerId);
+      } else {
+        await FollowRepository.follow(followerId, sellerId);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Could not update follow: $e'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
   }
 
   Widget _buildBottomBar(Product product, colorToken) {

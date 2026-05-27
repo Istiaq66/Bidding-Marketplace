@@ -198,6 +198,10 @@ class NotificationsPage extends StatelessWidget {
         return (Icons.sentiment_dissatisfied, colorToken.error as Color);
       case NotificationType.auctionEndedSeller:
         return (Icons.flag, colorToken.warning as Color);
+      case NotificationType.auctionEndingSoon:
+        return (Icons.timer_outlined, colorToken.warning as Color);
+      case NotificationType.newAuction:
+        return (Icons.new_releases_outlined, colorToken.primary as Color);
       case NotificationType.unknown:
         return (Icons.notifications, colorToken.textSecondary as Color);
     }
@@ -215,6 +219,10 @@ class NotificationsPage extends StatelessWidget {
         return 'Auction ended — ${n.productName}';
       case NotificationType.auctionEndedSeller:
         return 'Your auction ended — ${n.productName}';
+      case NotificationType.auctionEndingSoon:
+        return '${n.productName} is ending soon';
+      case NotificationType.newAuction:
+        return 'New auction: ${n.productName}';
       case NotificationType.unknown:
         return n.productName.isNotEmpty ? n.productName : 'Notification';
     }

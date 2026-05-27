@@ -55,6 +55,18 @@ service cloud.firestore {
       allow write: if false; // written only by Cloud Functions
     }
 
+    // ── Follows ───────────────────────────────────────────────────────────────
+    // A follower subscribes to a seller's new auctions. Doc id is
+    // `{followerId}_{sellerId}` to keep the pair unique.
+    match /follows/{followId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null
+        && request.resource.data.followerId == request.auth.uid;
+      allow delete: if request.auth != null
+        && resource.data.followerId == request.auth.uid;
+      allow update: if false;
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────────
     function isBidUpdate(resource, request) {
       let changed = request.resource.data.diff(resource.data).affectedKeys();
