@@ -1,4 +1,4 @@
-import 'package:app/repositories/user_repository.dart';
+import 'package:app/features/profile/data/user_repository.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 

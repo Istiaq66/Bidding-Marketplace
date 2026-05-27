@@ -1,5 +1,5 @@
-import 'package:app/screens/auth_page.dart';
-import 'package:app/providers/theme_provider.dart';
+import 'package:app/features/auth/presentation/auth_page.dart';
+import 'package:app/core/theme/theme_provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';

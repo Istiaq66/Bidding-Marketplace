@@ -1,4 +1,4 @@
-import 'package:app/repositories/watchlist_repository.dart';
+import 'package:app/features/watchlist/data/watchlist_repository.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 

@@ -1,4 +1,4 @@
-import 'package:app/repositories/bid_repository.dart';
+import 'package:app/features/bids/data/bid_repository.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';

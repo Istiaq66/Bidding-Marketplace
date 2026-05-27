@@ -1,201 +1,386 @@
-# Bidding Marketplace — Completion Prompt (Senior Engineer)
+# Bidding Marketplace — v1.1 Next-Stage Prompt (Senior Engineer)
 
-You are a senior Flutter engineer taking over a partially built auction/bidding marketplace app. The skeleton, theming, auth, auction creation, bid placement, and watchlist are in place. Your job is to ship a production-quality v1 by fixing broken wiring, completing stubbed features, hardening the Firestore data model, and adding the missing core auction lifecycle. Do not rewrite working code. Do not introduce new state-management libraries (Provider stays). Do not change the design system (`lib/Util/colors.dart`, `lib/providers/theme_provider.dart`).
+You are a senior Flutter engineer continuing work on a **shipped v1** auction/bidding
+marketplace. v1 hardening (models, repositories, transactional bids, Firestore rules,
+indexes, in-app notifications, Cloud Functions, tests, CI) is **complete and on `main`**.
+Your job for v1.1 is to (1) migrate the codebase to a **feature-first architecture**,
+(2) replace URL-paste images with **real image upload**, (3) build a complete
+**notification system including FCM push**, and (4) close the **product/QA gaps** a senior
+engineer + QA would flag before a real launch.
 
----
-
-## 1. Tech Baseline (do not change)
-
-- Flutter SDK `>=3.7.0 <4.0.0`, Dart 3.
-- State: `provider` 6.x (`ThemeProvider` already wired via `MultiProvider` in `lib/main.dart`).
-- Backend: Firebase Core / Auth / Firestore / Storage. Google Sign-In 7.x.
-- Persistence: `shared_preferences` for theme only.
-- Images: `image_picker` + `cached_network_image`.
-- Pubspec name is `app` — keep it (do not rename to `auction_app`); update only README to match.
-
----
-
-## 2. Current Firestore Schema (audit + harden)
-
-Existing collections and the exact field names already written by the code:
-
-- `users/{uid}`: `userId, name, email, photo, profileImage, phone, bio, address, updatedAt`
-- `products/{autoId}`: `User Id, Product Name, Product Description, Minimum Bid Price, Date (yyyy-MM-dd string), Image Url`
-- `bids/{autoId}`: `Bidder Id, Product Id, Bid Amount, Bid Time (yyyy-MM-dd HH:mm string), Created At (serverTimestamp)`
-- `watchlist/{autoId}`: `User Id, Product Id, Added At (serverTimestamp)`
-
-**Required changes (must be backward-compatible reads):**
-
-1. Add the following fields on `products` write path in `lib/Services/new_auction_item.dart`:
-   - `endsAt` (Timestamp, derived from `Date` at 23:59:59 local) — replace string-date comparisons over time, but keep writing `Date` for now.
-   - `currentBid` (num, init = `Minimum Bid Price`)
-   - `bidCount` (int, init 0)
-   - `status` (`active` | `ended` | `cancelled`, init `active`)
-   - `winnerId` (string?, init null)
-   - `sellerName`, `sellerPhoto` (denormalized from `users` doc at creation)
-   - `createdAt` (serverTimestamp)
-2. On every successful bid in `lib/Screens/product_details_page.dart::_placeBid`, run a Firestore transaction that:
-   - Re-reads the product, asserts `status == 'active'` and `endsAt > now`.
-   - Asserts `Bid Amount > currentBid` (not just `> Minimum Bid Price`).
-   - Writes the `bids` doc, increments `bidCount`, sets `currentBid` and `highestBidderId` on the product.
-   - Rejects bids by the seller on their own product.
-3. Add composite indexes (document in `firestore.indexes.json` at repo root):
-   - `products` (`status` asc, `endsAt` asc)
-   - `bids` (`Product Id` asc, `Bid Amount` desc)
-   - `bids` (`Bidder Id` asc, `Created At` desc)
-   - `watchlist` (`User Id` asc, `Added At` desc)
-4. Ship `firestore.rules` at repo root enforcing:
-   - `users/{uid}` writable only by `request.auth.uid == uid`.
-   - `products` create requires `User Id == auth.uid`; update only to `status`, `currentBid`, `bidCount`, `winnerId`, `highestBidderId` and only via transaction-equivalent constraints; delete only by owner while `bidCount == 0`.
-   - `bids` create requires `Bidder Id == auth.uid`, immutable thereafter.
-   - `watchlist` create/delete requires `User Id == auth.uid`.
+Do not rewrite working business logic. Do not change the design system
+(`core/theme/colors.dart`, `core/theme/theme_provider.dart`). Provider stays as the state
+solution unless a section below says otherwise.
 
 ---
 
-## 3. Bugs to fix (exact file:line)
+## 0. v1 status — DONE (do not redo)
 
-1. `lib/Screens/navigation_page.dart:395` — logout dialog has `AuthService.signOut()` commented out. Wire it: call `AuthService.signOut()`, then let `AuthPage`'s `StreamBuilder` route back to login. Remove the navigator pop-then-push hack if present.
-2. `lib/Screens/login.dart:117` — commented post-registration navigation. Remove the comment and the dead nav; rely on `authStateChanges()` in `AuthPage`.
-3. `lib/Screens/bid.dart` and `lib/Components/product_card.dart` — both deprecated by `product_details_page.dart`. Delete both files and the empty `onPressed: () {}` at `bid.dart:104`. Update any imports.
-4. `lib/Components/floating_action_button.dart` — unused. Delete.
-5. `lib/Screens/watch_list_page.dart:93-112` — hardcoded `"Product Name"` / `"$100 • Ends in 2 days"`. Replace with a real `StreamBuilder` over `watchlist` filtered by `User Id == auth.uid`, joined to `products` via a second fetch (or denormalize product fields onto the watchlist doc on write).
-6. `pubspec.yaml:33` — `flutter_lints: ^2.0.0` is stale for Dart 3. Bump to `^4.0.0` and fix any new lints.
-7. README — replace boilerplate with real project description; remove `firebase_database` reference (you use Firestore + Storage, not RTDB).
+The following are already implemented and verified on `main`. They are listed only so you
+don't re-open them:
 
----
+- Lowercase dirs, lint bump (`flutter_lints ^4.0.0`), `withOpacity` sweep, dead-file deletes.
+- Logout wiring, all stub navigations, Settings/Privacy/Help screens.
+- `lib/models/` (`Product`, `Bid`, `AppUser`, `WatchlistEntry`, `AppNotification`) with
+  `fromFirestore`/`toMap`.
+- `lib/repositories/` (`auth`, `user`, `product`, `bid`, `watchlist`, `notification`,
+  `account`). Screens consume repositories, not raw Firestore.
+- Firestore hardening: `endsAt`, `currentBid`, `bidCount`, `status`, `winnerId`,
+  `highestBidderId`, `sellerName`, `sellerPhoto`, `createdAt`, `nameLower`; transactional
+  bid placement; `firestore.rules`; composite indexes; `tools/backfill.dart`.
+- Real watchlist + my-bids data; infinite-scroll pagination on Home.
+- Search (prefix query on `nameLower`).
+- In-app notifications screen + unread badge; `notifications/{uid}/items`.
+- Cloud Functions (`endAuction` scheduled, `onBidCreate`, `onAuctionWrite`).
+- Account deletion, edit auction, share.
+- Tests (repository + widget + one integration) and GitHub Actions CI.
 
-## 4. Stubs to complete (exact file:line, each)
+**v1 known defects carried into v1.1 (fix as part of the relevant section below):**
 
-Dashboard filter sheet `navigation_page.dart:191` — wire selection to a `DashboardFilter` enum lifted to the `Dashboard` widget via a callback; apply against the `products` stream.
-
-`navigation_page.dart:231` (Refresh) — trigger a `setState` plus re-subscribe; use `liquid_pull_to_refresh` already in pubspec on the Home and Dashboard lists.
-
-`navigation_page.dart:245` (Sort) — bottom sheet with: Newest, Ending Soonest, Highest Bid, Lowest Min Bid. Pipe into the same stream query.
-
-`navigation_page.dart:259, :318, :332` (Settings / Privacy / Help) — create three minimal screens under `lib/Screens/`: `settings_page.dart`, `privacy_page.dart`, `help_page.dart`. Settings hosts theme + notifications + account deletion entrypoint. Privacy is static markdown for now. Help shows FAQ + contact email.
-
-`navigation_page.dart:304` (Edit Profile) — push `EditProfilePage` (already implemented in `lib/Screens/edit_profile_page.dart`).
-
-`home.dart:45` (search icon) and `:131` (browse) — open a dedicated `SearchPage` that runs a Firestore prefix query on a lowercased `nameLower` field (add on write); fall back to client-side `contains` until index backfilled.
-
-`home.dart:51` (notifications icon) — push `NotificationsPage` reading `notifications/{uid}/items` (see §5).
-
-`dashboard.dart:131, :378` — wire to `NavigationPage` Home tab and `ProductDetailsPage(productId: ...)` respectively.
-
-`dashboard.dart:290-304` (hardcoded recent activity) — replace with a `bids` query for the current user ordered by `Created At` desc, limit 5, each row resolving the `products` doc for the image/title.
-
-`product_details_page.dart:375` (share) — use `share_plus` (add to pubspec) to share a deep link `https://<your-domain>/auction/{productId}`. Add `app_links` only if you wire deep links on Android/iOS; otherwise leave a TODO with the bundle ID note.
-
-`profile.dart:196, :290, :301, :312` — share = `share_plus`; history = new `auction_history_page.dart` (closed auctions where user was bidder or seller); payment = stub page that explains "coming soon" and lists Stripe Connect as the planned integration; help routes to the same `help_page.dart`.
-
-`my_auction_page.dart:36, :134` — push `AddNewItem` (already implemented).
-
-`my_auction_page.dart:346` (Edit auction) — push a new `EditAuctionPage` that lets the seller update description, end date, and minimum bid **only when `bidCount == 0`** (enforce in rules too).
-
-`my_bids_page.dart:179` — push `ProductDetailsPage(productId: ...)`.
+- `INTERNET` permission was missing from `android/app/src/main/AndroidManifest.xml`
+  (release builds had no network) — **fixed**; verify it stays.
+- Product images are **pasted URLs** — primary cause of broken images in production.
+  Replaced in §3.
+- `lib/util/share.dart` comment claims `app_links` deep links are wired; **they are not**
+  (no `app_links` dependency). Fix the comment or wire it (§6).
+- `pubspec.yaml` `description` is still the default `A new Flutter project.` — set a real one.
 
 ---
 
-## 5. Missing features to build
+## 1. Tech baseline
 
-### 5.1 Auction lifecycle (highest priority)
+Unchanged: Flutter `>=3.7.0 <4.0.0`, Dart 3, Provider 6.x, Firebase Core/Auth/Firestore/
+Storage, Google Sign-In 7.x, `cached_network_image`, `image_picker`, `share_plus`,
+`liquid_pull_to_refresh`, `intl`.
 
-- Server-authoritative end: write a Cloud Function in a new top-level `functions/` directory (TypeScript). Implement:
-  - `endAuction` — scheduled (every 5 minutes) Firestore query for `products where status == 'active' and endsAt <= now`. For each, run a transaction that:
-    - Sets `status = 'ended'`.
-    - Reads the top bid (`bids` ordered by `Bid Amount` desc, limit 1) and sets `winnerId`.
-    - Writes a `notifications/{userId}/items` doc for both winner and seller.
-  - `onBidCreate` — Firestore trigger that creates a `notifications` doc for the seller and the previous high bidder ("outbid").
-  - `onAuctionWrite` — keep `nameLower` in sync for search.
-- Document deploy: `firebase deploy --only functions`.
-- Until functions are deployed, add a defensive client-side check in `product_details_page.dart` that hides the Bid button when `endsAt <= now`.
+**New top-level dependencies you ARE authorized to add this stage** (only these — stop and
+ask before adding anything else):
 
-### 5.2 Notifications (in-app, no FCM in v1)
+- `firebase_messaging` — FCM push.
+- `flutter_local_notifications` — foreground notification display + channels.
+- `firebase_crashlytics` and `firebase_analytics` — crash + usage telemetry.
+- `go_router` — declarative routing + deep links (replaces the bare `home: AuthPage()`).
+- `flutter_image_compress` — client-side compression before Storage upload.
+- `cached_network_image` is already present (keep).
 
-- Collection `notifications/{uid}/items/{autoId}`: `type` (`bid_placed` | `outbid` | `auction_won` | `auction_lost` | `auction_ended_seller`), `productId`, `productName`, `productImage`, `amount?`, `read` (bool), `createdAt`.
-- New screen `lib/Screens/notifications_page.dart`: stream items, mark-as-read on tap, badge unread count on the nav bell.
-
-### 5.3 Search
-
-- Add `nameLower` (lowercased `Product Name`) on product writes (client + backfill function).
-- Prefix query: `where('nameLower', isGreaterThanOrEqualTo: q).where('nameLower', isLessThan: q + '').limit(20)`.
-
-### 5.4 Pagination
-
-- All list streams (`Home`, `Dashboard`, `MyAuctions`, `MyBids`, `Watchlist`) move to paged `query.startAfterDocument` with `limit(20)` and infinite scroll.
-
-### 5.5 Account deletion
-
-- In Settings, "Delete account" reauthenticates, then deletes the `users` doc, the user's `products` (only if `bidCount == 0`), the user's `bids`, the user's `watchlist`, and finally `FirebaseAuth.currentUser.delete()`.
+Run `flutterfire configure` to generate `lib/firebase_options.dart` and pass
+`DefaultFirebaseOptions.currentPlatform` to `Firebase.initializeApp` (currently called with
+no options — works on Android via `google-services.json` but is not iOS-safe).
 
 ---
 
-## 6. Architecture & code quality requirements
+## 2. Feature-first architecture migration (PR1 — pure move, no behavior change)
 
-- Introduce a `lib/models/` directory with immutable data classes for `Product`, `Bid`, `AppUser`, `WatchlistEntry`, `AppNotification`. Each has `fromFirestore(DocumentSnapshot)` and `toMap()`. Update all screens to consume models, not raw `Map<String, dynamic>`.
-- Introduce `lib/repositories/` (one file per collection) wrapping Firestore queries. Screens depend on repositories, not on `FirebaseFirestore.instance` directly. Existing services (`auth_service.dart`, `new_user.dart`, `new_auction_item.dart`) move into this layer and are renamed: `auth_repository.dart`, `user_repository.dart`, `product_repository.dart`, `bid_repository.dart`, `watchlist_repository.dart`, `notification_repository.dart`. Keep one commit per move with no behavior change before refactoring callers.
-- Rename top-level directories to lowercase to match Dart conventions: `lib/Screens` → `lib/screens`, `lib/Components` → `lib/components`, `lib/Services` → `lib/services` (becomes `lib/repositories`), `lib/Util` → `lib/util`. Update all imports. Verify on case-sensitive filesystems (CI) — Windows hides this.
-- Replace `withOpacity` (deprecated in Flutter 3.27) with `.withValues(alpha: ...)`. Currently used in `navigation_page.dart:425` and elsewhere — sweep the tree.
-- Add `analysis_options.yaml` rules: `prefer_const_constructors`, `prefer_const_literals_to_create_immutables`, `avoid_print`, `require_trailing_commas`. Fix all violations.
-- Add error and empty states to every list/stream: handle `snapshot.hasError`, `ConnectionState.waiting`, and empty data with a consistent `EmptyState` widget.
-- Wrap every Firebase call site with try/catch logging via a single `lib/util/logger.dart`; surface user-visible failures via a `ScaffoldMessenger` extension.
+Current layout is **layer-first** (`screens/`, `models/`, `repositories/`). Migrate to
+**feature-first**. Each feature owns its data, domain, and presentation. Cross-cutting code
+lives in `core/`. The app shell (router, providers, theme bootstrap) lives in `app/`.
+
+**Target tree:**
+
+```
+lib/
+  main.dart                      # bind + Firebase init + runApp(App())
+  app/
+    app.dart                     # MaterialApp.router, MultiProvider, theme
+    router.dart                  # GoRouter: routes + auth redirect + deep links
+  core/
+    theme/
+      colors.dart                # was util/colors.dart
+      theme_provider.dart        # was providers/theme_provider.dart
+    utils/
+      logger.dart
+      scaffold_messenger_ext.dart
+      share.dart
+    services/
+      firebase_options.dart      # generated by flutterfire
+      fcm_service.dart           # token reg, channels, foreground/bg handlers
+      storage_service.dart       # image upload/delete helpers
+    widgets/
+      custom_image_holder.dart   # was components/
+      my_button.dart
+      my_textfield.dart
+      empty_state.dart           # extract the shared empty/error widget
+  features/
+    auth/
+      data/auth_repository.dart
+      presentation/auth_page.dart
+      presentation/login.dart
+    auctions/
+      data/product_repository.dart
+      domain/product.dart
+      presentation/home.dart
+      presentation/dashboard.dart
+      presentation/product_details_page.dart
+      presentation/add_new_item.dart
+      presentation/edit_auction_page.dart
+      presentation/my_auction_page.dart
+      presentation/search_page.dart
+    bids/
+      data/bid_repository.dart
+      domain/bid.dart
+      presentation/my_bids_page.dart
+    watchlist/
+      data/watchlist_repository.dart
+      domain/watchlist_entry.dart
+      presentation/watch_list_page.dart
+    notifications/
+      data/notification_repository.dart
+      domain/app_notification.dart
+      presentation/notifications_page.dart
+    profile/
+      data/user_repository.dart
+      data/account_repository.dart
+      domain/app_user.dart
+      presentation/profile.dart
+      presentation/edit_profile_page.dart
+      presentation/settings_page.dart
+      presentation/delete_account_page.dart
+    shell/
+      presentation/navigation_page.dart
+    support/
+      presentation/privacy_page.dart
+      presentation/help_page.dart
+```
+
+**Rules for this migration:**
+
+- One PR, **git `mv` only** — no logic edits in the same diff. Update imports
+  (`package:app/...`) to the new paths. The pubspec name stays `app`.
+- Verify on a case-sensitive filesystem (CI / Linux), not just Windows.
+- No feature imports another feature's `presentation/`; cross-feature reuse goes through
+  `core/` or a repository in `data/`.
+- `flutter analyze` zero errors and `flutter test` green at the end of the PR.
+- A follow-up doc `ARCHITECTURE.md` at repo root: one paragraph on the dependency direction
+  (`presentation → data → Firestore`, `core` depends on nothing app-specific).
 
 ---
 
-## 7. Testing
+## 3. Real image upload (kills the broken-image class of bugs)
 
-- Add `test/` with:
-  - Unit tests for every repository using `fake_cloud_firestore` and `firebase_auth_mocks`.
-  - Widget tests for `LoginRegister`, `ProductDetailsPage` (bid validation), `MyAuctionPage` (delete guard), `WatchListPage` (empty state).
-  - One integration test under `integration_test/` that signs in anonymously (test mode), creates a product, places a bid, ends it via a forced clock, and asserts winner.
-- Add `flutter test` and `flutter analyze` to CI: ship `.github/workflows/flutter.yml` running on `ubuntu-latest` with the FVM-pinned Flutter version.
+Today `add_new_item.dart` writes whatever URL the user pastes into `_imageUrlController`.
+`image_picker` and `firebase_storage` are in `pubspec.yaml` but **unused**. Replace the paste
+flow with a real upload.
 
----
-
-## 8. Deliverables / definition of done
-
-A reviewer pulling `main` should be able to:
-
-1. `flutter pub get && flutter analyze` — zero errors, zero warnings.
-2. `flutter test` — all tests green.
-3. `flutter run` on Android emulator — register, log in with Google, create an auction with image, place a bid, get outbid, see notification, watchlist add/remove, dark/light toggle, edit profile, log out from both menu and profile, delete account.
-4. Inspect Firestore — no documents with missing required fields; rules deployed; indexes present.
-5. `cd functions && npm run deploy` — scheduled `endAuction` visible in Firebase console.
-
----
-
-## 9. Sequencing (PRs, in order)
-
-1. **PR1 — Hygiene.** Lint bump, dir lowercase rename, `withOpacity` sweep, delete `bid.dart` / `product_card.dart` / `floating_action_button.dart`, fix README, fix `login.dart:117`.
-2. **PR2 — Logout + stubbed navigations.** Fix `navigation_page.dart:395` and wire every stub callback to its target screen (Settings/Privacy/Help shells, Edit Profile, AddNewItem from MyAuctions, etc.).
-3. **PR3 — Models + repositories.** Introduce `lib/models/` and `lib/repositories/`; migrate screens, no feature changes.
-4. **PR4 — Firestore hardening.** Add new product fields, transactional bid placement, rules, indexes, `nameLower` backfill script.
-5. **PR5 — Watchlist + MyBids real data.** Wire to repositories; pagination on Home/Dashboard.
-6. **PR6 — Search + Notifications screens.** Client-side flows only; notifications doc reads.
-7. **PR7 — Cloud Functions.** `endAuction`, `onBidCreate`, `onAuctionWrite`. Deploy guide in `functions/README.md`.
-8. **PR8 — Edit auction + account deletion + share.**
-9. **PR9 — Tests + CI.**
-
-Each PR must include: rationale in the description, before/after screenshots for any UI change, and a manual QA checklist.
+1. `core/services/storage_service.dart`:
+   - `pickImage(ImageSource)` via `image_picker`.
+   - Compress with `flutter_image_compress` (max edge ~1600px, quality ~80, target < 500 KB).
+   - Upload to `product_images/{uid}/{productId or uuid}.jpg`, return the
+     `getDownloadURL()` (always `https`, always with token).
+   - `deleteImage(url)` for edit/replace and for account deletion cleanup.
+2. `add_new_item.dart` / `edit_auction_page.dart`: replace the URL `TextFormField` with an
+   image picker + preview + progress indicator + "replace" affordance. Support 1 required
+   image now; design the field/model to allow a `List<String> imageUrls` later (store a
+   single-element list, render the first).
+3. Keep reading the legacy `Image Url` field for old documents (backward-compatible). Write
+   the new Storage URL into the same field.
+4. Storage security rules (`storage.rules`, deploy via `firebase deploy --only storage`):
+   - Read: public (images are public product photos) **or** auth-only — pick auth-only for
+     v1.1 and document why.
+   - Write/delete: `request.auth.uid` must equal the `{uid}` path segment; enforce
+     `request.resource.size < 5 * 1024 * 1024` and `contentType.matches('image/.*')`.
+5. `CustomImageHolder` already shows a broken-image fallback — keep it, but now genuine
+   broken images should be near-zero. Add a `Image Url` validator that rejects non-`https`.
 
 ---
 
-## 10. Non-goals (v1)
+## 4. Notification system (in-app + FCM push)
+
+v1 has **in-app only**, triggered server-side for `bid_placed`, `outbid`, `auction_won`,
+`auction_ended_seller`. v1.1 completes it.
+
+### 4.1 New + missing trigger coverage (Cloud Functions, TypeScript)
+
+Extend `functions/src` so the full set of `AppNotification.type` values are actually written:
+
+| type                    | when                                                   | recipient(s)            |
+|-------------------------|--------------------------------------------------------|-------------------------|
+| `bid_placed`            | existing                                               | seller                  |
+| `outbid`                | existing                                               | previous high bidder    |
+| `auction_won`           | existing (`endAuction`)                                | winner                  |
+| `auction_lost`          | **new** — in `endAuction`, every non-winning bidder    | losing bidders          |
+| `auction_ended_seller`  | existing                                               | seller                  |
+| `auction_ending_soon`   | **new** — scheduled, ~1h before `endsAt`               | watchers + active bidders |
+| `new_auction`           | **new** — `onAuctionCreate`, sellers a user follows    | followers (see §4.3)    |
+
+- `auction_ending_soon`: scheduled function querying `status == 'active'` and
+  `endsAt` within the next window; guard against double-fire with an `endingSoonNotified`
+  flag on the product.
+- De-dupe: never notify a user about their own action (no self-outbid, no
+  new_auction to the seller).
+
+### 4.2 FCM push delivery
+
+- `core/services/fcm_service.dart`: request permission (iOS + Android 13+ runtime),
+  get the token, write it to `users/{uid}.fcmTokens` (array — a user has multiple devices),
+  refresh on `onTokenRefresh`, remove on logout and on account deletion.
+- Define Android notification channels and wire `flutter_local_notifications` for foreground
+  display; handle `onMessage`, `onMessageOpenedApp`, and `getInitialMessage` (cold start from
+  a notification → deep link to the relevant screen via GoRouter).
+- Server: in each notification-writing function, after writing the
+  `notifications/{uid}/items` doc, also send `messaging().sendEachForMulticast` to that
+  user's `fcmTokens`. Prune tokens that come back `messaging/registration-token-not-registered`.
+- Payload carries `type` + `productId` so the app can deep-link on tap.
+- Respect a per-user mute: `users/{uid}.notificationPrefs` (`bids`, `outbid`, `endingSoon`,
+  `newAuction`, `won`/`lost` booleans), edited in Settings; functions skip push when muted
+  (still write the in-app row).
+
+### 4.3 Follow sellers (supports `new_auction`)
+
+- New collection `follows/{autoId}`: `followerId`, `sellerId`, `createdAt`. Rules:
+  create/delete only by `followerId == auth.uid`.
+- Follow/unfollow button on `profile` (other users' seller view) and on
+  `product_details_page` seller row.
+- `onAuctionCreate` fans out `new_auction` to the seller's followers.
+
+### 4.4 iOS prerequisites (document in `functions/README.md` + a new `docs/PUSH_SETUP.md`)
+
+- APNs auth key uploaded to Firebase, `GoogleService-Info.plist` added (gitignored),
+  Push Notifications + Background Modes capabilities enabled in Xcode.
+
+---
+
+## 5. Auction lifecycle gaps (QA found)
+
+- **Bid increments**: enforce a minimum increment (e.g. `max(currentBid * 0.02, 1)`) in the
+  bid transaction and in `firestore.rules`, not just `> currentBid`.
+- **Anti-snipe (optional, behind a flag)**: if a bid lands within the last 2 minutes,
+  extend `endsAt` by 2 minutes. Document the rule; keep it server-side.
+- **Cancellation**: seller may set `status = 'cancelled'` only while `bidCount == 0`
+  (rules already restrict; expose the UI in `edit_auction_page`).
+- **Buyer/seller post-win flow**: a minimal "you won — contact seller" / "sold to X" panel on
+  the ended product page. No payments (still a non-goal).
+
+---
+
+## 6. Routing & deep links
+
+- Replace `home: AuthPage()` with `MaterialApp.router` + `go_router` in `app/router.dart`.
+- Auth redirect: unauthenticated → `/login`; authenticated → `/` (shell with tabs).
+- Routes: `/`, `/auction/:id`, `/notifications`, `/profile`, `/settings`, `/search`,
+  `/my-auctions`, `/add`.
+- Deep links: `https://<domain>/auction/:id` and a custom scheme; wire `app_links`-equivalent
+  via go_router's platform deep-link integration. Update `share.dart` to generate links that
+  actually resolve, and **fix or delete its now-true/false comment**.
+- Notification taps (§4.2) route through the same paths.
+
+---
+
+## 7. UI/UX improvements
+
+Senior + QA pass on the existing screens. Keep the design tokens; improve consistency and
+states.
+
+1. **Consistent states**: extract one `EmptyState` and one `ErrorState` widget in
+   `core/widgets/`; use them on every list (`home`, `dashboard`, `my_auctions`, `my_bids`,
+   `watchlist`, `notifications`, `search`). Audit each `StreamBuilder` for `hasError` /
+   `waiting` / empty.
+2. **Skeleton loaders** instead of bare spinners on first load of card lists
+   (shimmer-style placeholder cards).
+3. **Countdown timers** on product cards and details (`endsAt`), with a "ending soon"
+   accent when < 1h, and a clear "Ended"/"Won by you"/"You were outbid" badge.
+4. **Pull-to-refresh** on every list (the dep exists; verify all tabs use it).
+5. **Bid sheet UX**: show current bid, minimum next bid (incl. increment), and inline
+   validation before submit; disable submit while the transaction runs.
+6. **Image UX**: aspect-ratio-stable cards (no layout jump), hero transition list → details,
+   pinch-zoom on the details image.
+7. **Empty avatars / fallbacks**: initials avatar when `sellerPhoto` is empty.
+8. **Accessibility**: semantic labels on icon-only buttons (bell, share, fav), min 48dp tap
+   targets, text scales with system font size, contrast check both themes.
+9. **Notification badge**: live unread count on the bell across tab switches.
+10. **Form polish**: numeric keyboard for price, date picker already themed — verify
+    dark-mode contrast.
+
+Provide before/after screenshots for each UI PR.
+
+---
+
+## 8. Observability & resilience (QA hardening)
+
+- **Crashlytics**: `FlutterError.onError` + `PlatformDispatcher.instance.onError` →
+  Crashlytics; record caught repository errors as non-fatals (no PII — strip emails, reuse
+  the existing logger's redaction).
+- **Analytics**: log key events (`auction_created`, `bid_placed`, `auction_won`,
+  `notification_opened`, `search`). No PII.
+- **Connectivity / offline**: Firestore offline persistence is on by default — surface an
+  offline banner and make sure writes (bids) fail gracefully with a retry, not a silent hang.
+- **Error surfacing**: every repository call site already routes through the
+  `ScaffoldMessenger` extension — verify the new upload/FCM/follow paths do too.
+- **Secrets**: confirm `google-services.json`, `GoogleService-Info.plist`, and any service
+  account JSON are in `.gitignore` and not committed.
+- **CI**: there are two workflows (`.github/workflows/ci.yml` and `flutter.yml`) — dedupe to
+  one. Add `firebase emulators:exec` running the Functions tests, and a
+  `flutter build apk --release` smoke step to catch release-only breakage (e.g. the INTERNET
+  permission regression).
+
+---
+
+## 9. Testing additions
+
+- Unit: `storage_service` (mock), notification fan-out logic, bid-increment + anti-snipe
+  rules. Functions: tests for `auction_lost`, `auction_ending_soon`, `new_auction`, and FCM
+  token pruning, under the Firebase emulator.
+- Widget: image-picker upload flow (mock storage), follow/unfollow button, notification
+  prefs toggles, `EmptyState`/`ErrorState` rendering.
+- Integration: extend the existing lifecycle test to assert a losing bidder gets
+  `auction_lost` and that a follower gets `new_auction`.
+- Rules: `@firebase/rules-unit-testing` for `storage.rules` and the new `follows` collection.
+
+---
+
+## 10. Sequencing (PRs, in order)
+
+1. **PR1 — Feature-first migration.** Pure `git mv` + import updates + `go_router` shell +
+   `firebase_options.dart`. No behavior change. `ARCHITECTURE.md`.
+2. **PR2 — Image upload.** `storage_service`, picker UI in add/edit, `storage.rules`,
+   non-`https` validator, drop the paste field.
+3. **PR3 — Notifications backend.** New/missing function triggers (`auction_lost`,
+   `auction_ending_soon`, `new_auction`), `follows` collection + rules.
+4. **PR4 — FCM push.** `fcm_service`, channels, token lifecycle, server multicast,
+   notification prefs in Settings, deep-link-on-tap. `docs/PUSH_SETUP.md`.
+5. **PR5 — Lifecycle gaps.** Min increment, anti-snipe flag, cancel UI, post-win panel.
+6. **PR6 — UI/UX pass.** States, skeletons, countdowns, accessibility, hero/zoom.
+7. **PR7 — Observability.** Crashlytics, analytics, offline banner, CI dedupe + release smoke.
+8. **PR8 — Tests.** Fill the matrix in §9.
+
+Each PR: rationale, before/after screenshots for UI, manual QA checklist.
+
+---
+
+## 11. Definition of done (v1.1)
+
+A reviewer pulling `main` can:
+
+1. `flutter pub get && flutter analyze` — zero errors/warnings.
+2. `flutter test` and Functions tests — all green; release APK build succeeds in CI.
+3. On a real device: create an auction with a **picked + uploaded** image (no broken images
+   in release), place a bid, get an **FCM push** when outbid, follow a seller and receive a
+   `new_auction` push, receive `auction_ending_soon`, win/lose an auction and get the push,
+   tap a push → deep-link to the right screen, mute a category in Settings and confirm it's
+   honored.
+4. Firestore + Storage: no orphaned images after account deletion; rules deployed for
+   `storage` and `follows`.
+5. Crashlytics receives a forced test crash; Analytics shows events.
+
+---
+
+## 12. Non-goals (v1.1)
 
 - Payments / escrow / Stripe Connect.
-- Multi-currency.
+- Multi-currency, i18n (keep centralizing strings; no `intl` localization yet).
 - Real-time chat between bidder and seller.
-- Push notifications (FCM) — add in v1.1.
 - Web/desktop builds — Android + iOS only.
-- Ratings, disputes, reports.
+- Ratings, disputes, reports, moderation queue (image content moderation is a v1.2 item).
 
 ---
 
-## 11. Constraints
+## 13. Constraints
 
-- Do not break existing Firestore documents. New required fields must be either backfilled by a one-shot script (`tools/backfill.dart`) committed in the same PR, or read with defensive defaults.
-- Do not log PII. Strip emails from any analytics/logger output.
-- Do not commit `google-services.json`, `GoogleService-Info.plist`, or `.env`. Add to `.gitignore` if missing.
-- All user-visible strings go through a single `lib/util/strings.dart` constant file to ease later i18n. Do not add `intl`-based localization yet; just centralize.
+- Do not break existing Firestore/Storage documents. New fields read with defensive defaults
+  or backfilled by a one-shot script committed in the same PR.
+- Do not log PII; strip emails from logger, Crashlytics, and Analytics.
+- Do not commit `google-services.json`, `GoogleService-Info.plist`, service-account JSON,
+  or `.env`.
+- All user-visible strings stay centralized (`core/utils/strings.dart` if not already).
+- Stop and ask before adding any top-level dependency not listed in §1.
 
-Begin with PR1. Open each PR against `main`. Stop and ask before introducing any new top-level dependency not listed here.
+Begin with PR1. Open each PR against `main`.
