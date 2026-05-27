@@ -1,7 +1,12 @@
+import 'dart:io';
+
 import 'package:app/features/auctions/domain/product.dart';
+import 'package:app/core/services/storage_service.dart';
 import 'package:app/core/theme/theme_provider.dart';
+import 'package:app/core/widgets/custom_image_holder.dart';
 import 'package:app/features/auctions/data/product_repository.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
 /// Lets the seller update an auction's description, end date, and minimum
@@ -23,6 +28,7 @@ class _EditAuctionPageState extends State<EditAuctionPage> {
   late final TextEditingController _minBid;
   late final TextEditingController _date;
   DateTime? _endDate;
+  XFile? _newImage;
   bool _isSaving = false;
 
   @override
@@ -46,6 +52,53 @@ class _EditAuctionPageState extends State<EditAuctionPage> {
 
   bool get _isEditable => widget.product.bidCount == 0;
 
+  Future<void> _pickImage(ImageSource source) async {
+    try {
+      final picked = await StorageService.pickImage(source);
+      if (picked != null) setState(() => _newImage = picked);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Could not pick image: ${e.toString()}'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
+  void _showImageSourceSheet() {
+    final colorToken = ThemeProvider.of(context).colorToken;
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: colorToken.surface,
+      builder: (sheetContext) => SafeArea(
+        child: Wrap(
+          children: [
+            ListTile(
+              leading: Icon(Icons.photo_camera, color: colorToken.primary),
+              title: Text('Take a photo',
+                  style: TextStyle(color: colorToken.textPrimary)),
+              onTap: () {
+                Navigator.pop(sheetContext);
+                _pickImage(ImageSource.camera);
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.photo_library, color: colorToken.primary),
+              title: Text('Choose from gallery',
+                  style: TextStyle(color: colorToken.textPrimary)),
+              onTap: () {
+                Navigator.pop(sheetContext);
+                _pickImage(ImageSource.gallery);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Future<void> _pickDate() async {
     final initial = _endDate ?? DateTime.now().add(const Duration(days: 1));
     final picked = await showDatePicker(
@@ -65,12 +118,26 @@ class _EditAuctionPageState extends State<EditAuctionPage> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isSaving = true);
     try {
+      String? newImageUrl;
+      if (_newImage != null) {
+        newImageUrl = await StorageService.uploadProductImage(
+          uid: widget.product.sellerId,
+          file: _newImage!,
+        );
+      }
+
       await ProductRepository.updateEditable(
         id: widget.product.id,
         description: _description.text.trim(),
         date: _date.text.trim(),
         minBidPrice: _minBid.text.trim(),
+        imageUrl: newImageUrl,
       );
+
+      // Old image is now orphaned — delete it after the doc points at the new one.
+      if (newImageUrl != null && widget.product.imageUrl.isNotEmpty) {
+        await StorageService.deleteByUrl(widget.product.imageUrl);
+      }
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -122,6 +189,8 @@ class _EditAuctionPageState extends State<EditAuctionPage> {
             key: _formKey,
             child: ListView(
               children: [
+                _imageSection(colorToken),
+                const SizedBox(height: 16),
                 if (!_isEditable)
                   Container(
                     margin: const EdgeInsets.only(bottom: 16),
@@ -234,6 +303,41 @@ class _EditAuctionPageState extends State<EditAuctionPage> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _imageSection(ColorToken colorToken) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: SizedBox(
+            height: 200,
+            width: double.infinity,
+            child: _newImage != null
+                ? Image.file(File(_newImage!.path), fit: BoxFit.cover)
+                : CustomImageHolder(
+                    imageUrl: widget.product.imageUrl,
+                    height: 200,
+                  ),
+          ),
+        ),
+        if (_isEditable) ...[
+          const SizedBox(height: 8),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton.icon(
+              onPressed: _isSaving ? null : _showImageSourceSheet,
+              icon: Icon(Icons.photo_camera_outlined, color: colorToken.primary),
+              label: Text(
+                _newImage == null ? 'Replace photo' : 'Change photo',
+                style: TextStyle(color: colorToken.primary),
+              ),
+            ),
+          ),
+        ],
+      ],
     );
   }
 

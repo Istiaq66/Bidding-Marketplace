@@ -83,7 +83,7 @@ service cloud.firestore {
         && request.resource.data.get('bidCount', 0) == 0
         && changed.hasOnly(
              ['Product Description', 'Date', 'Minimum Bid Price',
-              'endsAt', 'currentBid', 'nameLower']
+              'endsAt', 'currentBid', 'nameLower', 'Image Url']
            );
     }
   }

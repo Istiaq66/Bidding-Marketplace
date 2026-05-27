@@ -1,7 +1,11 @@
+import 'dart:io';
+
 import 'package:app/features/auth/data/auth_repository.dart';
 import 'package:app/features/auctions/data/product_repository.dart';
+import 'package:app/core/services/storage_service.dart';
 import 'package:app/core/theme/theme_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
 class NewItem extends StatefulWidget {
@@ -17,10 +21,55 @@ class _NewItemState extends State<NewItem> {
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _minBidPriceController = TextEditingController();
-  final _imageUrlController = TextEditingController();
 
+  XFile? _pickedImage;
   DateTime _selectedDate = DateTime.now().add(const Duration(days: 7));
   bool _isLoading = false;
+
+  Future<void> _pickImage(ImageSource source) async {
+    try {
+      final picked = await StorageService.pickImage(source);
+      if (picked != null) setState(() => _pickedImage = picked);
+    } catch (e) {
+      _showErrorSnackbar('Could not pick image: ${e.toString()}');
+    }
+  }
+
+  void _showImageSourceSheet() {
+    final colorToken = ThemeProvider.of(context).colorToken;
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: colorToken.surface,
+      builder: (sheetContext) => SafeArea(
+        child: Wrap(
+          children: [
+            ListTile(
+              leading: Icon(Icons.photo_camera, color: colorToken.primary),
+              title: Text(
+                'Take a photo',
+                style: TextStyle(color: colorToken.textPrimary),
+              ),
+              onTap: () {
+                Navigator.pop(sheetContext);
+                _pickImage(ImageSource.camera);
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.photo_library, color: colorToken.primary),
+              title: Text(
+                'Choose from gallery',
+                style: TextStyle(color: colorToken.textPrimary),
+              ),
+              onTap: () {
+                Navigator.pop(sheetContext);
+                _pickImage(ImageSource.gallery);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   Future<void> _selectDate(BuildContext context) async {
     final colorToken = ThemeProvider.of(context).colorToken;
@@ -55,6 +104,11 @@ class _NewItemState extends State<NewItem> {
   Future<void> _submitAuction() async {
     if (!_formKey.currentState!.validate()) return;
 
+    if (_pickedImage == null) {
+      _showErrorSnackbar('Please add a product photo');
+      return;
+    }
+
     setState(() => _isLoading = true);
 
     final sellerId = _sellerId;
@@ -65,13 +119,18 @@ class _NewItemState extends State<NewItem> {
     }
 
     try {
+      final imageUrl = await StorageService.uploadProductImage(
+        uid: sellerId,
+        file: _pickedImage!,
+      );
+
       await ProductRepository.create(
         sellerId: sellerId,
         name: _nameController.text.trim(),
         description: _descriptionController.text.trim(),
         minBidPrice: _minBidPriceController.text.trim(),
         date: DateFormat('yyyy-MM-dd').format(_selectedDate),
-        imageUrl: _imageUrlController.text.trim(),
+        imageUrl: imageUrl,
       );
 
       _showSuccessSnackbar('Auction created successfully!');
@@ -79,8 +138,8 @@ class _NewItemState extends State<NewItem> {
       _nameController.clear();
       _descriptionController.clear();
       _minBidPriceController.clear();
-      _imageUrlController.clear();
       setState(() {
+        _pickedImage = null;
         _selectedDate = DateTime.now().add(const Duration(days: 7));
       });
 
@@ -122,7 +181,6 @@ class _NewItemState extends State<NewItem> {
     _nameController.dispose();
     _descriptionController.dispose();
     _minBidPriceController.dispose();
-    _imageUrlController.dispose();
     super.dispose();
   }
 
@@ -168,7 +226,6 @@ class _NewItemState extends State<NewItem> {
   @override
   Widget build(BuildContext context) {
     final colorToken = ThemeProvider.of(context).colorToken;
-    final imageUrl = _imageUrlController.text.trim();
 
     return Scaffold(
       backgroundColor: colorToken.background,
@@ -198,75 +255,66 @@ class _NewItemState extends State<NewItem> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Image preview
-                  Container(
-                    width: double.infinity,
-                    height: 200,
-                    decoration: BoxDecoration(
-                      color: colorToken.surfaceVariant,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: colorToken.divider, width: 2),
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(10),
-                      child: imageUrl.isEmpty
-                          ? Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.image_outlined,
-                                  size: 64,
-                                  color: colorToken.textSecondary,
-                                ),
-                                const SizedBox(height: 12),
-                                Text(
-                                  'Paste an image URL below',
-                                  style: TextStyle(
-                                    fontSize: 16,
+                  // Image preview + picker
+                  GestureDetector(
+                    onTap: _isLoading ? null : _showImageSourceSheet,
+                    child: Container(
+                      width: double.infinity,
+                      height: 200,
+                      decoration: BoxDecoration(
+                        color: colorToken.surfaceVariant,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: colorToken.divider, width: 2),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(10),
+                        child: _pickedImage == null
+                            ? Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.add_a_photo_outlined,
+                                    size: 64,
                                     color: colorToken.textSecondary,
-                                    fontFamily: 'SourceSans3',
                                   ),
-                                ),
-                              ],
-                            )
-                          : Image.network(
-                              imageUrl,
-                              fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => Center(
-                                child: Icon(
-                                  Icons.broken_image_outlined,
-                                  size: 64,
-                                  color: colorToken.textSecondary,
-                                ),
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    'Tap to add a product photo',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      color: colorToken.textSecondary,
+                                      fontFamily: 'SourceSans3',
+                                    ),
+                                  ),
+                                ],
+                              )
+                            : Stack(
+                                fit: StackFit.expand,
+                                children: [
+                                  Image.file(
+                                    File(_pickedImage!.path),
+                                    fit: BoxFit.cover,
+                                  ),
+                                  Positioned(
+                                    right: 8,
+                                    bottom: 8,
+                                    child: Material(
+                                      color: colorToken.surface,
+                                      shape: const CircleBorder(),
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(8),
+                                        child: Icon(
+                                          Icons.edit,
+                                          size: 20,
+                                          color: colorToken.primary,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ),
+                      ),
                     ),
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  TextFormField(
-                    controller: _imageUrlController,
-                    onChanged: (_) => setState(() {}),
-                    style: TextStyle(
-                      color: colorToken.textPrimary,
-                      fontFamily: 'SourceSans3',
-                    ),
-                    decoration: _decoration(
-                      colorToken,
-                      label: 'Image URL',
-                      hint: 'https://...',
-                      icon: Icons.link,
-                    ),
-                    validator: (value) {
-                      final v = value?.trim() ?? '';
-                      if (v.isEmpty) return 'Please paste an image URL';
-                      final uri = Uri.tryParse(v);
-                      if (uri == null || !uri.hasAbsolutePath || uri.host.isEmpty) {
-                        return 'Enter a valid URL (https://...)';
-                      }
-                      return null;
-                    },
                   ),
 
                   const SizedBox(height: 24),

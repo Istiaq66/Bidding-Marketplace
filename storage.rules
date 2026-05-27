@@ -1,0 +1,25 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // Product photos. Read is public: these are public marketplace listing
+    // images and are served via tokenized download URLs anyway. Writes/deletes
+    // are restricted to the owner's own `{uid}` folder, capped at 5 MB, images
+    // only.
+    match /product_images/{uid}/{file} {
+      allow read: if true;
+      allow write: if request.auth != null
+        && request.auth.uid == uid
+        && request.resource.size < 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+      allow delete: if request.auth != null
+        && request.auth.uid == uid;
+    }
+
+    // Everything else is closed by default.
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

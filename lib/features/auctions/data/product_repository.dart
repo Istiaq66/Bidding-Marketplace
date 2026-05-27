@@ -128,6 +128,7 @@ class ProductRepository {
     required String description,
     required String date,
     required String minBidPrice,
+    String? imageUrl,
   }) async {
     final ref = _products.doc(id);
     final minPrice = double.tryParse(minBidPrice) ?? 0;
@@ -155,6 +156,7 @@ class ProductRepository {
         'Minimum Bid Price': minBidPrice,
         if (endsAt != null) 'endsAt': endsAt,
         'currentBid': minPrice,
+        if (imageUrl != null) 'Image Url': imageUrl,
       });
     });
   }
