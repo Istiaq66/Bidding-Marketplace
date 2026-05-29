@@ -7,6 +7,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Background/terminated-state message handler. Runs in its own isolate, so it
 /// must initialize Firebase itself. The system renders the notification; this
@@ -19,6 +20,10 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+  await Supabase.initialize(
+    url: 'https://yqaixcpcwnomdbjvgibc.supabase.co',
+    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlxYWl4Y3Bjd25vbWRianZnaWJjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAwMjU0MDgsImV4cCI6MjA5NTYwMTQwOH0.IO1qNZaSt_BFwggB3sJRxXYKaGjVV6DawOwhNJLhdKs',
+  );
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
   await FcmService.init();
 
