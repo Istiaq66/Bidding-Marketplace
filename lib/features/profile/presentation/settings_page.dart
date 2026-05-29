@@ -1,4 +1,5 @@
 import 'package:app/core/theme/theme_provider.dart';
+import 'package:app/core/utils/share.dart';
 import 'package:app/features/profile/presentation/delete_account_page.dart';
 import 'package:app/features/profile/presentation/notification_settings_page.dart';
 import 'package:flutter/material.dart';
@@ -64,6 +65,17 @@ class SettingsPage extends StatelessWidget {
           ),
           _comingSoonTile(context, Icons.lock_outline, 'Privacy & Security', colorToken),
           _comingSoonTile(context, Icons.payment, 'Payment methods', colorToken),
+          ListTile(
+            leading: Icon(Icons.share, color: colorToken.textPrimary),
+            title: Text(
+              'Share app',
+              style: TextStyle(
+                  color: colorToken.textPrimary, fontFamily: 'SourceSans3'),
+            ),
+            trailing:
+                Icon(Icons.chevron_right, color: colorToken.textSecondary),
+            onTap: ShareUtil.shareApp,
+          ),
           _sectionHeader('Danger zone', colorToken),
           ListTile(
             leading: Icon(Icons.delete_forever, color: colorToken.error),

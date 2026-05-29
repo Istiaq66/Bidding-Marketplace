@@ -54,10 +54,22 @@ class BidRepository {
       final minBidStr = (data['Minimum Bid Price'] ?? '0').toString();
       final currentBid =
           (data['currentBid'] as num?) ?? double.tryParse(minBidStr) ?? 0;
+      final bidCount = (data['bidCount'] as int?) ?? 0;
+      final minIncrement = (data['minIncrement'] as num?) ?? 1;
 
       if (amount <= currentBid) {
         throw Exception(
           'Bid must be higher than current bid of \$${currentBid.toStringAsFixed(2)}',
+        );
+      }
+
+      // Once the first bid lands, every subsequent bid must clear the current
+      // bid by the seller's chosen increment.
+      if (bidCount > 0 && amount < currentBid + minIncrement) {
+        final required = currentBid + minIncrement;
+        throw Exception(
+          'Bid must be at least \$${required.toStringAsFixed(2)} '
+          '(\$${minIncrement.toStringAsFixed(2)} increment)',
         );
       }
 

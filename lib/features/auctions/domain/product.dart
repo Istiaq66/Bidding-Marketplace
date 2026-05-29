@@ -12,6 +12,7 @@ class Product {
   final DateTime? endsAt;
   final num currentBid;
   final int bidCount;
+  final num minIncrement;
   final String status;
   final String? winnerId;
   final String? highestBidderId;
@@ -31,6 +32,7 @@ class Product {
     this.endsAt,
     this.currentBid = 0,
     this.bidCount = 0,
+    this.minIncrement = 1,
     this.status = 'active',
     this.winnerId,
     this.highestBidderId,
@@ -38,6 +40,11 @@ class Product {
     this.sellerPhoto = '',
     this.createdAt,
   });
+
+  /// Smallest amount the next bid must reach. First bid clears the start price;
+  /// every subsequent bid must clear the current bid by at least [minIncrement].
+  num get nextMinBid =>
+      bidCount == 0 ? currentBid : currentBid + minIncrement;
 
   factory Product.fromFirestore(DocumentSnapshot snapshot) {
     final data = (snapshot.data() as Map<String, dynamic>? ?? const {});
@@ -56,6 +63,7 @@ class Product {
       endsAt: endsAtRaw is Timestamp ? endsAtRaw.toDate() : null,
       currentBid: (data['currentBid'] as num?) ?? double.tryParse(minBidPrice) ?? 0,
       bidCount: (data['bidCount'] as int?) ?? 0,
+      minIncrement: (data['minIncrement'] as num?) ?? 1,
       status: (data['status'] as String?) ?? 'active',
       winnerId: data['winnerId'] as String?,
       highestBidderId: data['highestBidderId'] as String?,
@@ -76,6 +84,7 @@ class Product {
         if (endsAt != null) 'endsAt': Timestamp.fromDate(endsAt!),
         'currentBid': currentBid,
         'bidCount': bidCount,
+        'minIncrement': minIncrement,
         'status': status,
         'winnerId': winnerId,
         'highestBidderId': highestBidderId,

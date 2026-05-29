@@ -134,6 +134,18 @@ class _ProductDetailsState extends State<ProductDetails> {
                   fontFamily: 'SourceSans3',
                 ),
               ),
+              const SizedBox(height: 4),
+              Text(
+                product.bidCount == 0
+                    ? 'First bid must clear the start price.'
+                    : 'Min next bid: \$${product.nextMinBid.toStringAsFixed(2)} '
+                        '(\$${product.minIncrement.toStringAsFixed(2)} increment)',
+                style: TextStyle(
+                  color: colorToken.textSecondary,
+                  fontFamily: 'SourceSans3',
+                  fontSize: 12,
+                ),
+              ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _bidController,
@@ -170,6 +182,9 @@ class _ProductDetailsState extends State<ProductDetails> {
                   if (bid == null) return 'Enter a valid number';
                   if (bid <= product.currentBid) {
                     return 'Bid must be > \$${product.currentBid.toStringAsFixed(2)}';
+                  }
+                  if (product.bidCount > 0 && bid < product.nextMinBid) {
+                    return 'Bid must be ≥ \$${product.nextMinBid.toStringAsFixed(2)}';
                   }
                   return null;
                 },

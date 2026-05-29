@@ -22,6 +22,7 @@ class ProductRepository {
     required String minBidPrice,
     required String date,
     required String imageUrl,
+    num minIncrement = 1,
   }) async {
     // Fetch seller info for denormalization
     final sellerSnap = await _db.collection('users').doc(sellerId).get();
@@ -53,6 +54,7 @@ class ProductRepository {
       'endsAt': endsAt,
       'currentBid': minPrice,
       'bidCount': 0,
+      'minIncrement': minIncrement,
       'status': 'active',
       'winnerId': null,
       'sellerName': sellerName,
@@ -129,6 +131,7 @@ class ProductRepository {
     required String date,
     required String minBidPrice,
     String? imageUrl,
+    num? minIncrement,
   }) async {
     final ref = _products.doc(id);
     final minPrice = double.tryParse(minBidPrice) ?? 0;
@@ -157,6 +160,7 @@ class ProductRepository {
         if (endsAt != null) 'endsAt': endsAt,
         'currentBid': minPrice,
         if (imageUrl != null) 'Image Url': imageUrl,
+        if (minIncrement != null) 'minIncrement': minIncrement,
       });
     });
   }

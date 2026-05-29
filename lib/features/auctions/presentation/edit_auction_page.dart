@@ -26,6 +26,7 @@ class _EditAuctionPageState extends State<EditAuctionPage> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _description;
   late final TextEditingController _minBid;
+  late final TextEditingController _increment;
   late final TextEditingController _date;
   DateTime? _endDate;
   XFile? _newImage;
@@ -36,6 +37,9 @@ class _EditAuctionPageState extends State<EditAuctionPage> {
     super.initState();
     _description = TextEditingController(text: widget.product.description);
     _minBid = TextEditingController(text: widget.product.minBidPrice);
+    _increment = TextEditingController(
+      text: widget.product.minIncrement.toString(),
+    );
     _date = TextEditingController(text: widget.product.date);
     if (widget.product.date.isNotEmpty) {
       _endDate = DateTime.tryParse(widget.product.date);
@@ -46,6 +50,7 @@ class _EditAuctionPageState extends State<EditAuctionPage> {
   void dispose() {
     _description.dispose();
     _minBid.dispose();
+    _increment.dispose();
     _date.dispose();
     super.dispose();
   }
@@ -126,12 +131,14 @@ class _EditAuctionPageState extends State<EditAuctionPage> {
         );
       }
 
+      final inc = double.tryParse(_increment.text.trim());
       await ProductRepository.updateEditable(
         id: widget.product.id,
         description: _description.text.trim(),
         date: _date.text.trim(),
         minBidPrice: _minBid.text.trim(),
         imageUrl: newImageUrl,
+        minIncrement: (inc != null && inc > 0) ? inc : 1,
       );
 
       // Old image is now orphaned — delete it after the doc points at the new one.
@@ -241,6 +248,21 @@ class _EditAuctionPageState extends State<EditAuctionPage> {
                   decoration: _decoration(colorToken, 'Minimum Bid (USD)'),
                   validator: (v) {
                     if (v == null || v.trim().isEmpty) return 'Required';
+                    final n = double.tryParse(v.trim());
+                    if (n == null || n <= 0) return 'Must be a positive number';
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _increment,
+                  enabled: _isEditable,
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
+                  style: TextStyle(color: colorToken.textPrimary),
+                  decoration: _decoration(colorToken, 'Bid Increment (USD)'),
+                  validator: (v) {
+                    if (v == null || v.trim().isEmpty) return null;
                     final n = double.tryParse(v.trim());
                     if (n == null || n <= 0) return 'Must be a positive number';
                     return null;

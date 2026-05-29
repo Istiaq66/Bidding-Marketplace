@@ -34,4 +34,16 @@ class ShareUtil {
       subject: 'Bidding Marketplace',
     );
   }
+
+  /// GitHub releases page — always resolves to the newest published release,
+  /// so the link stays current without code changes per release.
+  static const String _releasesUrl =
+      'https://github.com/Istiaq66/Bidding-Marketplace/releases/latest';
+
+  static Future<void> shareApp() async {
+    await Share.share(
+      'Get Bidding Marketplace: $_releasesUrl',
+      subject: 'Bidding Marketplace',
+    );
+  }
 }

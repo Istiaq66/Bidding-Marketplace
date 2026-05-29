@@ -21,6 +21,7 @@ class _NewItemState extends State<NewItem> {
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _minBidPriceController = TextEditingController();
+  final _minIncrementController = TextEditingController(text: '1');
 
   XFile? _pickedImage;
   DateTime _selectedDate = DateTime.now().add(const Duration(days: 7));
@@ -124,6 +125,7 @@ class _NewItemState extends State<NewItem> {
         file: _pickedImage!,
       );
 
+      final increment = double.tryParse(_minIncrementController.text.trim());
       await ProductRepository.create(
         sellerId: sellerId,
         name: _nameController.text.trim(),
@@ -131,6 +133,7 @@ class _NewItemState extends State<NewItem> {
         minBidPrice: _minBidPriceController.text.trim(),
         date: DateFormat('yyyy-MM-dd').format(_selectedDate),
         imageUrl: imageUrl,
+        minIncrement: (increment != null && increment > 0) ? increment : 1,
       );
 
       _showSuccessSnackbar('Auction created successfully!');
@@ -138,6 +141,7 @@ class _NewItemState extends State<NewItem> {
       _nameController.clear();
       _descriptionController.clear();
       _minBidPriceController.clear();
+      _minIncrementController.text = '1';
       setState(() {
         _pickedImage = null;
         _selectedDate = DateTime.now().add(const Duration(days: 7));
@@ -181,6 +185,7 @@ class _NewItemState extends State<NewItem> {
     _nameController.dispose();
     _descriptionController.dispose();
     _minBidPriceController.dispose();
+    _minIncrementController.dispose();
     super.dispose();
   }
 
@@ -401,6 +406,31 @@ class _NewItemState extends State<NewItem> {
                       final price = double.tryParse(value);
                       if (price == null || price <= 0) {
                         return 'Please enter a valid price';
+                      }
+                      return null;
+                    },
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  TextFormField(
+                    controller: _minIncrementController,
+                    keyboardType: TextInputType.number,
+                    style: TextStyle(
+                      color: colorToken.textPrimary,
+                      fontFamily: 'SourceSans3',
+                    ),
+                    decoration: _decoration(
+                      colorToken,
+                      label: 'Bid Increment',
+                      hint: 'Smallest step between bids (default \$1)',
+                      icon: Icons.trending_up,
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) return null;
+                      final inc = double.tryParse(value);
+                      if (inc == null || inc <= 0) {
+                        return 'Enter a positive number';
                       }
                       return null;
                     },
