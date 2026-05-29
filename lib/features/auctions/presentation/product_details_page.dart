@@ -695,6 +695,9 @@ class _ProductDetailsState extends State<ProductDetails> {
 
         final bids = snapshot.data ?? const <Bid>[];
         if (bids.isEmpty) {
+          final isOwner =
+              AuthRepository.currentUserId == _product?.sellerId;
+          if (isOwner) return const SizedBox.shrink();
           return Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(

@@ -5,11 +5,11 @@ search-index sync.
 
 ## Functions
 
-| Name             | Trigger                                  | Purpose                                                                                              |
-| ---------------- | ---------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| Name             | Trigger                                  | Purpose                                                                                                 |
+|------------------|------------------------------------------|---------------------------------------------------------------------------------------------------------|
 | `endAuction`     | Schedule — every 5 minutes               | Closes products where `status == 'active'` and `endsAt <= now`. Sets `winnerId`, notifies both parties. |
-| `onBidCreate`    | Firestore `bids/{bidId}` onCreate        | Notifies the seller (`bid_placed`) and the previous high bidder (`outbid`).                          |
-| `onAuctionWrite` | Firestore `products/{productId}` onWrite | Keeps `nameLower` (lowercased `Product Name`) in sync for prefix search. Idempotent.                 |
+| `onBidCreate`    | Firestore `bids/{bidId}` onCreate        | Notifies the seller (`bid_placed`) and the previous high bidder (`outbid`).                             |
+| `onAuctionWrite` | Firestore `products/{productId}` onWrite | Keeps `nameLower` (lowercased `Product Name`) in sync for prefix search. Idempotent.                    |
 
 All functions deploy to `us-central1`. Change the `REGION` constant in each
 `src/*.ts` to relocate.
