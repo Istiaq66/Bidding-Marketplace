@@ -2,6 +2,9 @@ import 'package:app/features/auctions/domain/product.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 
+/// Server-side ordering options for the Home auction list.
+enum ProductSort { newest, priceLowToHigh, priceHighToLow }
+
 class ProductRepository {
   ProductRepository._();
 
@@ -200,8 +203,24 @@ class ProductRepository {
       fetchPage({
     int limit = 20,
     QueryDocumentSnapshot<Map<String, dynamic>>? after,
+    ProductSort sort = ProductSort.newest,
   }) async {
-    var q = _products.limit(limit);
+    // Order server-side so sort is consistent across all pages, not just the
+    // loaded subset. orderBy excludes docs missing the field — `createdAt` and
+    // `currentBid` are set on create and backfilled in v1, so all docs qualify.
+    Query<Map<String, dynamic>> q = _products;
+    switch (sort) {
+      case ProductSort.newest:
+        q = q.orderBy('createdAt', descending: true);
+        break;
+      case ProductSort.priceLowToHigh:
+        q = q.orderBy('currentBid');
+        break;
+      case ProductSort.priceHighToLow:
+        q = q.orderBy('currentBid', descending: true);
+        break;
+    }
+    q = q.limit(limit);
     if (after != null) q = q.startAfterDocument(after);
     final snap = await q.get();
     final products = snap.docs.map(Product.fromFirestore).toList();

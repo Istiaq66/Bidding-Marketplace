@@ -64,6 +64,17 @@ class _HomeState extends State<Home> {
     }
   }
 
+  ProductSort get _sort {
+    switch (_selectedFilter) {
+      case 'Price: Low to High':
+        return ProductSort.priceLowToHigh;
+      case 'Price: High to Low':
+        return ProductSort.priceHighToLow;
+      default: // 'All' and 'Newest First'
+        return ProductSort.newest;
+    }
+  }
+
   Future<void> _loadFirstPage() async {
     setState(() {
       _isLoading = true;
@@ -73,8 +84,11 @@ class _HomeState extends State<Home> {
       _hasMore = true;
     });
     try {
-      final (products, cursor) =
-          await ProductRepository.fetchPage(limit: _pageSize, after: null);
+      final (products, cursor) = await ProductRepository.fetchPage(
+        limit: _pageSize,
+        after: null,
+        sort: _sort,
+      );
       setState(() {
         _products = products;
         _cursor = cursor;
@@ -96,6 +110,7 @@ class _HomeState extends State<Home> {
       final (products, cursor) = await ProductRepository.fetchPage(
         limit: _pageSize,
         after: _cursor,
+        sort: _sort,
       );
       setState(() {
         _products.addAll(products);
@@ -250,31 +265,20 @@ class _HomeState extends State<Home> {
       ),
       trailing: isSelected ? Icon(Icons.check, color: colorToken.primary) : null,
       onTap: () {
-        setState(() => _selectedFilter = title);
         Navigator.pop(context);
+        if (_selectedFilter == title) return;
+        setState(() => _selectedFilter = title);
+        _loadFirstPage(); // re-query with the new server-side order
       },
     );
   }
 
+  // Sort order is applied server-side in fetchPage (see _sort). Only the search
+  // text is filtered client-side, over the currently-loaded pages.
   List<Product> _filterAndSortProducts(List<Product> products) {
-    var filtered = products.where((p) {
-      if (_searchQuery.isEmpty) return true;
-      return p.name.toLowerCase().contains(_searchQuery.toLowerCase());
-    }).toList();
-
-    switch (_selectedFilter) {
-      case 'Price: Low to High':
-        filtered.sort((a, b) => a.currentBid.compareTo(b.currentBid));
-        break;
-      case 'Price: High to Low':
-        filtered.sort((a, b) => b.currentBid.compareTo(a.currentBid));
-        break;
-      case 'Newest First':
-        filtered = filtered.reversed.toList();
-        break;
-    }
-
-    return filtered;
+    if (_searchQuery.isEmpty) return products;
+    final q = _searchQuery.toLowerCase();
+    return products.where((p) => p.name.toLowerCase().contains(q)).toList();
   }
 
   @override
