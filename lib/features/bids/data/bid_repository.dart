@@ -124,6 +124,18 @@ class BidRepository {
         });
   }
 
+  /// Streams the set of product ids [bidderId] has placed at least one bid on.
+  /// Used to badge auction cards the user has bid on.
+  static Stream<Set<String>> watchBidProductIds(String bidderId) {
+    return _bids
+        .where('Bidder Id', isEqualTo: bidderId)
+        .snapshots()
+        .map((snap) => snap.docs
+            .map((d) => (d.data()['Product Id'] as String?) ?? '')
+            .where((id) => id.isNotEmpty)
+            .toSet());
+  }
+
   static List<Bid> _sortByCreatedDesc(List<Bid> list) {
     list.sort((a, b) {
       final ac = a.createdAt;

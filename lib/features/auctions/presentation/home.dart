@@ -1,6 +1,10 @@
+import 'dart:async';
+
 import 'package:app/core/widgets/custom_image_holder.dart';
 import 'package:app/features/auctions/domain/product.dart';
 import 'package:app/features/auctions/data/product_repository.dart';
+import 'package:app/features/bids/data/bid_repository.dart';
+import 'package:app/features/auth/data/auth_repository.dart';
 import 'package:app/features/profile/data/user_repository.dart';
 import 'package:app/features/auctions/presentation/product_details_page.dart';
 import 'package:app/core/theme/theme_provider.dart';
@@ -29,16 +33,26 @@ class _HomeState extends State<Home> {
   bool _hasMore = true;
   String? _error;
 
+  Set<String> _myBidProductIds = {};
+  StreamSubscription<Set<String>>? _bidSub;
+
   @override
   void initState() {
     super.initState();
     UserRepository.ensureUserDocument();
     _scrollController.addListener(_onScroll);
     _loadFirstPage();
+    final uid = AuthRepository.currentUserId;
+    if (uid != null) {
+      _bidSub = BidRepository.watchBidProductIds(uid).listen((ids) {
+        if (mounted) setState(() => _myBidProductIds = ids);
+      });
+    }
   }
 
   @override
   void dispose() {
+    _bidSub?.cancel();
     _scrollController.dispose();
     super.dispose();
   }
@@ -501,6 +515,7 @@ class _HomeState extends State<Home> {
                   imageUrl: product.imageUrl,
                   description: product.description,
                   docId: product.id,
+                  hasBid: _myBidProductIds.contains(product.id),
                 );
               },
               childCount: filtered.length,
@@ -543,6 +558,7 @@ class MinimalisticProductCard extends StatelessWidget {
   final String imageUrl;
   final String docId;
   final String? description;
+  final bool hasBid;
 
   const MinimalisticProductCard({
     super.key,
@@ -551,6 +567,7 @@ class MinimalisticProductCard extends StatelessWidget {
     required this.imageUrl,
     required this.docId,
     this.description,
+    this.hasBid = false,
   });
 
   @override
@@ -635,6 +652,36 @@ class MinimalisticProductCard extends StatelessWidget {
                       ),
                     ),
                   ),
+                  if (hasBid)
+                    Positioned(
+                      top: 8,
+                      left: 8,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: colorToken.primary,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.gavel,
+                                size: 12, color: colorToken.onPrimary),
+                            const SizedBox(width: 4),
+                            Text(
+                              'Bid placed',
+                              style: TextStyle(
+                                color: colorToken.onPrimary,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                fontFamily: 'SourceSans3',
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                 ],
               ),
             ),
