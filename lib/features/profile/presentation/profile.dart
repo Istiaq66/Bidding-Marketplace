@@ -6,6 +6,7 @@ import 'package:app/features/auctions/data/product_repository.dart';
 import 'package:app/features/profile/data/user_repository.dart';
 import 'package:app/features/watchlist/data/watchlist_repository.dart';
 import 'package:app/features/profile/presentation/edit_profile_page.dart';
+import 'package:app/features/profile/presentation/following_page.dart';
 import 'package:app/features/support/presentation/help_page.dart';
 import 'package:app/features/auctions/presentation/my_auction_page.dart';
 import 'package:app/features/bids/presentation/my_bids_page.dart';
@@ -310,6 +311,20 @@ class _ProfileState extends State<Profile> {
                             MaterialPageRoute(
                               builder: (context) => const WatchList(),
                             ),
+                          );
+                        },
+                      ),
+                      _buildMenuItem(
+                        icon: Icons.people_outline,
+                        title: 'Following',
+                        subtitle: 'Sellers you follow',
+                        iconColor: colorToken.info,
+                        iconBg: colorToken.info.withValues(alpha: 0.1),
+                        colorToken: colorToken,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => const FollowingPage()),
                           );
                         },
                       ),

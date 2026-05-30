@@ -4,6 +4,7 @@ import 'package:app/features/auth/data/auth_repository.dart';
 import 'package:app/features/profile/data/user_repository.dart';
 import 'package:app/core/services/storage_service.dart';
 import 'package:app/core/theme/theme_provider.dart';
+import 'package:app/core/widgets/user_avatar.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -227,24 +228,17 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       onTap: _showImageSourceSheet,
                       child: Stack(
                         children: [
-                          CircleAvatar(
-                            radius: 60,
-                            backgroundColor: colorToken.surfaceVariant,
-                            backgroundImage: _pickedImage != null
-                                ? FileImage(File(_pickedImage!.path))
-                                : (_existingImageUrl != null
-                                        ? NetworkImage(_existingImageUrl!)
-                                        : null)
-                                    as ImageProvider<Object>?,
-                            child: (_pickedImage == null &&
-                                    _existingImageUrl == null)
-                                ? Icon(
-                                    Icons.person,
-                                    size: 60,
-                                    color: colorToken.textSecondary,
-                                  )
-                                : null,
-                          ),
+                          _pickedImage != null
+                              ? CircleAvatar(
+                                  radius: 60,
+                                  backgroundColor: colorToken.surfaceVariant,
+                                  backgroundImage:
+                                      FileImage(File(_pickedImage!.path)),
+                                )
+                              : UserAvatar(
+                                  imageUrl: _existingImageUrl ?? '',
+                                  radius: 60,
+                                ),
                           Positioned(
                             bottom: 0,
                             right: 0,

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:app/core/widgets/custom_image_holder.dart';
+import 'package:app/core/widgets/user_avatar.dart';
 import 'package:app/features/bids/domain/bid.dart';
 import 'package:app/features/auctions/domain/product.dart';
 import 'package:app/features/auth/data/auth_repository.dart';
@@ -7,6 +8,7 @@ import 'package:app/features/bids/data/bid_repository.dart';
 import 'package:app/features/auctions/data/product_repository.dart';
 import 'package:app/features/watchlist/data/watchlist_repository.dart';
 import 'package:app/features/profile/data/follow_repository.dart';
+import 'package:app/features/profile/presentation/seller_profile_page.dart';
 import 'package:app/core/theme/theme_provider.dart';
 import 'package:app/core/utils/share.dart';
 import 'package:flutter/material.dart';
@@ -544,7 +546,15 @@ class _ProductDetailsState extends State<ProductDetails> {
   }
 
   Widget _sellerCard(Product product, colorToken, String currentUserId) {
-    return Container(
+    return InkWell(
+      borderRadius: BorderRadius.circular(12),
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => SellerProfilePage(sellerId: product.sellerId),
+        ),
+      ),
+      child: Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: colorToken.surface,
@@ -553,16 +563,7 @@ class _ProductDetailsState extends State<ProductDetails> {
       ),
       child: Row(
         children: [
-          CircleAvatar(
-            radius: 22,
-            backgroundColor: colorToken.surfaceVariant,
-            backgroundImage: product.sellerPhoto.isNotEmpty
-                ? NetworkImage(product.sellerPhoto)
-                : null,
-            child: product.sellerPhoto.isEmpty
-                ? Icon(Icons.person, color: colorToken.textSecondary)
-                : null,
-          ),
+          UserAvatar(imageUrl: product.sellerPhoto, radius: 22),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -624,6 +625,7 @@ class _ProductDetailsState extends State<ProductDetails> {
             },
           ),
         ],
+      ),
       ),
     );
   }

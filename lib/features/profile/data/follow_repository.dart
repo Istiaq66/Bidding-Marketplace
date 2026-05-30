@@ -45,6 +45,22 @@ class FollowRepository {
         .map((snap) => snap.exists);
   }
 
+  /// Streams the seller ids the [followerId] currently follows. No `orderBy`
+  /// so no composite index is required; callers sort client-side if needed.
+  static Stream<List<String>> watchFollowingSellerIds(String followerId) {
+    return _follows
+        .where('followerId', isEqualTo: followerId)
+        .snapshots()
+        .map((q) =>
+            q.docs.map((d) => d.data()['sellerId'] as String? ?? '').where((id) => id.isNotEmpty).toList());
+  }
+
+  static Future<int> countFollowing(String followerId) async {
+    final snap =
+        await _follows.where('followerId', isEqualTo: followerId).count().get();
+    return snap.count ?? 0;
+  }
+
   static Future<int> countFollowers(String sellerId) async {
     final snap =
         await _follows.where('sellerId', isEqualTo: sellerId).count().get();
