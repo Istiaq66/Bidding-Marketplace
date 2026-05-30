@@ -89,18 +89,6 @@ class ProductRepository {
         .map((snap) => snap.docs.map(Product.fromFirestore).toList());
   }
 
-  static Stream<List<Product>> watchRecentByUser(
-      String userId, {
-      int limit = 3,
-    }) {
-    return _products
-        .where('User Id', isEqualTo: userId)
-        .orderBy('createdAt', descending: true)
-        .limit(limit)
-        .snapshots()
-        .map((snap) => snap.docs.map(Product.fromFirestore).toList());
-  }
-
   static Future<int> countWonByUser(String userId) async {
     final snap = await _products.where('winnerId', isEqualTo: userId).count().get();
     return snap.count ?? 0;

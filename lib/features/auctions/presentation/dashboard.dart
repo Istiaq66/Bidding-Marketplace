@@ -151,20 +151,38 @@ class Dashboard extends StatelessWidget {
             StreamBuilder<List<Product>>(
               stream: userId == null
                   ? const Stream.empty()
-                  : ProductRepository.watchRecentByUser(userId),
+                  : ProductRepository.watchByUser(userId),
               builder: (context, snapshot) {
+                if (snapshot.hasError) {
+                  return _buildEmptyState(
+                    context,
+                    'Could not load auctions',
+                    '${snapshot.error}',
+                  );
+                }
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return Center(
                     child: CircularProgressIndicator(color: colorToken.primary),
                   );
                 }
 
-                final products = snapshot.data ?? const <Product>[];
+                final active = (snapshot.data ?? const <Product>[])
+                    .where((p) => p.isActive)
+                    .toList()
+                  ..sort((a, b) {
+                    final ad = a.createdAt;
+                    final bd = b.createdAt;
+                    if (ad == null && bd == null) return 0;
+                    if (ad == null) return 1; // nulls last
+                    if (bd == null) return -1;
+                    return bd.compareTo(ad); // newest first
+                  });
+                final products = active.take(3).toList();
                 if (products.isEmpty) {
                   return _buildEmptyState(
                     context,
-                    'No auctions yet',
-                    'Create your first auction to get started',
+                    'No active auctions',
+                    'Create an auction to see it here',
                   );
                 }
 
