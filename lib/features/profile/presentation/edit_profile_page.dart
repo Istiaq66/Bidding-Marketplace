@@ -1,7 +1,11 @@
+import 'dart:io';
+
 import 'package:app/features/auth/data/auth_repository.dart';
 import 'package:app/features/profile/data/user_repository.dart';
+import 'package:app/core/services/storage_service.dart';
 import 'package:app/core/theme/theme_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 class EditProfilePage extends StatefulWidget {
   const EditProfilePage({super.key});
@@ -17,8 +21,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
   final _phoneController = TextEditingController();
   final _bioController = TextEditingController();
   final _addressController = TextEditingController();
-  final _imageUrlController = TextEditingController();
 
+  XFile? _pickedImage;
+  String? _existingImageUrl;
   bool _isLoading = false;
   final String? userId = AuthRepository.currentUserId;
 
@@ -40,13 +45,60 @@ class _EditProfilePageState extends State<EditProfilePage> {
         _phoneController.text = user.phone ?? '';
         _bioController.text = user.bio ?? '';
         _addressController.text = user.address ?? '';
-        _imageUrlController.text = user.profileImage ?? '';
+        final image = user.profileImage;
+        _existingImageUrl =
+            (image != null && image.isNotEmpty) ? image : null;
       }
     } catch (_) {
       _showErrorSnackbar('Failed to load profile data');
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  Future<void> _pickImage(ImageSource source) async {
+    try {
+      final picked = await StorageService.pickImage(source);
+      if (picked != null) setState(() => _pickedImage = picked);
+    } catch (e) {
+      _showErrorSnackbar('Could not pick image: ${e.toString()}');
+    }
+  }
+
+  void _showImageSourceSheet() {
+    final colorToken = ThemeProvider.of(context).colorToken;
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: colorToken.surface,
+      builder: (sheetContext) => SafeArea(
+        child: Wrap(
+          children: [
+            ListTile(
+              leading: Icon(Icons.photo_camera, color: colorToken.primary),
+              title: Text(
+                'Take a photo',
+                style: TextStyle(color: colorToken.textPrimary),
+              ),
+              onTap: () {
+                Navigator.pop(sheetContext);
+                _pickImage(ImageSource.camera);
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.photo_library, color: colorToken.primary),
+              title: Text(
+                'Choose from gallery',
+                style: TextStyle(color: colorToken.textPrimary),
+              ),
+              onTap: () {
+                Navigator.pop(sheetContext);
+                _pickImage(ImageSource.gallery);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Future<void> _saveProfile() async {
@@ -58,7 +110,13 @@ class _EditProfilePageState extends State<EditProfilePage> {
     final navigator = Navigator.of(context);
 
     try {
-      final imageUrl = _imageUrlController.text.trim();
+      String? imageUrl = _existingImageUrl;
+      if (_pickedImage != null) {
+        imageUrl = await StorageService.uploadProfileImage(
+          uid: uid,
+          file: _pickedImage!,
+        );
+      }
       await UserRepository.updateProfile(
         uid: uid,
         name: _nameController.text.trim(),
@@ -66,13 +124,13 @@ class _EditProfilePageState extends State<EditProfilePage> {
         phone: _phoneController.text.trim(),
         bio: _bioController.text.trim(),
         address: _addressController.text.trim(),
-        profileImageUrl: imageUrl.isEmpty ? null : imageUrl,
+        profileImageUrl: imageUrl,
       );
 
       _showSuccessSnackbar('Profile updated successfully');
       navigator.pop(true);
-    } catch (_) {
-      _showErrorSnackbar('Failed to update profile');
+    } catch (e) {
+      _showErrorSnackbar('Failed to update profile: ${e.toString()}');
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -107,7 +165,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
     _phoneController.dispose();
     _bioController.dispose();
     _addressController.dispose();
-    _imageUrlController.dispose();
     super.dispose();
   }
 
@@ -166,32 +223,61 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 padding: const EdgeInsets.symmetric(vertical: 32),
                 child: Column(
                   children: [
-                    ValueListenableBuilder<TextEditingValue>(
-                      valueListenable: _imageUrlController,
-                      builder: (_, value, __) {
-                        final url = value.text.trim();
-                        return CircleAvatar(
-                          radius: 60,
-                          backgroundColor: colorToken.surfaceVariant,
-                          backgroundImage:
-                              url.isNotEmpty ? NetworkImage(url) : null,
-                          child: url.isEmpty
-                              ? Icon(
-                                  Icons.person,
-                                  size: 60,
-                                  color: colorToken.textSecondary,
-                                )
-                              : null,
-                        );
-                      },
+                    GestureDetector(
+                      onTap: _showImageSourceSheet,
+                      child: Stack(
+                        children: [
+                          CircleAvatar(
+                            radius: 60,
+                            backgroundColor: colorToken.surfaceVariant,
+                            backgroundImage: _pickedImage != null
+                                ? FileImage(File(_pickedImage!.path))
+                                : (_existingImageUrl != null
+                                        ? NetworkImage(_existingImageUrl!)
+                                        : null)
+                                    as ImageProvider<Object>?,
+                            child: (_pickedImage == null &&
+                                    _existingImageUrl == null)
+                                ? Icon(
+                                    Icons.person,
+                                    size: 60,
+                                    color: colorToken.textSecondary,
+                                  )
+                                : null,
+                          ),
+                          Positioned(
+                            bottom: 0,
+                            right: 0,
+                            child: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: colorToken.primary,
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: colorToken.surface,
+                                  width: 2,
+                                ),
+                              ),
+                              child: Icon(
+                                Icons.camera_alt,
+                                size: 18,
+                                color: colorToken.onPrimary,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                     const SizedBox(height: 12),
-                    Text(
-                      'Paste an image URL in the field below',
-                      style: TextStyle(
-                        color: colorToken.textSecondary,
-                        fontSize: 14,
-                        fontFamily: 'SourceSans3',
+                    TextButton(
+                      onPressed: _showImageSourceSheet,
+                      child: Text(
+                        'Change photo',
+                        style: TextStyle(
+                          color: colorToken.primary,
+                          fontSize: 14,
+                          fontFamily: 'SourceSans3',
+                        ),
                       ),
                     ),
                   ],
@@ -207,24 +293,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     // Personal Information Section
                     _buildSectionHeader(context, 'Personal Information'),
                     const SizedBox(height: 12),
-
-                    _buildTextField(
-                      controller: _imageUrlController,
-                      label: 'Profile Image URL',
-                      icon: Icons.link,
-                      keyboardType: TextInputType.url,
-                      validator: (value) {
-                        final v = value?.trim() ?? '';
-                        if (v.isEmpty) return null;
-                        final uri = Uri.tryParse(v);
-                        if (uri == null || uri.host.isEmpty) {
-                          return 'Enter a valid URL (https://...)';
-                        }
-                        return null;
-                      },
-                    ),
-
-                    const SizedBox(height: 16),
 
                     _buildTextField(
                       controller: _nameController,

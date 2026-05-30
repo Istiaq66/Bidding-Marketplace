@@ -41,7 +41,9 @@ class Dashboard extends StatelessWidget {
                     final totalBids = bids.length;
                     final activeAuctions = products.where((p) => p.isActive).length;
 
-                    return Row(
+                    return IntrinsicHeight(
+                      child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         Expanded(
                           child: _buildStatCard(
@@ -73,6 +75,7 @@ class Dashboard extends StatelessWidget {
                           ),
                         ),
                       ],
+                    ),
                     );
                   },
                 );
@@ -191,6 +194,7 @@ class Dashboard extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(icon, size: 32, color: color),
             const SizedBox(height: 8),

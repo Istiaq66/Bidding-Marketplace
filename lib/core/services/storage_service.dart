@@ -57,6 +57,29 @@ class StorageService {
     return _client.storage.from(_bucket).getPublicUrl(path);
   }
 
+  /// Compresses [file] and uploads it to `product_images/{uid}/avatar.jpg`.
+  /// Reuses the public product bucket so no extra bucket setup is needed.
+  /// Keeps `{uid}` as the first path segment to satisfy uid-based RLS.
+  /// Returns the public `https` URL.
+  static Future<String> uploadProfileImage({
+    required String uid,
+    required XFile file,
+  }) async {
+    final bytes = await _compress(file);
+    final path = '$uid/avatar.jpg';
+
+    await _client.storage.from(_bucket).uploadBinary(
+          path,
+          bytes,
+          fileOptions: const FileOptions(
+            contentType: 'image/jpeg',
+            upsert: true,
+          ),
+        );
+
+    return _client.storage.from(_bucket).getPublicUrl(path);
+  }
+
   /// Deletes a previously uploaded image by its public URL. Silently ignores
   /// URLs that are not Supabase Storage references or are already gone.
   static Future<void> deleteByUrl(String url) async {

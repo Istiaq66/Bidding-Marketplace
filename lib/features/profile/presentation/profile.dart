@@ -27,6 +27,7 @@ class Profile extends StatefulWidget {
 class _ProfileState extends State<Profile> {
   final User? user = AuthRepository.currentUser;
   String? _currentImageUrl;
+  String? _userName;
   int? _itemsWon;
   int? _activeBids;
   int? _watchlistCount;
@@ -47,6 +48,8 @@ class _ProfileState extends State<Profile> {
       setState(() {
         final image = appUser?.profileImage;
         _currentImageUrl = (image != null && image.isNotEmpty) ? image : null;
+        final name = appUser?.name;
+        _userName = (name != null && name.isNotEmpty) ? name : null;
       });
     } catch (_) {
       // ignored — UI falls back to placeholder
@@ -144,7 +147,7 @@ class _ProfileState extends State<Profile> {
 
                       // User Info
                       Text(
-                        user?.displayName ?? 'Auction Enthusiast',
+                        _userName ?? user?.displayName ?? 'Auction Enthusiast',
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
@@ -223,7 +226,7 @@ class _ProfileState extends State<Profile> {
                           Expanded(
                             child: ElevatedButton(
                               onPressed: () => ShareUtil.shareProfile(
-                                userName: user?.displayName,
+                                userName: _userName ?? user?.displayName,
                               ),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: colorToken.buttonSecondary,
