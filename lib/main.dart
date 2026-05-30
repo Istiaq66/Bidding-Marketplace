@@ -17,12 +17,24 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
 }
 
+/// Supabase project config, injected at build time. Pass via
+/// `--dart-define-from-file=supabase.json` (see supabase.example.json), or
+/// individual `--dart-define=SUPABASE_URL=... --dart-define=SUPABASE_ANON_KEY=...`.
+/// Kept out of source so the project ref / anon key are not committed.
+const String _supabaseUrl = String.fromEnvironment('SUPABASE_URL');
+const String _supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  assert(
+    _supabaseUrl.isNotEmpty && _supabaseAnonKey.isNotEmpty,
+    'Missing Supabase config. Run with '
+    '--dart-define-from-file=supabase.json (see supabase.example.json).',
+  );
   await Firebase.initializeApp();
   await Supabase.initialize(
-    url: 'https://yqaixcpcwnomdbjvgibc.supabase.co',
-    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlxYWl4Y3Bjd25vbWRianZnaWJjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAwMjU0MDgsImV4cCI6MjA5NTYwMTQwOH0.IO1qNZaSt_BFwggB3sJRxXYKaGjVV6DawOwhNJLhdKs',
+    url: _supabaseUrl,
+    anonKey: _supabaseAnonKey,
   );
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
   await FcmService.init();

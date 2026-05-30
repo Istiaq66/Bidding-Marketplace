@@ -9,6 +9,7 @@ lib/
   core/                     # cross-cutting, no feature-specific imports
     theme/                  # colors, ThemeProvider (design system — do not change)
     utils/                  # logger, ScaffoldMessenger extension, share helpers
+    services/               # fcm_service (FCM), storage_service (Supabase Storage)
     widgets/                # shared widgets (CustomImageHolder, buttons, fields)
   features/
     auth/        { data/ , presentation/ }
@@ -34,6 +35,9 @@ Rules:
 - `presentation/` depends on its own feature's `data/` and `domain/`, and on `core/`.
   It never reaches `FirebaseFirestore.instance` directly — only through a repository.
 - `data/` (repositories) wraps Firestore queries and returns `domain/` models.
+- **Storage exception:** Auth, Firestore, Cloud Functions, and FCM run on Firebase, but
+  product/profile *image* storage uses **Supabase Storage** (`core/services/storage_service.dart`).
+  See `docs/decisions/0001-supabase-storage.md` for why.
 - A feature must not import another feature's `presentation/`. Cross-feature reuse goes
   through `core/` or through a repository in the other feature's `data/`.
 - `core/` depends on nothing app-specific (no `features/` imports).

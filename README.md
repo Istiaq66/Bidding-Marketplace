@@ -35,7 +35,10 @@ Firestore collections: `users`, `products`, `bids`, `watchlist`.
    - Add `ios/Runner/GoogleService-Info.plist`
    - These files are gitignored — request them from a project admin.
 4. Replace the Google Sign-In `serverClientId` in `lib/services/auth_service.dart` with your own OAuth client ID.
-5. `flutter run`
+5. Configure Supabase Storage (used for product/profile images — see `docs/decisions/0001-supabase-storage.md`):
+   - Copy `supabase.example.json` to `supabase.json` and fill in your project URL + anon key. `supabase.json` is gitignored.
+   - Apply storage bucket + RLS policies: in the Supabase SQL editor run `supabase/policies.sql` (or `supabase db execute --file supabase/policies.sql`).
+6. `flutter run --dart-define-from-file=supabase.json` (the `--dart-define-from-file` flag is required for every `run`/`build`; without it the app asserts on missing Supabase config).
 
 ## Android Notes
 

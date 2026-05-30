@@ -32,6 +32,8 @@ lib/firebase_options.dart
 .env
 .env.*
 *.keystore
+# Supabase build-time config (anon key) — use supabase.example.json as template
+supabase.json
 
 # Cloud Functions
 functions/node_modules/
