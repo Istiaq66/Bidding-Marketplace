@@ -54,7 +54,7 @@ class StorageService {
           ),
         );
 
-    return _client.storage.from(_bucket).getPublicUrl(path);
+    return _bustCache(_client.storage.from(_bucket).getPublicUrl(path));
   }
 
   /// Compresses [file] and uploads it to `product_images/{uid}/avatar.jpg`.
@@ -77,8 +77,15 @@ class StorageService {
           ),
         );
 
-    return _client.storage.from(_bucket).getPublicUrl(path);
+    return _bustCache(_client.storage.from(_bucket).getPublicUrl(path));
   }
+
+  /// Appends a version query param so an overwritten image (same storage path,
+  /// hence same base URL) yields a fresh URL. Without this, `upsert: true`
+  /// re-uploads return an identical URL, and both `cached_network_image` (keyed
+  /// by URL) and the Supabase CDN keep serving the stale image.
+  static String _bustCache(String url) =>
+      '$url?v=${DateTime.now().millisecondsSinceEpoch}';
 
   /// Deletes a previously uploaded image by its public URL. Silently ignores
   /// URLs that are not Supabase Storage references or are already gone.
@@ -97,10 +104,14 @@ class StorageService {
   /// `https://<project>.supabase.co/storage/v1/object/public/<bucket>/<path>`
   /// Returns `<path>` if [url] matches our bucket, else null.
   static String? _pathFromPublicUrl(String url) {
-    final marker = '/object/public/$_bucket/';
+    const marker = '/object/public/$_bucket/';
     final i = url.indexOf(marker);
     if (i == -1) return null;
-    return Uri.decodeComponent(url.substring(i + marker.length));
+    var path = url.substring(i + marker.length);
+    // Strip the cache-busting query (`?v=...`) appended by _bustCache.
+    final q = path.indexOf('?');
+    if (q != -1) path = path.substring(0, q);
+    return Uri.decodeComponent(path);
   }
 
   /// Caps the long edge near 1600px at quality 80 (~target < 500 KB). Falls

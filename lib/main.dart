@@ -26,11 +26,16 @@ const String _supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  assert(
-    _supabaseUrl.isNotEmpty && _supabaseAnonKey.isNotEmpty,
-    'Missing Supabase config. Run with '
-    '--dart-define-from-file=supabase.json (see supabase.example.json).',
-  );
+  // Runtime check (not assert): asserts are stripped from release builds, so a
+  // missing config must still fail loudly here rather than initializing
+  // Supabase with an empty URL (which yields "no host specified" at request
+  // time).
+  if (_supabaseUrl.isEmpty || _supabaseAnonKey.isEmpty) {
+    throw StateError(
+      'Missing Supabase config. Run with '
+      '--dart-define-from-file=supabase.json (see supabase.example.json).',
+    );
+  }
   await Firebase.initializeApp();
   await Supabase.initialize(
     url: _supabaseUrl,
