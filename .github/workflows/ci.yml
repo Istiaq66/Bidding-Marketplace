@@ -1,40 +1,80 @@
-name: CI
+name: Flutter CI/CD
 
 on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
+
+# Cancel superseded runs on the same ref.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  FLUTTER_VERSION: '3.35.0'
 
 permissions:
   contents: write
 
 jobs:
-  build_apk:
+  # Fast quality gate — runs on every push/PR, no signing required.
+  analyze_and_test:
+    name: Analyze & Test
     runs-on: ubuntu-latest
     steps:
-      # 1. Checkout code
       - name: Checkout Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      # 2. Setup Java 17 (matches Gradle settings)
-      - name: Setup Java
-        uses: actions/setup-java@v3
-        with:
-          distribution: temurin
-          java-version: 21
-
-      # 3. Setup Flutter
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.35.0'
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
 
-      # 4. Install dependencies
       - name: Install Dependencies
         run: flutter pub get
 
-      # 5a. Verify required secrets are present (fail loud rather than shipping
-      # an APK that crashes on startup with an empty Supabase config).
+      - name: Verify Formatting
+        run: dart format --set-exit-if-changed .
+
+      # Errors/warnings block; infos are tracked tech debt.
+      - name: Analyze
+        run: flutter analyze --no-fatal-infos
+
+      - name: Run Tests
+        run: flutter test --coverage
+
+  # Release build — only on push to main, after the gate passes.
+  build_apk:
+    name: Build Release APK
+    needs: analyze_and_test
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # Java 21 matches the Gradle / build.gradle toolchain settings.
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      - name: Install Dependencies
+        run: flutter pub get
+
+      # Fail loud if required secrets are missing rather than shipping an APK
+      # that crashes on startup with an empty Supabase config.
       - name: Check required secrets
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
@@ -52,12 +92,11 @@ jobs:
           fi
           echo "All required secrets present."
 
-      # 5b. Decode release keystore
+      # Decode release keystore (build.gradle reads signing from env vars).
       - name: Decode Keystore
         run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android/app/upload-keystore.jks
 
-      # 5c. Build APK (release)
-      - name: Build APK
+      - name: Build APK (release)
         env:
           KEYSTORE_PATH: upload-keystore.jks
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
@@ -68,16 +107,14 @@ jobs:
             --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_URL }} \
             --dart-define=SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}
 
-      # 6. Upload APK as artifact
       - name: Upload APK as Artifact
         uses: actions/upload-artifact@v4
         with:
           name: BidPlace
           path: build/app/outputs/flutter-apk/app-release.apk
 
-      # 7. Create GitHub Release and attach APK
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
+      - name: Create GitHub Release and attach APK
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ github.run_number }}
           name: BidPlace
