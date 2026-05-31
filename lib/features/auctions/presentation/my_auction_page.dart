@@ -90,7 +90,11 @@ class MyAuctionsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildAuctionsList(BuildContext context, String filter, {String? userId}) {
+  Widget _buildAuctionsList(
+    BuildContext context,
+    String filter, {
+    String? userId,
+  }) {
     final colorToken = ThemeProvider.of(context).colorToken;
 
     if (userId == null) {
@@ -162,11 +166,12 @@ class MyAuctionsPage extends StatelessWidget {
           );
         }
 
-        final products = all.where((p) {
-          if (filter == 'all') return true;
-          if (filter == 'active') return p.isActive;
-          return !p.isActive;
-        }).toList();
+        final products =
+            all.where((p) {
+              if (filter == 'all') return true;
+              if (filter == 'active') return p.isActive;
+              return !p.isActive;
+            }).toList();
 
         if (products.isEmpty) {
           return Center(
@@ -196,7 +201,8 @@ class MyAuctionsPage extends StatelessWidget {
         return ListView.builder(
           padding: const EdgeInsets.all(16),
           itemCount: products.length,
-          itemBuilder: (context, index) => _buildAuctionItem(context, products[index]),
+          itemBuilder:
+              (context, index) => _buildAuctionItem(context, products[index]),
         );
       },
     );
@@ -214,71 +220,74 @@ class MyAuctionsPage extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 1,
-      color: themeProvider.isLightTheme
-          ? colorToken.surface
-          : colorToken.surfaceVariant,
+      color:
+          themeProvider.isLightTheme
+              ? colorToken.surface
+              : colorToken.surfaceVariant,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: colorToken.divider,
-          width: 1,
-        ),
+        side: BorderSide(color: colorToken.divider, width: 1),
       ),
       child: Column(
         children: [
           // Image
           ClipRRect(
             borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-            child: imageUrl.isNotEmpty && imageUrl != ''
-                ? Image.network(
-              imageUrl,
-              height: 200,
-              width: double.infinity,
-              fit: BoxFit.cover,
-              loadingBuilder: (context, child, loadingProgress) {
-                if (loadingProgress == null) return child;
-                return Container(
-                  height: 200,
-                  color: themeProvider.isLightTheme
-                      ? colorToken.surfaceVariant
-                      : colorToken.background,
-                  child: Center(
-                    child: CircularProgressIndicator(
-                      value: loadingProgress.expectedTotalBytes != null
-                          ? loadingProgress.cumulativeBytesLoaded /
-                          loadingProgress.expectedTotalBytes!
-                          : null,
-                      color: colorToken.primary,
-                      strokeWidth: 2,
+            child:
+                imageUrl.isNotEmpty && imageUrl != ''
+                    ? Image.network(
+                      imageUrl,
+                      height: 200,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return Container(
+                          height: 200,
+                          color:
+                              themeProvider.isLightTheme
+                                  ? colorToken.surfaceVariant
+                                  : colorToken.background,
+                          child: Center(
+                            child: CircularProgressIndicator(
+                              value:
+                                  loadingProgress.expectedTotalBytes != null
+                                      ? loadingProgress.cumulativeBytesLoaded /
+                                          loadingProgress.expectedTotalBytes!
+                                      : null,
+                              color: colorToken.primary,
+                              strokeWidth: 2,
+                            ),
+                          ),
+                        );
+                      },
+                      errorBuilder: (context, error, stack) {
+                        return Container(
+                          height: 200,
+                          color:
+                              themeProvider.isLightTheme
+                                  ? colorToken.surfaceVariant
+                                  : colorToken.background,
+                          child: Icon(
+                            Icons.image_not_supported_outlined,
+                            size: 64,
+                            color: colorToken.textSecondary,
+                          ),
+                        );
+                      },
+                    )
+                    : Container(
+                      height: 200,
+                      color:
+                          themeProvider.isLightTheme
+                              ? colorToken.surfaceVariant
+                              : colorToken.background,
+                      child: Icon(
+                        Icons.shopping_bag_outlined,
+                        size: 64,
+                        color: colorToken.textSecondary,
+                      ),
                     ),
-                  ),
-                );
-              },
-              errorBuilder: (context, error, stack) {
-                return Container(
-                  height: 200,
-                  color: themeProvider.isLightTheme
-                      ? colorToken.surfaceVariant
-                      : colorToken.background,
-                  child: Icon(
-                    Icons.image_not_supported_outlined,
-                    size: 64,
-                    color: colorToken.textSecondary,
-                  ),
-                );
-              },
-            )
-                : Container(
-              height: 200,
-              color: themeProvider.isLightTheme
-                  ? colorToken.surfaceVariant
-                  : colorToken.background,
-              child: Icon(
-                Icons.shopping_bag_outlined,
-                size: 64,
-                color: colorToken.textSecondary,
-              ),
-            ),
           ),
 
           // Content
@@ -309,7 +318,11 @@ class MyAuctionsPage extends StatelessWidget {
                 const SizedBox(height: 12),
                 Row(
                   children: [
-                    Icon(Icons.attach_money, size: 20, color: colorToken.success),
+                    Icon(
+                      Icons.attach_money,
+                      size: 20,
+                      color: colorToken.success,
+                    ),
                     Text(
                       'Starting Bid: \$$minBidPrice',
                       style: TextStyle(
@@ -324,7 +337,11 @@ class MyAuctionsPage extends StatelessWidget {
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    Icon(Icons.calendar_today, size: 16, color: colorToken.textSecondary),
+                    Icon(
+                      Icons.calendar_today,
+                      size: 16,
+                      color: colorToken.textSecondary,
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       'Ends: $date',
@@ -342,26 +359,28 @@ class MyAuctionsPage extends StatelessWidget {
                   children: [
                     Expanded(
                       child: OutlinedButton.icon(
-                        onPressed: product.bidCount == 0
-                            ? () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) =>
-                                        EditAuctionPage(product: product),
-                                  ),
-                                );
-                              }
-                            : () {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text(
-                                      'Auctions with bids cannot be edited',
+                        onPressed:
+                            product.bidCount == 0
+                                ? () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder:
+                                          (_) =>
+                                              EditAuctionPage(product: product),
                                     ),
-                                    behavior: SnackBarBehavior.floating,
-                                  ),
-                                );
-                              },
+                                  );
+                                }
+                                : () {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        'Auctions with bids cannot be edited',
+                                      ),
+                                      behavior: SnackBarBehavior.floating,
+                                    ),
+                                  );
+                                },
                         icon: const Icon(Icons.edit, size: 18),
                         label: const Text('Edit'),
                         style: OutlinedButton.styleFrom(
@@ -407,61 +426,60 @@ class MyAuctionsPage extends StatelessWidget {
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: colorToken.surface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        title: Text(
-          'Delete Auction',
-          style: TextStyle(
-            color: colorToken.textPrimary,
-            fontFamily: 'SourceSans3',
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        content: Text(
-          'Are you sure you want to delete this auction? This action cannot be undone.',
-          style: TextStyle(
-            color: colorToken.textSecondary,
-            fontFamily: 'SourceSans3',
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              'Cancel',
+      builder:
+          (context) => AlertDialog(
+            backgroundColor: colorToken.surface,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            title: Text(
+              'Delete Auction',
+              style: TextStyle(
+                color: colorToken.textPrimary,
+                fontFamily: 'SourceSans3',
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            content: Text(
+              'Are you sure you want to delete this auction? This action cannot be undone.',
               style: TextStyle(
                 color: colorToken.textSecondary,
                 fontFamily: 'SourceSans3',
               ),
             ),
-          ),
-          TextButton(
-            onPressed: () async {
-              final navigator = Navigator.of(context);
-              final messenger = ScaffoldMessenger.of(context);
-              await ProductRepository.deleteById(docId);
-              navigator.pop();
-              messenger.showSnackBar(
-                SnackBar(
-                  content: const Text('Auction deleted successfully'),
-                  backgroundColor: colorToken.success,
-                  behavior: SnackBarBehavior.floating,
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(
+                  'Cancel',
+                  style: TextStyle(
+                    color: colorToken.textSecondary,
+                    fontFamily: 'SourceSans3',
+                  ),
                 ),
-              );
-            },
-            style: TextButton.styleFrom(
-              foregroundColor: colorToken.error,
-            ),
-            child: const Text(
-              'Delete',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
+              ),
+              TextButton(
+                onPressed: () async {
+                  final navigator = Navigator.of(context);
+                  final messenger = ScaffoldMessenger.of(context);
+                  await ProductRepository.deleteById(docId);
+                  navigator.pop();
+                  messenger.showSnackBar(
+                    SnackBar(
+                      content: const Text('Auction deleted successfully'),
+                      backgroundColor: colorToken.success,
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                },
+                style: TextButton.styleFrom(foregroundColor: colorToken.error),
+                child: const Text(
+                  'Delete',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 }

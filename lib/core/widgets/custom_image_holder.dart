@@ -7,7 +7,12 @@ class CustomImageHolder extends StatelessWidget {
   final double height;
   final double width;
 
-  const CustomImageHolder({super.key, required this.imageUrl, this.height = 200, this.width = double.infinity});
+  const CustomImageHolder({
+    super.key,
+    required this.imageUrl,
+    this.height = 200,
+    this.width = double.infinity,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -20,7 +25,10 @@ class CustomImageHolder extends StatelessWidget {
           Icons.image_outlined,
           size: 50,
           color:
-              ThemeProvider.of(context, listen: false).colorToken.surfaceVariant,
+              ThemeProvider.of(
+                context,
+                listen: false,
+              ).colorToken.surfaceVariant,
         ),
       );
     }
@@ -29,21 +37,25 @@ class CustomImageHolder extends StatelessWidget {
       imageUrl: imageUrl,
       width: width,
       height: height,
-      placeholder: (context, url) => Container(
-        color: ThemeProvider.of(context, listen: false).colorToken.surface,
-        child: const Center(
-          child: CircularProgressIndicator(),
-        ),
-      ),
+      placeholder:
+          (context, url) => Container(
+            color: ThemeProvider.of(context, listen: false).colorToken.surface,
+            child: const Center(child: CircularProgressIndicator()),
+          ),
       // Error widget if image fails to load
-      errorWidget: (context, url, error) => Container(
-        color: ThemeProvider.of(context, listen: false).colorToken.surface,
-        child: Icon(
-          Icons.broken_image,
-          size: 50,
-          color: ThemeProvider.of(context, listen: false).colorToken.surfaceVariant,
-        ),
-      ),
+      errorWidget:
+          (context, url, error) => Container(
+            color: ThemeProvider.of(context, listen: false).colorToken.surface,
+            child: Icon(
+              Icons.broken_image,
+              size: 50,
+              color:
+                  ThemeProvider.of(
+                    context,
+                    listen: false,
+                  ).colorToken.surfaceVariant,
+            ),
+          ),
       // Fit image
       fit: BoxFit.cover,
       // Fade in animation

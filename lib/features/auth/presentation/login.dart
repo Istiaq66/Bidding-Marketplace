@@ -32,24 +32,25 @@ class _LoginRegisterState extends State<LoginRegister> {
       );
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Login successful!')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Login successful!')));
       }
     } catch (e) {
       if (mounted) {
         showDialog(
           context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Login Failed'),
-            content: Text(e.toString().replaceAll('Exception: ', '')),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('OK'),
+          builder:
+              (context) => AlertDialog(
+                title: const Text('Login Failed'),
+                content: Text(e.toString().replaceAll('Exception: ', '')),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('OK'),
+                  ),
+                ],
               ),
-            ],
-          ),
         );
       }
     } finally {
@@ -67,16 +68,17 @@ class _LoginRegisterState extends State<LoginRegister> {
     if (passwordController.text != confirmPasswordController.text) {
       showDialog(
         context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Password Mismatch'),
-          content: const Text('Passwords do not match. Please try again.'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('OK'),
+        builder:
+            (context) => AlertDialog(
+              title: const Text('Password Mismatch'),
+              content: const Text('Passwords do not match. Please try again.'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('OK'),
+                ),
+              ],
             ),
-          ],
-        ),
       );
       return;
     }
@@ -85,16 +87,19 @@ class _LoginRegisterState extends State<LoginRegister> {
     if (passwordController.text.length < 6) {
       showDialog(
         context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Weak Password'),
-          content: const Text('Password must be at least 6 characters long.'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('OK'),
+        builder:
+            (context) => AlertDialog(
+              title: const Text('Weak Password'),
+              content: const Text(
+                'Password must be at least 6 characters long.',
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('OK'),
+                ),
+              ],
             ),
-          ],
-        ),
       );
       return;
     }
@@ -118,16 +123,17 @@ class _LoginRegisterState extends State<LoginRegister> {
       if (mounted) {
         showDialog(
           context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Registration Failed'),
-            content: Text(e.toString().replaceAll('Exception: ', '')),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('OK'),
+          builder:
+              (context) => AlertDialog(
+                title: const Text('Registration Failed'),
+                content: Text(e.toString().replaceAll('Exception: ', '')),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('OK'),
+                  ),
+                ],
               ),
-            ],
-          ),
         );
       }
     } finally {
@@ -144,16 +150,17 @@ class _LoginRegisterState extends State<LoginRegister> {
     if (emailController.text.trim().isEmpty) {
       showDialog(
         context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Email Required'),
-          content: const Text('Please enter your email address.'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('OK'),
+        builder:
+            (context) => AlertDialog(
+              title: const Text('Email Required'),
+              content: const Text('Please enter your email address.'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('OK'),
+                ),
+              ],
             ),
-          ],
-        ),
       );
       return;
     }
@@ -163,32 +170,36 @@ class _LoginRegisterState extends State<LoginRegister> {
       if (mounted) {
         showDialog(
           context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Password Reset'),
-            content: const Text('Password reset email sent. Check your inbox.'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('OK'),
+          builder:
+              (context) => AlertDialog(
+                title: const Text('Password Reset'),
+                content: const Text(
+                  'Password reset email sent. Check your inbox.',
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('OK'),
+                  ),
+                ],
               ),
-            ],
-          ),
         );
       }
     } catch (e) {
       if (mounted) {
         showDialog(
           context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Error'),
-            content: Text(e.toString().replaceAll('Exception: ', '')),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('OK'),
+          builder:
+              (context) => AlertDialog(
+                title: const Text('Error'),
+                content: Text(e.toString().replaceAll('Exception: ', '')),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('OK'),
+                  ),
+                ],
               ),
-            ],
-          ),
         );
       }
     }
@@ -245,7 +256,10 @@ class _LoginRegisterState extends State<LoginRegister> {
                   isLoginMode
                       ? 'Welcome back, you\'ve been missed'
                       : 'Create an account to get started',
-                  style: const TextStyle(fontFamily: 'SourceSans3', fontSize: 15),
+                  style: const TextStyle(
+                    fontFamily: 'SourceSans3',
+                    fontSize: 15,
+                  ),
                 ),
 
                 const SizedBox(height: 20),
@@ -308,9 +322,9 @@ class _LoginRegisterState extends State<LoginRegister> {
                 isLoading
                     ? const Center(child: CircularProgressIndicator())
                     : MyButton(
-                  onTap: isLoginMode ? _signInUser : _registerUser,
-                  text: isLoginMode ? 'Sign In' : 'Register',
-                ),
+                      onTap: isLoginMode ? _signInUser : _registerUser,
+                      text: isLoginMode ? 'Sign In' : 'Register',
+                    ),
 
                 const SizedBox(height: 25),
 
@@ -320,10 +334,7 @@ class _LoginRegisterState extends State<LoginRegister> {
                   child: Row(
                     children: [
                       Expanded(
-                        child: Divider(
-                          thickness: 0.5,
-                          color: Colors.grey[400],
-                        ),
+                        child: Divider(thickness: 0.5, color: Colors.grey[400]),
                       ),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -333,10 +344,7 @@ class _LoginRegisterState extends State<LoginRegister> {
                         ),
                       ),
                       Expanded(
-                        child: Divider(
-                          thickness: 0.5,
-                          color: Colors.grey[400],
-                        ),
+                        child: Divider(thickness: 0.5, color: Colors.grey[400]),
                       ),
                     ],
                   ),
@@ -351,22 +359,27 @@ class _LoginRegisterState extends State<LoginRegister> {
                     try {
                       await AuthRepository.signInWithGoogle();
                       messenger.showSnackBar(
-                        const SnackBar(content: Text('Google sign in successful!')),
+                        const SnackBar(
+                          content: Text('Google sign in successful!'),
+                        ),
                       );
                     } catch (e) {
                       if (!context.mounted) return;
                       showDialog(
                         context: context,
-                        builder: (context) => AlertDialog(
-                          title: const Text('Sign In Failed'),
-                          content: Text(e.toString().replaceAll('Exception: ', '')),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(context),
-                              child: const Text('OK'),
+                        builder:
+                            (context) => AlertDialog(
+                              title: const Text('Sign In Failed'),
+                              content: Text(
+                                e.toString().replaceAll('Exception: ', ''),
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context),
+                                  child: const Text('OK'),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
                       );
                     }
                   },
@@ -377,10 +390,7 @@ class _LoginRegisterState extends State<LoginRegister> {
                       borderRadius: BorderRadius.circular(16),
                       color: Colors.grey[200],
                     ),
-                    child: Image.asset(
-                      'images/google.png',
-                      height: 30,
-                    ),
+                    child: Image.asset('images/google.png', height: 30),
                   ),
                 ),
 
@@ -391,7 +401,9 @@ class _LoginRegisterState extends State<LoginRegister> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      isLoginMode ? 'Not a member?' : 'Already have an account?',
+                      isLoginMode
+                          ? 'Not a member?'
+                          : 'Already have an account?',
                     ),
                     const SizedBox(width: 5),
                     GestureDetector(
@@ -403,7 +415,7 @@ class _LoginRegisterState extends State<LoginRegister> {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                    )
+                    ),
                   ],
                 ),
               ],

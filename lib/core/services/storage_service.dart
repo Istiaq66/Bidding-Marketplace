@@ -27,11 +27,7 @@ class StorageService {
 
   /// Opens the camera or gallery. Returns null if the user cancels.
   static Future<XFile?> pickImage(ImageSource source) {
-    return _picker.pickImage(
-      source: source,
-      maxWidth: 2000,
-      imageQuality: 90,
-    );
+    return _picker.pickImage(source: source, maxWidth: 2000, imageQuality: 90);
   }
 
   /// Compresses [file] and uploads it to `product_images/{uid}/{id}.jpg`.
@@ -45,7 +41,9 @@ class StorageService {
     final name = '${id ?? DateTime.now().millisecondsSinceEpoch}.jpg';
     final path = '$uid/$name';
 
-    await _client.storage.from(_bucket).uploadBinary(
+    await _client.storage
+        .from(_bucket)
+        .uploadBinary(
           path,
           bytes,
           fileOptions: const FileOptions(
@@ -68,7 +66,9 @@ class StorageService {
     final bytes = await _compress(file);
     final path = '$uid/avatar.jpg';
 
-    await _client.storage.from(_bucket).uploadBinary(
+    await _client.storage
+        .from(_bucket)
+        .uploadBinary(
           path,
           bytes,
           fileOptions: const FileOptions(

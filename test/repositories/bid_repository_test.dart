@@ -11,7 +11,7 @@ void main() {
     BidRepository.firestoreForTesting = fake;
   });
 
-Future<DocumentReference<Map<String, dynamic>>> seedProduct({
+  Future<DocumentReference<Map<String, dynamic>>> seedProduct({
     String sellerId = 'seller',
     double currentBid = 100,
     String status = 'active',

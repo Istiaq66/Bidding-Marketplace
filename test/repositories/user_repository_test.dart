@@ -10,7 +10,7 @@ void main() {
     UserRepository.firestoreForTesting = fake;
   });
 
-test('getById returns null when no doc', () async {
+  test('getById returns null when no doc', () async {
     expect(await UserRepository.getById('uid-1'), isNull);
   });
 

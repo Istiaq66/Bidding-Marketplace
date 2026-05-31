@@ -46,73 +46,76 @@ class NotificationsPage extends StatelessWidget {
           const SizedBox(width: 8),
         ],
       ),
-      body: userId == null
-          ? Center(
-              child: Text(
-                'Sign in to view notifications',
-                style: TextStyle(
-                  color: colorToken.textSecondary,
-                  fontFamily: 'SourceSans3',
+      body:
+          userId == null
+              ? Center(
+                child: Text(
+                  'Sign in to view notifications',
+                  style: TextStyle(
+                    color: colorToken.textSecondary,
+                    fontFamily: 'SourceSans3',
+                  ),
                 ),
-              ),
-            )
-          : StreamBuilder<List<AppNotification>>(
-              stream: NotificationRepository.watchByUser(userId),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Center(
-                    child:
-                        CircularProgressIndicator(color: colorToken.primary),
-                  );
-                }
+              )
+              : StreamBuilder<List<AppNotification>>(
+                stream: NotificationRepository.watchByUser(userId),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return Center(
+                      child: CircularProgressIndicator(
+                        color: colorToken.primary,
+                      ),
+                    );
+                  }
 
-                final notifications =
-                    snapshot.data ?? const <AppNotification>[];
+                  final notifications =
+                      snapshot.data ?? const <AppNotification>[];
 
-                if (notifications.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.notifications_none_outlined,
-                          size: 72,
-                          color: colorToken.textSecondary,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'No notifications yet',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: colorToken.textPrimary,
-                            fontFamily: 'SourceSans3',
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'You\'ll be notified about bids and auctions',
-                          style: TextStyle(
+                  if (notifications.isEmpty) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.notifications_none_outlined,
+                            size: 72,
                             color: colorToken.textSecondary,
-                            fontFamily: 'SourceSans3',
                           ),
-                        ),
-                      ],
-                    ),
-                  );
-                }
+                          const SizedBox(height: 16),
+                          Text(
+                            'No notifications yet',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: colorToken.textPrimary,
+                              fontFamily: 'SourceSans3',
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'You\'ll be notified about bids and auctions',
+                            style: TextStyle(
+                              color: colorToken.textSecondary,
+                              fontFamily: 'SourceSans3',
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
 
-                return ListView.separated(
-                  itemCount: notifications.length,
-                  separatorBuilder: (_, __) =>
-                      Divider(height: 1, color: colorToken.divider),
-                  itemBuilder: (context, index) {
-                    final n = notifications[index];
-                    return _buildTile(context, n, userId, colorToken);
-                  },
-                );
-              },
-            ),
+                  return ListView.separated(
+                    itemCount: notifications.length,
+                    separatorBuilder:
+                        (_, __) =>
+                            Divider(height: 1, color: colorToken.divider),
+                    itemBuilder: (context, index) {
+                      final n = notifications[index];
+                      return _buildTile(context, n, userId, colorToken);
+                    },
+                  );
+                },
+              ),
     );
   }
 
@@ -135,9 +138,10 @@ class NotificationsPage extends StatelessWidget {
     final subtitle = _subtitleFor(n);
 
     return Material(
-      color: n.read
-          ? colorToken.background
-          : colorToken.primary.withValues(alpha: 0.05),
+      color:
+          n.read
+              ? colorToken.background
+              : colorToken.primary.withValues(alpha: 0.05),
       child: ListTile(
         leading: CircleAvatar(
           backgroundColor: iconColor.withValues(alpha: 0.12),
@@ -161,16 +165,17 @@ class NotificationsPage extends StatelessWidget {
             fontFamily: 'SourceSans3',
           ),
         ),
-        trailing: n.read
-            ? null
-            : Container(
-                width: 8,
-                height: 8,
-                decoration: BoxDecoration(
-                  color: colorToken.primary,
-                  shape: BoxShape.circle,
+        trailing:
+            n.read
+                ? null
+                : Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: colorToken.primary,
+                    shape: BoxShape.circle,
+                  ),
                 ),
-              ),
         onTap: () async {
           if (!n.read) await NotificationRepository.markRead(userId, n.id);
           if (n.productId.isNotEmpty && context.mounted) {
@@ -230,9 +235,7 @@ class NotificationsPage extends StatelessWidget {
 
   String _subtitleFor(AppNotification n) {
     final amount = n.amount != null ? ' • \$${n.amount}' : '';
-    final time = n.createdAt != null
-        ? _formatTime(n.createdAt!)
-        : '';
+    final time = n.createdAt != null ? _formatTime(n.createdAt!) : '';
     return '$time$amount'.trim();
   }
 

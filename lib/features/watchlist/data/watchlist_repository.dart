@@ -15,7 +15,10 @@ class WatchlistRepository {
   @visibleForTesting
   static void resetForTesting() => _db = FirebaseFirestore.instance;
 
-  static Query<Map<String, dynamic>> _userProductQuery(String userId, String productId) {
+  static Query<Map<String, dynamic>> _userProductQuery(
+    String userId,
+    String productId,
+  ) {
     return _watchlist
         .where('User Id', isEqualTo: userId)
         .where('Product Id', isEqualTo: productId);
@@ -34,7 +37,10 @@ class WatchlistRepository {
     });
   }
 
-  static Future<void> removeByUserAndProduct(String userId, String productId) async {
+  static Future<void> removeByUserAndProduct(
+    String userId,
+    String productId,
+  ) async {
     final snap = await _userProductQuery(userId, productId).get();
     for (final doc in snap.docs) {
       await doc.reference.delete();
@@ -46,33 +52,32 @@ class WatchlistRepository {
   }
 
   static Future<void> deleteAllByUser(String userId) async {
-    final snap =
-        await _watchlist.where('User Id', isEqualTo: userId).get();
+    final snap = await _watchlist.where('User Id', isEqualTo: userId).get();
     for (final doc in snap.docs) {
       await doc.reference.delete();
     }
   }
 
   static Stream<List<WatchlistEntry>> watchByUser(String userId) {
-    return _watchlist
-        .where('User Id', isEqualTo: userId)
-        .snapshots()
-        .map((snap) {
-          final list = snap.docs.map(WatchlistEntry.fromFirestore).toList()
-            ..sort((a, b) {
-              final ac = a.addedAt;
-              final bc = b.addedAt;
-              if (ac == null && bc == null) return 0;
-              if (ac == null) return 1;
-              if (bc == null) return -1;
-              return bc.compareTo(ac);
-            });
-          return list;
-        });
+    return _watchlist.where('User Id', isEqualTo: userId).snapshots().map((
+      snap,
+    ) {
+      final list =
+          snap.docs.map(WatchlistEntry.fromFirestore).toList()..sort((a, b) {
+            final ac = a.addedAt;
+            final bc = b.addedAt;
+            if (ac == null && bc == null) return 0;
+            if (ac == null) return 1;
+            if (bc == null) return -1;
+            return bc.compareTo(ac);
+          });
+      return list;
+    });
   }
 
   static Future<int> countByUser(String userId) async {
-    final snap = await _watchlist.where('User Id', isEqualTo: userId).count().get();
+    final snap =
+        await _watchlist.where('User Id', isEqualTo: userId).count().get();
     return snap.count ?? 0;
   }
 }

@@ -39,7 +39,10 @@ class SettingsPage extends StatelessWidget {
             onChanged: (_) => themeProvider.toggleTheme(),
             title: Text(
               'Dark mode',
-              style: TextStyle(color: colorToken.textPrimary, fontFamily: 'SourceSans3'),
+              style: TextStyle(
+                color: colorToken.textPrimary,
+                fontFamily: 'SourceSans3',
+              ),
             ),
             secondary: Icon(
               themeProvider.isLightTheme ? Icons.light_mode : Icons.dark_mode,
@@ -53,27 +56,47 @@ class SettingsPage extends StatelessWidget {
             title: Text(
               'Notifications',
               style: TextStyle(
-                  color: colorToken.textPrimary, fontFamily: 'SourceSans3'),
+                color: colorToken.textPrimary,
+                fontFamily: 'SourceSans3',
+              ),
             ),
-            trailing:
-                Icon(Icons.chevron_right, color: colorToken.textSecondary),
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (_) => const NotificationSettingsPage()),
+            trailing: Icon(
+              Icons.chevron_right,
+              color: colorToken.textSecondary,
             ),
+            onTap:
+                () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const NotificationSettingsPage(),
+                  ),
+                ),
           ),
-          _comingSoonTile(context, Icons.lock_outline, 'Privacy & Security', colorToken),
-          _comingSoonTile(context, Icons.payment, 'Payment methods', colorToken),
+          _comingSoonTile(
+            context,
+            Icons.lock_outline,
+            'Privacy & Security',
+            colorToken,
+          ),
+          _comingSoonTile(
+            context,
+            Icons.payment,
+            'Payment methods',
+            colorToken,
+          ),
           ListTile(
             leading: Icon(Icons.share, color: colorToken.textPrimary),
             title: Text(
               'Share app',
               style: TextStyle(
-                  color: colorToken.textPrimary, fontFamily: 'SourceSans3'),
+                color: colorToken.textPrimary,
+                fontFamily: 'SourceSans3',
+              ),
             ),
-            trailing:
-                Icon(Icons.chevron_right, color: colorToken.textSecondary),
+            trailing: Icon(
+              Icons.chevron_right,
+              color: colorToken.textSecondary,
+            ),
             onTap: ShareUtil.shareApp,
           ),
           _sectionHeader('Danger zone', colorToken),
@@ -94,7 +117,10 @@ class SettingsPage extends StatelessWidget {
                 fontFamily: 'SourceSans3',
               ),
             ),
-            trailing: Icon(Icons.chevron_right, color: colorToken.textSecondary),
+            trailing: Icon(
+              Icons.chevron_right,
+              color: colorToken.textSecondary,
+            ),
             onTap: () {
               Navigator.push(
                 context,
@@ -107,11 +133,17 @@ class SettingsPage extends StatelessWidget {
             leading: Icon(Icons.info_outline, color: colorToken.textPrimary),
             title: Text(
               'Version',
-              style: TextStyle(color: colorToken.textPrimary, fontFamily: 'SourceSans3'),
+              style: TextStyle(
+                color: colorToken.textPrimary,
+                fontFamily: 'SourceSans3',
+              ),
             ),
             trailing: Text(
               '1.0.0',
-              style: TextStyle(color: colorToken.textSecondary, fontFamily: 'SourceSans3'),
+              style: TextStyle(
+                color: colorToken.textSecondary,
+                fontFamily: 'SourceSans3',
+              ),
             ),
           ),
         ],
@@ -135,12 +167,20 @@ class SettingsPage extends StatelessWidget {
     );
   }
 
-  Widget _comingSoonTile(BuildContext context, IconData icon, String title, ColorToken colorToken) {
+  Widget _comingSoonTile(
+    BuildContext context,
+    IconData icon,
+    String title,
+    ColorToken colorToken,
+  ) {
     return ListTile(
       leading: Icon(icon, color: colorToken.textPrimary),
       title: Text(
         title,
-        style: TextStyle(color: colorToken.textPrimary, fontFamily: 'SourceSans3'),
+        style: TextStyle(
+          color: colorToken.textPrimary,
+          fontFamily: 'SourceSans3',
+        ),
       ),
       trailing: Icon(Icons.chevron_right, color: colorToken.textSecondary),
       onTap: () {

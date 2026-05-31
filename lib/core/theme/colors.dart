@@ -7,7 +7,9 @@ class AppColors {
   static const Color neutral200 = Color(0xFFE0E0E0); // Divider
   static const Color neutral300 = Color(0xFFBDBDBD); // Border
   static const Color neutral400 = Color(0xFF9E9E9E); // Placeholder text
-  static const Color neutral500 = Color(0xFF757575); // Secondary text "Forgot Password?"
+  static const Color neutral500 = Color(
+    0xFF757575,
+  ); // Secondary text "Forgot Password?"
   static const Color neutral600 = Color(0xFF616161); // Grey text
   static const Color neutral700 = Color(0xFF424242); // Dark grey
   static const Color neutral800 = Color(0xFF212121); // Almost black text
@@ -22,7 +24,9 @@ class AppColors {
 
   // Link color - Blue "Register Now" text
   static const Color blue667eea = Color(0xFF3B82F6); // Blue for links
-  static const Color purple764ba2 = Color(0xFF8B5CF6); // Keep for gradient if needed
+  static const Color purple764ba2 = Color(
+    0xFF8B5CF6,
+  ); // Keep for gradient if needed
 
   // Status Colors (Muted)
   static const Color success = Color(0xFF10B981);

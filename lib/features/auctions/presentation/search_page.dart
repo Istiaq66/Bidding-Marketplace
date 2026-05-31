@@ -182,27 +182,33 @@ class _SearchPageState extends State<SearchPage> {
       child: ListTile(
         leading: ClipRRect(
           borderRadius: BorderRadius.circular(8),
-          child: product.imageUrl.isNotEmpty
-              ? Image.network(
-                  product.imageUrl,
-                  width: 60,
-                  height: 60,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Container(
+          child:
+              product.imageUrl.isNotEmpty
+                  ? Image.network(
+                    product.imageUrl,
+                    width: 60,
+                    height: 60,
+                    fit: BoxFit.cover,
+                    errorBuilder:
+                        (_, __, ___) => Container(
+                          width: 60,
+                          height: 60,
+                          color: colorToken.surfaceVariant,
+                          child: Icon(
+                            Icons.shopping_bag,
+                            color: colorToken.textSecondary,
+                          ),
+                        ),
+                  )
+                  : Container(
                     width: 60,
                     height: 60,
                     color: colorToken.surfaceVariant,
-                    child: Icon(Icons.shopping_bag,
-                        color: colorToken.textSecondary),
+                    child: Icon(
+                      Icons.shopping_bag,
+                      color: colorToken.textSecondary,
+                    ),
                   ),
-                )
-              : Container(
-                  width: 60,
-                  height: 60,
-                  color: colorToken.surfaceVariant,
-                  child: Icon(Icons.shopping_bag,
-                      color: colorToken.textSecondary),
-                ),
         ),
         title: Text(
           product.name,
@@ -230,9 +236,12 @@ class _SearchPageState extends State<SearchPage> {
             Row(
               children: [
                 Icon(
-                  product.isActive ? Icons.radio_button_on : Icons.radio_button_off,
+                  product.isActive
+                      ? Icons.radio_button_on
+                      : Icons.radio_button_off,
                   size: 12,
-                  color: product.isActive ? colorToken.success : colorToken.error,
+                  color:
+                      product.isActive ? colorToken.success : colorToken.error,
                 ),
                 const SizedBox(width: 4),
                 Text(
@@ -249,12 +258,13 @@ class _SearchPageState extends State<SearchPage> {
         ),
         trailing: Icon(Icons.chevron_right, color: colorToken.textSecondary),
         isThreeLine: true,
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => ProductDetails(docId: product.id),
-          ),
-        ),
+        onTap:
+            () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => ProductDetails(docId: product.id),
+              ),
+            ),
       ),
     );
   }

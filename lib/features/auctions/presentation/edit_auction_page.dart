@@ -77,30 +77,35 @@ class _EditAuctionPageState extends State<EditAuctionPage> {
     showModalBottomSheet(
       context: context,
       backgroundColor: colorToken.surface,
-      builder: (sheetContext) => SafeArea(
-        child: Wrap(
-          children: [
-            ListTile(
-              leading: Icon(Icons.photo_camera, color: colorToken.primary),
-              title: Text('Take a photo',
-                  style: TextStyle(color: colorToken.textPrimary)),
-              onTap: () {
-                Navigator.pop(sheetContext);
-                _pickImage(ImageSource.camera);
-              },
+      builder:
+          (sheetContext) => SafeArea(
+            child: Wrap(
+              children: [
+                ListTile(
+                  leading: Icon(Icons.photo_camera, color: colorToken.primary),
+                  title: Text(
+                    'Take a photo',
+                    style: TextStyle(color: colorToken.textPrimary),
+                  ),
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    _pickImage(ImageSource.camera);
+                  },
+                ),
+                ListTile(
+                  leading: Icon(Icons.photo_library, color: colorToken.primary),
+                  title: Text(
+                    'Choose from gallery',
+                    style: TextStyle(color: colorToken.textPrimary),
+                  ),
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    _pickImage(ImageSource.gallery);
+                  },
+                ),
+              ],
             ),
-            ListTile(
-              leading: Icon(Icons.photo_library, color: colorToken.primary),
-              title: Text('Choose from gallery',
-                  style: TextStyle(color: colorToken.textPrimary)),
-              onTap: () {
-                Navigator.pop(sheetContext);
-                _pickImage(ImageSource.gallery);
-              },
-            ),
-          ],
-        ),
-      ),
+          ),
     );
   }
 
@@ -235,15 +240,17 @@ class _EditAuctionPageState extends State<EditAuctionPage> {
                   maxLines: 6,
                   style: TextStyle(color: colorToken.textPrimary),
                   decoration: _decoration(colorToken, 'Description'),
-                  validator: (v) =>
-                      (v == null || v.trim().isEmpty) ? 'Required' : null,
+                  validator:
+                      (v) =>
+                          (v == null || v.trim().isEmpty) ? 'Required' : null,
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _minBid,
                   enabled: _isEditable,
-                  keyboardType:
-                      const TextInputType.numberWithOptions(decimal: true),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
                   style: TextStyle(color: colorToken.textPrimary),
                   decoration: _decoration(colorToken, 'Minimum Bid (USD)'),
                   validator: (v) {
@@ -257,8 +264,9 @@ class _EditAuctionPageState extends State<EditAuctionPage> {
                 TextFormField(
                   controller: _increment,
                   enabled: _isEditable,
-                  keyboardType:
-                      const TextInputType.numberWithOptions(decimal: true),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
                   style: TextStyle(color: colorToken.textPrimary),
                   decoration: _decoration(colorToken, 'Bid Increment (USD)'),
                   validator: (v) {
@@ -285,7 +293,9 @@ class _EditAuctionPageState extends State<EditAuctionPage> {
                     if (v == null || v.trim().isEmpty) return 'Required';
                     final d = DateTime.tryParse(v.trim());
                     if (d == null) return 'Invalid date';
-                    if (d.isBefore(DateTime.now().subtract(const Duration(days: 1)))) {
+                    if (d.isBefore(
+                      DateTime.now().subtract(const Duration(days: 1)),
+                    )) {
                       return 'End date must be in the future';
                     }
                     return null;
@@ -302,23 +312,24 @@ class _EditAuctionPageState extends State<EditAuctionPage> {
                       borderRadius: BorderRadius.circular(8),
                     ),
                   ),
-                  child: _isSaving
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2,
+                  child:
+                      _isSaving
+                          ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                          : const Text(
+                            'Save Changes',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: 'SourceSans3',
+                            ),
                           ),
-                        )
-                      : const Text(
-                          'Save Changes',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            fontFamily: 'SourceSans3',
-                          ),
-                        ),
                 ),
               ],
             ),
@@ -337,12 +348,13 @@ class _EditAuctionPageState extends State<EditAuctionPage> {
           child: SizedBox(
             height: 200,
             width: double.infinity,
-            child: _newImage != null
-                ? Image.file(File(_newImage!.path), fit: BoxFit.cover)
-                : CustomImageHolder(
-                    imageUrl: widget.product.imageUrl,
-                    height: 200,
-                  ),
+            child:
+                _newImage != null
+                    ? Image.file(File(_newImage!.path), fit: BoxFit.cover)
+                    : CustomImageHolder(
+                      imageUrl: widget.product.imageUrl,
+                      height: 200,
+                    ),
           ),
         ),
         if (_isEditable) ...[
@@ -351,7 +363,10 @@ class _EditAuctionPageState extends State<EditAuctionPage> {
             alignment: Alignment.centerLeft,
             child: TextButton.icon(
               onPressed: _isSaving ? null : _showImageSourceSheet,
-              icon: Icon(Icons.photo_camera_outlined, color: colorToken.primary),
+              icon: Icon(
+                Icons.photo_camera_outlined,
+                color: colorToken.primary,
+              ),
               label: Text(
                 _newImage == null ? 'Replace photo' : 'Change photo',
                 style: TextStyle(color: colorToken.primary),

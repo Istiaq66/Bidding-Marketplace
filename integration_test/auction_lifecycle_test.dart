@@ -38,8 +38,9 @@ void main() {
     AuthRepository.authForTesting = auth;
   });
 
-  testWidgets('anon user creates auction, places bid, auction is closed',
-      (tester) async {
+  testWidgets('anon user creates auction, places bid, auction is closed', (
+    tester,
+  ) async {
     final seller = await auth.signInAnonymously();
     final sellerId = seller.user!.uid;
 
@@ -77,12 +78,13 @@ void main() {
     );
 
     // "Forced clock": simulate endAuction by closing the auction now.
-    final topBid = await db
-        .collection('bids')
-        .where('Product Id', isEqualTo: productRef.id)
-        .orderBy('Bid Amount', descending: true)
-        .limit(1)
-        .get();
+    final topBid =
+        await db
+            .collection('bids')
+            .where('Product Id', isEqualTo: productRef.id)
+            .orderBy('Bid Amount', descending: true)
+            .limit(1)
+            .get();
     final winnerId =
         topBid.docs.isEmpty ? null : topBid.docs.first.data()['Bidder Id'];
 

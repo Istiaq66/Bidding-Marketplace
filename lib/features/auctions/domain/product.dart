@@ -43,8 +43,7 @@ class Product {
 
   /// Smallest amount the next bid must reach. First bid clears the start price;
   /// every subsequent bid must clear the current bid by at least [minIncrement].
-  num get nextMinBid =>
-      bidCount == 0 ? currentBid : currentBid + minIncrement;
+  num get nextMinBid => bidCount == 0 ? currentBid : currentBid + minIncrement;
 
   factory Product.fromFirestore(DocumentSnapshot snapshot) {
     final data = (snapshot.data() as Map<String, dynamic>? ?? const {});
@@ -61,7 +60,8 @@ class Product {
       imageUrl: (data['Image Url'] ?? '') as String,
       nameLower: (data['nameLower'] as String?) ?? '',
       endsAt: endsAtRaw is Timestamp ? endsAtRaw.toDate() : null,
-      currentBid: (data['currentBid'] as num?) ?? double.tryParse(minBidPrice) ?? 0,
+      currentBid:
+          (data['currentBid'] as num?) ?? double.tryParse(minBidPrice) ?? 0,
       bidCount: (data['bidCount'] as int?) ?? 0,
       minIncrement: (data['minIncrement'] as num?) ?? 1,
       status: (data['status'] as String?) ?? 'active',
@@ -74,23 +74,23 @@ class Product {
   }
 
   Map<String, dynamic> toMap() => {
-        'User Id': sellerId,
-        'Product Name': name,
-        'Product Description': description,
-        'Minimum Bid Price': minBidPrice,
-        'Date': date,
-        'Image Url': imageUrl,
-        'nameLower': nameLower,
-        if (endsAt != null) 'endsAt': Timestamp.fromDate(endsAt!),
-        'currentBid': currentBid,
-        'bidCount': bidCount,
-        'minIncrement': minIncrement,
-        'status': status,
-        'winnerId': winnerId,
-        'highestBidderId': highestBidderId,
-        'sellerName': sellerName,
-        'sellerPhoto': sellerPhoto,
-      };
+    'User Id': sellerId,
+    'Product Name': name,
+    'Product Description': description,
+    'Minimum Bid Price': minBidPrice,
+    'Date': date,
+    'Image Url': imageUrl,
+    'nameLower': nameLower,
+    if (endsAt != null) 'endsAt': Timestamp.fromDate(endsAt!),
+    'currentBid': currentBid,
+    'bidCount': bidCount,
+    'minIncrement': minIncrement,
+    'status': status,
+    'winnerId': winnerId,
+    'highestBidderId': highestBidderId,
+    'sellerName': sellerName,
+    'sellerPhoto': sellerPhoto,
+  };
 
   bool get isActive {
     if (status != 'active') return false;

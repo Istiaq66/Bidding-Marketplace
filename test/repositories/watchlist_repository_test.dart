@@ -10,7 +10,7 @@ void main() {
     WatchlistRepository.firestoreForTesting = fake;
   });
 
-test('add → isWatched returns true', () async {
+  test('add → isWatched returns true', () async {
     await WatchlistRepository.add('user-1', 'product-A');
     expect(await WatchlistRepository.isWatched('user-1', 'product-A'), isTrue);
   });

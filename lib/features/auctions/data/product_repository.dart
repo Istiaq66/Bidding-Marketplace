@@ -31,7 +31,8 @@ class ProductRepository {
     final sellerSnap = await _db.collection('users').doc(sellerId).get();
     final sellerData = sellerSnap.data() ?? {};
     final sellerName = (sellerData['name'] as String?) ?? '';
-    final sellerPhoto = (sellerData['profileImage'] as String?) ??
+    final sellerPhoto =
+        (sellerData['profileImage'] as String?) ??
         (sellerData['photo'] as String?) ??
         '';
 
@@ -68,8 +69,8 @@ class ProductRepository {
 
   static Stream<List<Product>> watchAll() {
     return _products.snapshots().map(
-          (snap) => snap.docs.map(Product.fromFirestore).toList(),
-        );
+      (snap) => snap.docs.map(Product.fromFirestore).toList(),
+    );
   }
 
   static Stream<List<Product>> watchActive() {
@@ -93,7 +94,8 @@ class ProductRepository {
   }
 
   static Future<int> countWonByUser(String userId) async {
-    final snap = await _products.where('winnerId', isEqualTo: userId).count().get();
+    final snap =
+        await _products.where('winnerId', isEqualTo: userId).count().get();
     return snap.count ?? 0;
   }
 
@@ -104,9 +106,10 @@ class ProductRepository {
   }
 
   static Stream<Product?> watchById(String id) {
-    return _products.doc(id).snapshots().map(
-          (snap) => snap.exists ? Product.fromFirestore(snap) : null,
-        );
+    return _products
+        .doc(id)
+        .snapshots()
+        .map((snap) => snap.exists ? Product.fromFirestore(snap) : null);
   }
 
   static Future<void> deleteById(String id) async {
@@ -159,8 +162,7 @@ class ProductRepository {
   /// Deletes every product owned by [userId] whose `bidCount` is zero.
   /// Returns the number of products deleted.
   static Future<int> deleteAllByUser(String userId) async {
-    final snap =
-        await _products.where('User Id', isEqualTo: userId).get();
+    final snap = await _products.where('User Id', isEqualTo: userId).get();
     int deleted = 0;
     for (final doc in snap.docs) {
       final bidCount = (doc.data()['bidCount'] as int?) ?? 0;
@@ -178,11 +180,12 @@ class ProductRepository {
     final q = query.toLowerCase().trim();
     if (q.isEmpty) return [];
 
-    final snap = await _products
-        .where('nameLower', isGreaterThanOrEqualTo: q)
-        .where('nameLower', isLessThan: '$q')
-        .limit(limit)
-        .get();
+    final snap =
+        await _products
+            .where('nameLower', isGreaterThanOrEqualTo: q)
+            .where('nameLower', isLessThan: '$q')
+            .limit(limit)
+            .get();
 
     if (snap.docs.isNotEmpty) {
       return snap.docs.map(Product.fromFirestore).toList();
@@ -200,7 +203,7 @@ class ProductRepository {
   /// Fetches a page of products for infinite-scroll pagination.
   /// Returns the products and the cursor snapshot for the next page.
   static Future<(List<Product>, QueryDocumentSnapshot<Map<String, dynamic>>?)>
-      fetchPage({
+  fetchPage({
     int limit = 20,
     QueryDocumentSnapshot<Map<String, dynamic>>? after,
     ProductSort sort = ProductSort.newest,

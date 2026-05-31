@@ -17,26 +17,24 @@ class UserAvatar extends StatelessWidget {
     final colorToken = ThemeProvider.of(context, listen: false).colorToken;
     final diameter = radius * 2;
 
-    Widget fallback() => Icon(
-          Icons.person,
-          size: radius,
-          color: colorToken.textSecondary,
-        );
+    Widget fallback() =>
+        Icon(Icons.person, size: radius, color: colorToken.textSecondary);
 
     return CircleAvatar(
       radius: radius,
       backgroundColor: colorToken.surfaceVariant,
       child: ClipOval(
-        child: imageUrl.isEmpty
-            ? fallback()
-            : CachedNetworkImage(
-                imageUrl: imageUrl,
-                width: diameter,
-                height: diameter,
-                fit: BoxFit.cover,
-                placeholder: (_, __) => fallback(),
-                errorWidget: (_, __, ___) => fallback(),
-              ),
+        child:
+            imageUrl.isEmpty
+                ? fallback()
+                : CachedNetworkImage(
+                  imageUrl: imageUrl,
+                  width: diameter,
+                  height: diameter,
+                  fit: BoxFit.cover,
+                  placeholder: (_, __) => fallback(),
+                  errorWidget: (_, __, ___) => fallback(),
+                ),
       ),
     );
   }

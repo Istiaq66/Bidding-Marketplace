@@ -95,9 +95,7 @@ class _LightColorToken extends ColorToken {
       style: ElevatedButton.styleFrom(
         backgroundColor: AppColors.black,
         foregroundColor: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         elevation: 0,
       ),
     ),
@@ -106,9 +104,7 @@ class _LightColorToken extends ColorToken {
       style: OutlinedButton.styleFrom(
         backgroundColor: buttonSecondary,
         foregroundColor: onButtonSecondary,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         side: BorderSide(color: divider),
       ),
     ),
@@ -117,15 +113,10 @@ class _LightColorToken extends ColorToken {
       color: cardBackground,
       shadowColor: shadow,
       elevation: 1,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
     ),
 
-    dividerTheme: DividerThemeData(
-      color: divider,
-      thickness: 1,
-    ),
+    dividerTheme: DividerThemeData(color: divider, thickness: 1),
   );
 
   @override
@@ -255,9 +246,7 @@ class _DarkColorToken extends ColorToken {
       style: ElevatedButton.styleFrom(
         backgroundColor: Colors.white,
         foregroundColor: AppColors.black,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         elevation: 0,
       ),
     ),
@@ -266,9 +255,7 @@ class _DarkColorToken extends ColorToken {
       style: OutlinedButton.styleFrom(
         backgroundColor: buttonSecondary,
         foregroundColor: onButtonSecondary,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         side: BorderSide(color: divider),
       ),
     ),
@@ -277,15 +264,10 @@ class _DarkColorToken extends ColorToken {
       color: cardBackground,
       shadowColor: shadow,
       elevation: 1,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
     ),
 
-    dividerTheme: DividerThemeData(
-      color: divider,
-      thickness: 1,
-    ),
+    dividerTheme: DividerThemeData(color: divider, thickness: 1),
   );
 
   @override
@@ -401,31 +383,28 @@ class ThemeProvider with ChangeNotifier {
   }
 
   // Minimal background - NO gradient like screenshot
-  LinearGradient get primaryGradient => isLightTheme
-      ? const LinearGradient(
-    begin: Alignment.topCenter,
-    end: Alignment.bottomCenter,
-    colors: [
-      AppColors.neutral050, // Just solid grey
-      AppColors.neutral050,
-    ],
-  )
-      : const LinearGradient(
-    begin: Alignment.topCenter,
-    end: Alignment.bottomCenter,
-    colors: [
-      AppColors.black,
-      AppColors.black,
-    ],
-  );
+  LinearGradient get primaryGradient =>
+      isLightTheme
+          ? const LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              AppColors.neutral050, // Just solid grey
+              AppColors.neutral050,
+            ],
+          )
+          : const LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [AppColors.black, AppColors.black],
+          );
 
-  LinearGradient get cardGradient => isLightTheme
-      ? const LinearGradient(
-    colors: [Colors.white, Colors.white],
-  )
-      : LinearGradient(
-    colors: [_colorToken.cardBackground, _colorToken.cardBackground],
-  );
+  LinearGradient get cardGradient =>
+      isLightTheme
+          ? const LinearGradient(colors: [Colors.white, Colors.white])
+          : LinearGradient(
+            colors: [_colorToken.cardBackground, _colorToken.cardBackground],
+          );
 
   // Status color helpers for auction items
   Color getStatusColor(String status) {

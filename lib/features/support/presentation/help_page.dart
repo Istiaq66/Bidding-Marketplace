@@ -7,15 +7,18 @@ class HelpPage extends StatelessWidget {
   static const _faqs = <_Faq>[
     _Faq(
       question: 'How do I create an auction?',
-      answer: 'Open the Dashboard tab and tap "Create Auction". Add a photo, name, description, minimum bid, and end date.',
+      answer:
+          'Open the Dashboard tab and tap "Create Auction". Add a photo, name, description, minimum bid, and end date.',
     ),
     _Faq(
       question: 'How do bids work?',
-      answer: 'Open an auction from Home and tap "Place Bid". Your bid must be higher than the current minimum bid. The highest bid at the auction end date wins.',
+      answer:
+          'Open an auction from Home and tap "Place Bid". Your bid must be higher than the current minimum bid. The highest bid at the auction end date wins.',
     ),
     _Faq(
       question: 'Can I edit or cancel an auction?',
-      answer: 'You can delete your auction from the My Auctions screen. Editing existing auctions is coming soon.',
+      answer:
+          'You can delete your auction from the My Auctions screen. Editing existing auctions is coming soon.',
     ),
     _Faq(
       question: 'Where can I see items I am watching?',

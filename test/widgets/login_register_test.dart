@@ -11,8 +11,9 @@ void main() {
 
   Widget wrap() => const MaterialApp(home: LoginRegister());
 
-  testWidgets('renders email + password fields and login affordances',
-      (tester) async {
+  testWidgets('renders email + password fields and login affordances', (
+    tester,
+  ) async {
     await tester.pumpWidget(wrap());
     expect(find.byType(TextField), findsNWidgets(2));
     expect(find.text('Sign In'), findsWidgets);

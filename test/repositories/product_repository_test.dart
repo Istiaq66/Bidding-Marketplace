@@ -11,7 +11,7 @@ void main() {
     ProductRepository.firestoreForTesting = fake;
   });
 
-Future<DocumentReference<Map<String, dynamic>>> seed({
+  Future<DocumentReference<Map<String, dynamic>>> seed({
     String sellerId = 'seller-1',
     String name = 'Vintage Bike',
     int bidCount = 0,
@@ -122,7 +122,10 @@ Future<DocumentReference<Map<String, dynamic>>> seed({
       expect(deleted, 2);
 
       final remaining =
-          await fake.collection('products').where('User Id', isEqualTo: 'u').get();
+          await fake
+              .collection('products')
+              .where('User Id', isEqualTo: 'u')
+              .get();
       expect(remaining.docs.length, 1);
       expect(remaining.docs.first.data()['bidCount'], 5);
     });
@@ -136,28 +139,32 @@ Future<DocumentReference<Map<String, dynamic>>> seed({
 
       final results = await ProductRepository.search('antique');
       expect(results.length, 2);
-      expect(results.every((p) => p.name.toLowerCase().startsWith('antique')),
-          isTrue);
+      expect(
+        results.every((p) => p.name.toLowerCase().startsWith('antique')),
+        isTrue,
+      );
     });
 
-    test('falls back to client-side contains when prefix yields nothing',
-        () async {
-      // Seed a doc without nameLower (legacy).
-      await fake.collection('products').add({
-        'User Id': 'x',
-        'Product Name': 'Old Camera',
-        'Product Description': 'd',
-        'Minimum Bid Price': '10',
-        'Date': '2030-01-01',
-        'Image Url': '',
-        'currentBid': 10,
-        'bidCount': 0,
-        'status': 'active',
-      });
-      final results = await ProductRepository.search('camera');
-      expect(results.length, 1);
-      expect(results.first.name, 'Old Camera');
-    });
+    test(
+      'falls back to client-side contains when prefix yields nothing',
+      () async {
+        // Seed a doc without nameLower (legacy).
+        await fake.collection('products').add({
+          'User Id': 'x',
+          'Product Name': 'Old Camera',
+          'Product Description': 'd',
+          'Minimum Bid Price': '10',
+          'Date': '2030-01-01',
+          'Image Url': '',
+          'currentBid': 10,
+          'bidCount': 0,
+          'status': 'active',
+        });
+        final results = await ProductRepository.search('camera');
+        expect(results.length, 1);
+        expect(results.first.name, 'Old Camera');
+      },
+    );
 
     test('empty query returns empty list', () async {
       await seed();

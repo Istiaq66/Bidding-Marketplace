@@ -9,7 +9,12 @@ class AppLogger {
     developer.log(message, name: tag);
   }
 
-  static void error(String message, {String tag = 'app', Object? error, StackTrace? stackTrace}) {
+  static void error(
+    String message, {
+    String tag = 'app',
+    Object? error,
+    StackTrace? stackTrace,
+  }) {
     developer.log(
       message,
       name: tag,

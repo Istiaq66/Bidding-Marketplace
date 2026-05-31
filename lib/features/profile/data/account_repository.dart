@@ -25,8 +25,10 @@ class AccountRepository {
     if (user == null || email == null || email.isEmpty) {
       throw Exception('No password-backed account is currently signed in.');
     }
-    final credential =
-        EmailAuthProvider.credential(email: email, password: password);
+    final credential = EmailAuthProvider.credential(
+      email: email,
+      password: password,
+    );
     try {
       await user.reauthenticateWithCredential(credential);
     } on FirebaseAuthException catch (e) {

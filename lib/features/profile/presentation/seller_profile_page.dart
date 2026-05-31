@@ -85,9 +85,10 @@ class SellerProfilePage extends StatelessWidget {
     String? currentUserId,
     bool isSelf,
   ) {
-    final name = (seller?.name != null && seller!.name!.isNotEmpty)
-        ? seller.name!
-        : 'Unknown seller';
+    final name =
+        (seller?.name != null && seller!.name!.isNotEmpty)
+            ? seller.name!
+            : 'Unknown seller';
 
     return Container(
       width: double.infinity,
@@ -111,10 +112,7 @@ class SellerProfilePage extends StatelessWidget {
             Text(
               seller.bio!,
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                color: colorToken.textSecondary,
-              ),
+              style: TextStyle(fontSize: 14, color: colorToken.textSecondary),
             ),
           ],
           if (seller?.address != null && seller!.address!.isNotEmpty) ...[
@@ -122,8 +120,11 @@ class SellerProfilePage extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.location_on_outlined,
-                    size: 16, color: colorToken.textTertiary),
+                Icon(
+                  Icons.location_on_outlined,
+                  size: 16,
+                  color: colorToken.textTertiary,
+                ),
                 const SizedBox(width: 4),
                 Text(
                   seller.address!,
@@ -170,38 +171,40 @@ class SellerProfilePage extends StatelessWidget {
         final following = snap.data ?? false;
         return SizedBox(
           width: double.infinity,
-          child: following
-              ? OutlinedButton.icon(
-                  onPressed: () =>
-                      FollowRepository.unfollow(currentUserId, sellerId),
-                  icon: Icon(Icons.check, color: colorToken.textSecondary),
-                  label: Text(
-                    'Following',
-                    style: TextStyle(color: colorToken.textSecondary),
-                  ),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    side: BorderSide(color: colorToken.divider),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+          child:
+              following
+                  ? OutlinedButton.icon(
+                    onPressed:
+                        () =>
+                            FollowRepository.unfollow(currentUserId, sellerId),
+                    icon: Icon(Icons.check, color: colorToken.textSecondary),
+                    label: Text(
+                      'Following',
+                      style: TextStyle(color: colorToken.textSecondary),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      side: BorderSide(color: colorToken.divider),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  )
+                  : ElevatedButton.icon(
+                    onPressed:
+                        () => FollowRepository.follow(currentUserId, sellerId),
+                    icon: const Icon(Icons.add),
+                    label: const Text('Follow'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: colorToken.primary,
+                      foregroundColor: colorToken.onPrimary,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 0,
                     ),
                   ),
-                )
-              : ElevatedButton.icon(
-                  onPressed: () =>
-                      FollowRepository.follow(currentUserId, sellerId),
-                  icon: const Icon(Icons.add),
-                  label: const Text('Follow'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: colorToken.primary,
-                    foregroundColor: colorToken.onPrimary,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    elevation: 0,
-                  ),
-                ),
         );
       },
     );

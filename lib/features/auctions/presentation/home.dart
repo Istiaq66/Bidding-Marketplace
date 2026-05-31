@@ -208,41 +208,42 @@ class _HomeState extends State<Home> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) => Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                margin: const EdgeInsets.only(bottom: 20),
-                decoration: BoxDecoration(
-                  color: colorToken.divider,
-                  borderRadius: BorderRadius.circular(2),
+      builder:
+          (context) => Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: 20),
+                    decoration: BoxDecoration(
+                      color: colorToken.divider,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
                 ),
-              ),
+                Text(
+                  'Sort By',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: colorToken.textPrimary,
+                    fontFamily: 'SourceSans3',
+                  ),
+                ),
+                const SizedBox(height: 20),
+                _buildFilterOption('All', Icons.apps),
+                _buildFilterOption('Price: Low to High', Icons.arrow_upward),
+                _buildFilterOption('Price: High to Low', Icons.arrow_downward),
+                _buildFilterOption('Newest First', Icons.new_releases),
+                const SizedBox(height: 20),
+              ],
             ),
-            Text(
-              'Sort By',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: colorToken.textPrimary,
-                fontFamily: 'SourceSans3',
-              ),
-            ),
-            const SizedBox(height: 20),
-            _buildFilterOption('All', Icons.apps),
-            _buildFilterOption('Price: Low to High', Icons.arrow_upward),
-            _buildFilterOption('Price: High to Low', Icons.arrow_downward),
-            _buildFilterOption('Newest First', Icons.new_releases),
-            const SizedBox(height: 20),
-          ],
-        ),
-      ),
+          ),
     );
   }
 
@@ -263,7 +264,8 @@ class _HomeState extends State<Home> {
           fontFamily: 'SourceSans3',
         ),
       ),
-      trailing: isSelected ? Icon(Icons.check, color: colorToken.primary) : null,
+      trailing:
+          isSelected ? Icon(Icons.check, color: colorToken.primary) : null,
       onTap: () {
         Navigator.pop(context);
         if (_selectedFilter == title) return;
@@ -309,17 +311,21 @@ class _HomeState extends State<Home> {
                       ),
                       child: Row(
                         children: [
-                          Icon(Icons.search,
-                              color: colorToken.textSecondary, size: 20),
+                          Icon(
+                            Icons.search,
+                            color: colorToken.textSecondary,
+                            size: 20,
+                          ),
                           const SizedBox(width: 12),
                           Text(
                             _searchQuery.isEmpty
                                 ? 'Search auctions...'
                                 : _searchQuery,
                             style: TextStyle(
-                              color: _searchQuery.isEmpty
-                                  ? colorToken.textTertiary
-                                  : colorToken.textPrimary,
+                              color:
+                                  _searchQuery.isEmpty
+                                      ? colorToken.textTertiary
+                                      : colorToken.textPrimary,
                               fontFamily: 'SourceSans3',
                               fontSize: 15,
                             ),
@@ -338,8 +344,11 @@ class _HomeState extends State<Home> {
                       color: colorToken.surfaceVariant,
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Icon(Icons.tune,
-                        color: colorToken.textPrimary, size: 20),
+                    child: Icon(
+                      Icons.tune,
+                      color: colorToken.textPrimary,
+                      size: 20,
+                    ),
                   ),
                 ),
               ],
@@ -365,8 +374,11 @@ class _HomeState extends State<Home> {
                           fontFamily: 'SourceSans3',
                         ),
                       ),
-                      deleteIcon: Icon(Icons.close,
-                          size: 16, color: colorToken.textSecondary),
+                      deleteIcon: Icon(
+                        Icons.close,
+                        size: 16,
+                        color: colorToken.textSecondary,
+                      ),
                       onDeleted: () => setState(() => _searchQuery = ''),
                       backgroundColor: colorToken.surfaceVariant,
                     ),
@@ -380,10 +392,12 @@ class _HomeState extends State<Home> {
                           fontFamily: 'SourceSans3',
                         ),
                       ),
-                      deleteIcon: Icon(Icons.close,
-                          size: 16, color: colorToken.textSecondary),
-                      onDeleted: () =>
-                          setState(() => _selectedFilter = 'All'),
+                      deleteIcon: Icon(
+                        Icons.close,
+                        size: 16,
+                        color: colorToken.textSecondary,
+                      ),
+                      onDeleted: () => setState(() => _selectedFilter = 'All'),
                       backgroundColor: colorToken.surfaceVariant,
                     ),
                 ],
@@ -429,8 +443,7 @@ class _HomeState extends State<Home> {
             const SizedBox(height: 8),
             TextButton(
               onPressed: _loadFirstPage,
-              child: Text('Retry',
-                  style: TextStyle(color: colorToken.primary)),
+              child: Text('Retry', style: TextStyle(color: colorToken.primary)),
             ),
           ],
         ),
@@ -442,8 +455,11 @@ class _HomeState extends State<Home> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.inventory_2_outlined,
-                size: 64, color: colorToken.textSecondary),
+            Icon(
+              Icons.inventory_2_outlined,
+              size: 64,
+              color: colorToken.textSecondary,
+            ),
             const SizedBox(height: 16),
             Text(
               'No auctions available',
@@ -510,46 +526,45 @@ class _HomeState extends State<Home> {
               crossAxisSpacing: 12,
               mainAxisSpacing: 12,
             ),
-            delegate: SliverChildBuilderDelegate(
-              (context, index) {
-                final product = filtered[index];
-                return MinimalisticProductCard(
-                  name: product.name,
-                  minPrice: product.currentBid.toStringAsFixed(2),
-                  imageUrl: product.imageUrl,
-                  description: product.description,
-                  docId: product.id,
-                  hasBid: _myBidProductIds.contains(product.id),
-                );
-              },
-              childCount: filtered.length,
-            ),
+            delegate: SliverChildBuilderDelegate((context, index) {
+              final product = filtered[index];
+              return MinimalisticProductCard(
+                name: product.name,
+                minPrice: product.currentBid.toStringAsFixed(2),
+                imageUrl: product.imageUrl,
+                description: product.description,
+                docId: product.id,
+                hasBid: _myBidProductIds.contains(product.id),
+              );
+            }, childCount: filtered.length),
           ),
         ),
         SliverToBoxAdapter(
-          child: _isLoadingMore
-              ? Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Center(
-                    child:
-                        CircularProgressIndicator(color: colorToken.primary),
-                  ),
-                )
-              : _hasMore
+          child:
+              _isLoadingMore
+                  ? Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        color: colorToken.primary,
+                      ),
+                    ),
+                  )
+                  : _hasMore
                   ? const SizedBox(height: 80)
                   : Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Center(
-                        child: Text(
-                          'All ${filtered.length} items loaded',
-                          style: TextStyle(
-                            color: colorToken.textSecondary,
-                            fontFamily: 'SourceSans3',
-                            fontSize: 13,
-                          ),
+                    padding: const EdgeInsets.all(16),
+                    child: Center(
+                      child: Text(
+                        'All ${filtered.length} items loaded',
+                        style: TextStyle(
+                          color: colorToken.textSecondary,
+                          fontFamily: 'SourceSans3',
+                          fontSize: 13,
                         ),
                       ),
                     ),
+                  ),
         ),
       ],
     );
@@ -583,22 +598,22 @@ class MinimalisticProductCard extends StatelessWidget {
       onTap: () {
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (context) => ProductDetails(docId: docId),
-          ),
+          MaterialPageRoute(builder: (context) => ProductDetails(docId: docId)),
         );
       },
       child: Container(
         decoration: BoxDecoration(
-          color: themeProvider.isLightTheme
-              ? colorToken.surface
-              : colorToken.surfaceVariant,
+          color:
+              themeProvider.isLightTheme
+                  ? colorToken.surface
+                  : colorToken.surfaceVariant,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: themeProvider.isLightTheme
-                  ? Colors.black.withValues(alpha: 0.08)
-                  : Colors.black.withValues(alpha: 0.2),
+              color:
+                  themeProvider.isLightTheme
+                      ? Colors.black.withValues(alpha: 0.08)
+                      : Colors.black.withValues(alpha: 0.2),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
@@ -615,28 +630,30 @@ class MinimalisticProductCard extends StatelessWidget {
                     borderRadius: const BorderRadius.vertical(
                       top: Radius.circular(16),
                     ),
-                    child: imageUrl.isNotEmpty && imageUrl != ''
-                        ? CustomImageHolder(imageUrl: imageUrl)
-                        : Container(
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                                colors: [
-                                  colorToken.surfaceVariant,
-                                  colorToken.surface,
-                                ],
+                    child:
+                        imageUrl.isNotEmpty && imageUrl != ''
+                            ? CustomImageHolder(imageUrl: imageUrl)
+                            : Container(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: [
+                                    colorToken.surfaceVariant,
+                                    colorToken.surface,
+                                  ],
+                                ),
+                              ),
+                              child: Center(
+                                child: Icon(
+                                  Icons.shopping_bag_outlined,
+                                  size: 40,
+                                  color: colorToken.textSecondary.withValues(
+                                    alpha: 0.5,
+                                  ),
+                                ),
                               ),
                             ),
-                            child: Center(
-                              child: Icon(
-                                Icons.shopping_bag_outlined,
-                                size: 40,
-                                color: colorToken.textSecondary
-                                    .withValues(alpha: 0.5),
-                              ),
-                            ),
-                          ),
                   ),
                   Positioned(
                     bottom: 0,
@@ -662,7 +679,9 @@ class MinimalisticProductCard extends StatelessWidget {
                       left: 8,
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 4),
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: colorToken.primary,
                           borderRadius: BorderRadius.circular(8),
@@ -670,8 +689,11 @@ class MinimalisticProductCard extends StatelessWidget {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.gavel,
-                                size: 12, color: colorToken.onPrimary),
+                            Icon(
+                              Icons.gavel,
+                              size: 12,
+                              color: colorToken.onPrimary,
+                            ),
                             const SizedBox(width: 4),
                             Text(
                               'Bid placed',

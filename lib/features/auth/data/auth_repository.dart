@@ -20,8 +20,11 @@ class AuthRepository {
   static Stream<User?> get authStateChanges => _auth.authStateChanges();
 
   static Future<UserCredential> signInWithGoogle() async {
-    await GoogleSignIn.instance.initialize(serverClientId: _googleServerClientId);
-    final GoogleSignInAccount gUser = await GoogleSignIn.instance.authenticate();
+    await GoogleSignIn.instance.initialize(
+      serverClientId: _googleServerClientId,
+    );
+    final GoogleSignInAccount gUser =
+        await GoogleSignIn.instance.authenticate();
     final GoogleSignInAuthentication gAuth = gUser.authentication;
     final credential = GoogleAuthProvider.credential(idToken: gAuth.idToken);
     return _auth.signInWithCredential(credential);
@@ -32,7 +35,10 @@ class AuthRepository {
     required String password,
   }) async {
     try {
-      return await _auth.signInWithEmailAndPassword(email: email, password: password);
+      return await _auth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
     } on FirebaseAuthException catch (e) {
       throw Exception(_mapAuthError(e));
     }
@@ -43,7 +49,10 @@ class AuthRepository {
     required String password,
   }) async {
     try {
-      return await _auth.createUserWithEmailAndPassword(email: email, password: password);
+      return await _auth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
     } on FirebaseAuthException catch (e) {
       throw Exception(_mapAuthError(e));
     }

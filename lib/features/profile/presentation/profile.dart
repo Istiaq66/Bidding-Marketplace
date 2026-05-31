@@ -1,4 +1,3 @@
-
 import 'package:app/core/widgets/custom_image_holder.dart';
 import 'package:app/features/auth/data/auth_repository.dart';
 import 'package:app/features/bids/data/bid_repository.dart';
@@ -16,7 +15,6 @@ import 'package:app/core/utils/share.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
 
 class Profile extends StatefulWidget {
   const Profile({super.key});
@@ -113,18 +111,18 @@ class _ProfileState extends State<Profile> {
                       Stack(
                         children: [
                           Container(
-                              padding: const EdgeInsets.all(4),
-                              decoration: BoxDecoration(
-                                gradient: theme.primaryGradient,
-                                borderRadius: BorderRadius.circular(60),
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              gradient: theme.primaryGradient,
+                              borderRadius: BorderRadius.circular(60),
+                            ),
+                            child: ClipOval(
+                              child: CustomImageHolder(
+                                imageUrl: _currentImageUrl ?? '',
+                                height: 100,
+                                width: 100,
                               ),
-                              child: ClipOval(
-                                child: CustomImageHolder(
-                                  imageUrl: _currentImageUrl ?? '',
-                                  height: 100,
-                                  width: 100,
-                                ),
-                              )
+                            ),
                           ),
                           Positioned(
                             bottom: 4,
@@ -135,8 +133,8 @@ class _ProfileState extends State<Profile> {
                               decoration: BoxDecoration(
                                 color: colorToken.success,
                                 border: Border.all(
-                                    color: colorToken.cardBackground,
-                                    width: 3
+                                  color: colorToken.cardBackground,
+                                  width: 3,
                                 ),
                                 borderRadius: BorderRadius.circular(10),
                               ),
@@ -180,9 +178,21 @@ class _ProfileState extends State<Profile> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
-                          _buildStatItem(_itemsWon?.toString() ?? '—', 'Items Won', colorToken),
-                          _buildStatItem(_activeBids?.toString() ?? '—', 'Active Bids', colorToken),
-                          _buildStatItem(_watchlistCount?.toString() ?? '—', 'Watchlist', colorToken),
+                          _buildStatItem(
+                            _itemsWon?.toString() ?? '—',
+                            'Items Won',
+                            colorToken,
+                          ),
+                          _buildStatItem(
+                            _activeBids?.toString() ?? '—',
+                            'Active Bids',
+                            colorToken,
+                          ),
+                          _buildStatItem(
+                            _watchlistCount?.toString() ?? '—',
+                            'Watchlist',
+                            colorToken,
+                          ),
                         ],
                       ),
                       const SizedBox(height: 24),
@@ -197,7 +207,8 @@ class _ProfileState extends State<Profile> {
                                 await Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => const EditProfilePage(),
+                                    builder:
+                                        (context) => const EditProfilePage(),
                                   ),
                                 );
                                 if (mounted) {
@@ -208,7 +219,9 @@ class _ProfileState extends State<Profile> {
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: colorToken.primary,
                                 foregroundColor: colorToken.onPrimary,
-                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 16,
+                                ),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
@@ -226,13 +239,16 @@ class _ProfileState extends State<Profile> {
                           const SizedBox(width: 12),
                           Expanded(
                             child: ElevatedButton(
-                              onPressed: () => ShareUtil.shareProfile(
-                                userName: _userName ?? user?.displayName,
-                              ),
+                              onPressed:
+                                  () => ShareUtil.shareProfile(
+                                    userName: _userName ?? user?.displayName,
+                                  ),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: colorToken.buttonSecondary,
                                 foregroundColor: colorToken.onButtonSecondary,
-                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 16,
+                                ),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
@@ -324,7 +340,9 @@ class _ProfileState extends State<Profile> {
                         onTap: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (_) => const FollowingPage()),
+                            MaterialPageRoute(
+                              builder: (_) => const FollowingPage(),
+                            ),
                           );
                         },
                       ),
@@ -338,7 +356,9 @@ class _ProfileState extends State<Profile> {
                         onTap: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (_) => const MyAuctionsPage()),
+                            MaterialPageRoute(
+                              builder: (_) => const MyAuctionsPage(),
+                            ),
                           );
                         },
                       ),
@@ -363,7 +383,7 @@ class _ProfileState extends State<Profile> {
                         title: 'Help & Support',
                         subtitle: 'Get help with auctions',
                         iconColor: colorToken.info,
-                        iconBg: colorToken.info.withValues(alpha:0.1),
+                        iconBg: colorToken.info.withValues(alpha: 0.1),
                         colorToken: colorToken,
                         onTap: () {
                           Navigator.push(
@@ -393,7 +413,7 @@ class _ProfileState extends State<Profile> {
             ),
           ),
         );
-      }
+      },
     );
   }
 
@@ -410,10 +430,7 @@ class _ProfileState extends State<Profile> {
         ),
         Text(
           label,
-          style: TextStyle(
-            fontSize: 12,
-            color: colorToken.textTertiary,
-          ),
+          style: TextStyle(fontSize: 12, color: colorToken.textTertiary),
         ),
       ],
     );
@@ -440,11 +457,7 @@ class _ProfileState extends State<Profile> {
               color: iconBg,
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(
-              icon,
-              color: iconColor,
-              size: 20,
-            ),
+            child: Icon(icon, color: iconColor, size: 20),
           ),
           title: Text(
             title,
@@ -456,22 +469,12 @@ class _ProfileState extends State<Profile> {
           ),
           subtitle: Text(
             subtitle,
-            style: TextStyle(
-              fontSize: 14,
-              color: colorToken.textSecondary,
-            ),
+            style: TextStyle(fontSize: 14, color: colorToken.textSecondary),
           ),
-          trailing: Icon(
-            Icons.chevron_right,
-            color: colorToken.textTertiary,
-          ),
+          trailing: Icon(Icons.chevron_right, color: colorToken.textTertiary),
         ),
         if (showDivider)
-          Divider(
-            height: 1,
-            color: colorToken.divider,
-            indent: 72,
-          ),
+          Divider(height: 1, color: colorToken.divider, indent: 72),
       ],
     );
   }
@@ -494,9 +497,7 @@ class _ProfileState extends State<Profile> {
           ),
           content: Text(
             'Are you sure you want to sign out of your account?',
-            style: TextStyle(
-              color: colorToken.textSecondary,
-            ),
+            style: TextStyle(color: colorToken.textSecondary),
           ),
           actions: [
             TextButton(
@@ -505,9 +506,7 @@ class _ProfileState extends State<Profile> {
               },
               child: Text(
                 'Cancel',
-                style: TextStyle(
-                  color: colorToken.textSecondary,
-                ),
+                style: TextStyle(color: colorToken.textSecondary),
               ),
             ),
             ElevatedButton(
@@ -523,9 +522,7 @@ class _ProfileState extends State<Profile> {
               ),
               child: const Text(
                 'Logout',
-                style: TextStyle(
-                  color: Colors.white,
-                ),
+                style: TextStyle(color: Colors.white),
               ),
             ),
           ],

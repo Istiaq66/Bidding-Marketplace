@@ -33,18 +33,19 @@ Future<void> backfillProducts() async {
     final name = (data['Product Name'] ?? '') as String;
 
     // Count existing bids and find the highest to set currentBid accurately.
-    final bidsSnap = await db
-        .collection('bids')
-        .where('Product Id', isEqualTo: doc.id)
-        .orderBy('Bid Amount', descending: true)
-        .get();
+    final bidsSnap =
+        await db
+            .collection('bids')
+            .where('Product Id', isEqualTo: doc.id)
+            .orderBy('Bid Amount', descending: true)
+            .get();
 
     final bidCount = bidsSnap.docs.length;
-    final highestBidDoc =
-        bidCount > 0 ? bidsSnap.docs.first.data() : null;
-    final currentBid = highestBidDoc != null
-        ? (highestBidDoc['Bid Amount'] as num?)?.toDouble() ?? minPrice
-        : minPrice;
+    final highestBidDoc = bidCount > 0 ? bidsSnap.docs.first.data() : null;
+    final currentBid =
+        highestBidDoc != null
+            ? (highestBidDoc['Bid Amount'] as num?)?.toDouble() ?? minPrice
+            : minPrice;
     final highestBidderId =
         highestBidDoc != null ? highestBidDoc['Bidder Id'] as String? : null;
 

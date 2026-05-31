@@ -37,9 +37,10 @@ class UserRepository {
   }
 
   static Stream<AppUser?> watchById(String uid) {
-    return _users.doc(uid).snapshots().map(
-          (snap) => snap.exists ? AppUser.fromFirestore(snap) : null,
-        );
+    return _users
+        .doc(uid)
+        .snapshots()
+        .map((snap) => snap.exists ? AppUser.fromFirestore(snap) : null);
   }
 
   static Future<void> updateProfile({

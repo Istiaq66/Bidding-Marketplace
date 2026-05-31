@@ -90,38 +90,41 @@ class BidRepository {
   }
 
   static Stream<List<Bid>> watchByProduct(String productId, {int limit = 5}) {
-    return _bids
-        .where('Product Id', isEqualTo: productId)
-        .snapshots()
-        .map((snap) {
-          final list = snap.docs.map(Bid.fromFirestore).toList()
-            ..sort((a, b) {
-              final ad = double.tryParse(a.amount) ?? 0;
-              final bd = double.tryParse(b.amount) ?? 0;
-              return bd.compareTo(ad);
-            });
-          return list.take(limit).toList();
-        });
+    return _bids.where('Product Id', isEqualTo: productId).snapshots().map((
+      snap,
+    ) {
+      final list =
+          snap.docs.map(Bid.fromFirestore).toList()..sort((a, b) {
+            final ad = double.tryParse(a.amount) ?? 0;
+            final bd = double.tryParse(b.amount) ?? 0;
+            return bd.compareTo(ad);
+          });
+      return list.take(limit).toList();
+    });
   }
 
   static Stream<List<Bid>> watchByBidder(String bidderId) {
     return _bids
         .where('Bidder Id', isEqualTo: bidderId)
         .snapshots()
-        .map((snap) => _sortByCreatedDesc(snap.docs.map(Bid.fromFirestore).toList()));
+        .map(
+          (snap) =>
+              _sortByCreatedDesc(snap.docs.map(Bid.fromFirestore).toList()),
+        );
   }
 
   static Stream<List<Bid>> watchRecentByBidder(
     String bidderId, {
     int limit = 5,
   }) {
-    return _bids
-        .where('Bidder Id', isEqualTo: bidderId)
-        .snapshots()
-        .map((snap) {
-          final list = _sortByCreatedDesc(snap.docs.map(Bid.fromFirestore).toList());
-          return list.take(limit).toList();
-        });
+    return _bids.where('Bidder Id', isEqualTo: bidderId).snapshots().map((
+      snap,
+    ) {
+      final list = _sortByCreatedDesc(
+        snap.docs.map(Bid.fromFirestore).toList(),
+      );
+      return list.take(limit).toList();
+    });
   }
 
   /// Streams the set of product ids [bidderId] has placed at least one bid on.
@@ -130,10 +133,13 @@ class BidRepository {
     return _bids
         .where('Bidder Id', isEqualTo: bidderId)
         .snapshots()
-        .map((snap) => snap.docs
-            .map((d) => (d.data()['Product Id'] as String?) ?? '')
-            .where((id) => id.isNotEmpty)
-            .toSet());
+        .map(
+          (snap) =>
+              snap.docs
+                  .map((d) => (d.data()['Product Id'] as String?) ?? '')
+                  .where((id) => id.isNotEmpty)
+                  .toSet(),
+        );
   }
 
   static List<Bid> _sortByCreatedDesc(List<Bid> list) {
@@ -149,7 +155,8 @@ class BidRepository {
   }
 
   static Future<int> countByBidder(String bidderId) async {
-    final snap = await _bids.where('Bidder Id', isEqualTo: bidderId).count().get();
+    final snap =
+        await _bids.where('Bidder Id', isEqualTo: bidderId).count().get();
     return snap.count ?? 0;
   }
 

@@ -26,56 +26,59 @@ class Dashboard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             StreamBuilder<List<Product>>(
-              stream: userId == null
-                  ? const Stream.empty()
-                  : ProductRepository.watchByUser(userId),
+              stream:
+                  userId == null
+                      ? const Stream.empty()
+                      : ProductRepository.watchByUser(userId),
               builder: (context, productSnapshot) {
                 return StreamBuilder<List<Bid>>(
-                  stream: userId == null
-                      ? const Stream.empty()
-                      : BidRepository.watchByBidder(userId),
+                  stream:
+                      userId == null
+                          ? const Stream.empty()
+                          : BidRepository.watchByBidder(userId),
                   builder: (context, bidSnapshot) {
                     final products = productSnapshot.data ?? const <Product>[];
                     final bids = bidSnapshot.data ?? const <Bid>[];
                     final totalAuctions = products.length;
                     final totalBids = bids.length;
-                    final activeAuctions = products.where((p) => p.isActive).length;
+                    final activeAuctions =
+                        products.where((p) => p.isActive).length;
 
                     return IntrinsicHeight(
                       child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Expanded(
-                          child: _buildStatCard(
-                            context,
-                            'My Auctions',
-                            totalAuctions.toString(),
-                            Icons.shopping_bag,
-                            colorToken.primary,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Expanded(
+                            child: _buildStatCard(
+                              context,
+                              'My Auctions',
+                              totalAuctions.toString(),
+                              Icons.shopping_bag,
+                              colorToken.primary,
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _buildStatCard(
-                            context,
-                            'Active',
-                            activeAuctions.toString(),
-                            Icons.trending_up,
-                            colorToken.success,
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _buildStatCard(
+                              context,
+                              'Active',
+                              activeAuctions.toString(),
+                              Icons.trending_up,
+                              colorToken.success,
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _buildStatCard(
-                            context,
-                            'My Bids',
-                            totalBids.toString(),
-                            Icons.gavel,
-                            colorToken.warning,
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _buildStatCard(
+                              context,
+                              'My Bids',
+                              totalBids.toString(),
+                              Icons.gavel,
+                              colorToken.warning,
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
+                        ],
+                      ),
                     );
                   },
                 );
@@ -149,9 +152,10 @@ class Dashboard extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             StreamBuilder<List<Product>>(
-              stream: userId == null
-                  ? const Stream.empty()
-                  : ProductRepository.watchByUser(userId),
+              stream:
+                  userId == null
+                      ? const Stream.empty()
+                      : ProductRepository.watchByUser(userId),
               builder: (context, snapshot) {
                 if (snapshot.hasError) {
                   return _buildEmptyState(
@@ -166,17 +170,18 @@ class Dashboard extends StatelessWidget {
                   );
                 }
 
-                final active = (snapshot.data ?? const <Product>[])
-                    .where((p) => p.isActive)
-                    .toList()
-                  ..sort((a, b) {
-                    final ad = a.createdAt;
-                    final bd = b.createdAt;
-                    if (ad == null && bd == null) return 0;
-                    if (ad == null) return 1; // nulls last
-                    if (bd == null) return -1;
-                    return bd.compareTo(ad); // newest first
-                  });
+                final active =
+                    (snapshot.data ?? const <Product>[])
+                        .where((p) => p.isActive)
+                        .toList()
+                      ..sort((a, b) {
+                        final ad = a.createdAt;
+                        final bd = b.createdAt;
+                        if (ad == null && bd == null) return 0;
+                        if (ad == null) return 1; // nulls last
+                        if (bd == null) return -1;
+                        return bd.compareTo(ad); // newest first
+                      });
                 final products = active.take(3).toList();
                 if (products.isEmpty) {
                   return _buildEmptyState(
@@ -187,7 +192,10 @@ class Dashboard extends StatelessWidget {
                 }
 
                 return Column(
-                  children: products.map((p) => _buildAuctionCard(context, p)).toList(),
+                  children:
+                      products
+                          .map((p) => _buildAuctionCard(context, p))
+                          .toList(),
                 );
               },
             ),
@@ -317,14 +325,16 @@ class Dashboard extends StatelessWidget {
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: bids.length,
-            separatorBuilder: (context, index) =>
-                Divider(height: 1, color: colorToken.divider),
+            separatorBuilder:
+                (context, index) =>
+                    Divider(height: 1, color: colorToken.divider),
             itemBuilder: (context, index) {
               final bid = bids[index];
               return FutureBuilder<Product?>(
-                future: bid.productId.isEmpty
-                    ? Future.value(null)
-                    : ProductRepository.getById(bid.productId),
+                future:
+                    bid.productId.isEmpty
+                        ? Future.value(null)
+                        : ProductRepository.getById(bid.productId),
                 builder: (context, productSnapshot) {
                   final product = productSnapshot.data;
                   final amount = (double.tryParse(bid.amount.toString()) ?? 0)
@@ -332,27 +342,35 @@ class Dashboard extends StatelessWidget {
                   return ListTile(
                     leading: ClipRRect(
                       borderRadius: BorderRadius.circular(8),
-                      child: product != null && product.imageUrl.isNotEmpty
-                          ? Image.network(
-                              product.imageUrl,
-                              width: 44,
-                              height: 44,
-                              fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => Container(
+                      child:
+                          product != null && product.imageUrl.isNotEmpty
+                              ? Image.network(
+                                product.imageUrl,
+                                width: 44,
+                                height: 44,
+                                fit: BoxFit.cover,
+                                errorBuilder:
+                                    (_, __, ___) => Container(
+                                      width: 44,
+                                      height: 44,
+                                      color: colorToken.surfaceVariant,
+                                      child: Icon(
+                                        Icons.shopping_bag,
+                                        color: colorToken.textSecondary,
+                                        size: 20,
+                                      ),
+                                    ),
+                              )
+                              : Container(
                                 width: 44,
                                 height: 44,
                                 color: colorToken.surfaceVariant,
-                                child: Icon(Icons.shopping_bag,
-                                    color: colorToken.textSecondary, size: 20),
+                                child: Icon(
+                                  Icons.shopping_bag,
+                                  color: colorToken.textSecondary,
+                                  size: 20,
+                                ),
                               ),
-                            )
-                          : Container(
-                              width: 44,
-                              height: 44,
-                              color: colorToken.surfaceVariant,
-                              child: Icon(Icons.shopping_bag,
-                                  color: colorToken.textSecondary, size: 20),
-                            ),
                     ),
                     title: Text(
                       product?.name ?? 'Loading...',
@@ -379,8 +397,7 @@ class Dashboard extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) =>
-                              ProductDetails(docId: bid.productId),
+                          builder: (_) => ProductDetails(docId: bid.productId),
                         ),
                       );
                     },
@@ -463,7 +480,9 @@ class Dashboard extends StatelessWidget {
         onTap: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (_) => ProductDetails(docId: product.id)),
+            MaterialPageRoute(
+              builder: (_) => ProductDetails(docId: product.id),
+            ),
           );
         },
       ),

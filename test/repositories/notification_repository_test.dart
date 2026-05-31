@@ -11,7 +11,7 @@ void main() {
     NotificationRepository.firestoreForTesting = fake;
   });
 
-CollectionReference<Map<String, dynamic>> itemsRef(String uid) {
+  CollectionReference<Map<String, dynamic>> itemsRef(String uid) {
     return fake.collection('notifications').doc(uid).collection('items');
   }
 

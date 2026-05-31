@@ -29,9 +29,7 @@ void main() {
       'currentBid': currentBid,
       'bidCount': 0,
       'status': 'active',
-      'endsAt': Timestamp.fromDate(
-        DateTime.now().add(const Duration(days: 1)),
-      ),
+      'endsAt': Timestamp.fromDate(DateTime.now().add(const Duration(days: 1))),
     });
   }
 

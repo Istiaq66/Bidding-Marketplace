@@ -41,34 +41,35 @@ class _NewItemState extends State<NewItem> {
     showModalBottomSheet(
       context: context,
       backgroundColor: colorToken.surface,
-      builder: (sheetContext) => SafeArea(
-        child: Wrap(
-          children: [
-            ListTile(
-              leading: Icon(Icons.photo_camera, color: colorToken.primary),
-              title: Text(
-                'Take a photo',
-                style: TextStyle(color: colorToken.textPrimary),
-              ),
-              onTap: () {
-                Navigator.pop(sheetContext);
-                _pickImage(ImageSource.camera);
-              },
+      builder:
+          (sheetContext) => SafeArea(
+            child: Wrap(
+              children: [
+                ListTile(
+                  leading: Icon(Icons.photo_camera, color: colorToken.primary),
+                  title: Text(
+                    'Take a photo',
+                    style: TextStyle(color: colorToken.textPrimary),
+                  ),
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    _pickImage(ImageSource.camera);
+                  },
+                ),
+                ListTile(
+                  leading: Icon(Icons.photo_library, color: colorToken.primary),
+                  title: Text(
+                    'Choose from gallery',
+                    style: TextStyle(color: colorToken.textPrimary),
+                  ),
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    _pickImage(ImageSource.gallery);
+                  },
+                ),
+              ],
             ),
-            ListTile(
-              leading: Icon(Icons.photo_library, color: colorToken.primary),
-              title: Text(
-                'Choose from gallery',
-                style: TextStyle(color: colorToken.textPrimary),
-              ),
-              onTap: () {
-                Navigator.pop(sheetContext);
-                _pickImage(ImageSource.gallery);
-              },
-            ),
-          ],
-        ),
-      ),
+          ),
     );
   }
 
@@ -273,51 +274,52 @@ class _NewItemState extends State<NewItem> {
                       ),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(10),
-                        child: _pickedImage == null
-                            ? Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    Icons.add_a_photo_outlined,
-                                    size: 64,
-                                    color: colorToken.textSecondary,
-                                  ),
-                                  const SizedBox(height: 12),
-                                  Text(
-                                    'Tap to add a product photo',
-                                    style: TextStyle(
-                                      fontSize: 16,
+                        child:
+                            _pickedImage == null
+                                ? Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.add_a_photo_outlined,
+                                      size: 64,
                                       color: colorToken.textSecondary,
-                                      fontFamily: 'SourceSans3',
                                     ),
-                                  ),
-                                ],
-                              )
-                            : Stack(
-                                fit: StackFit.expand,
-                                children: [
-                                  Image.file(
-                                    File(_pickedImage!.path),
-                                    fit: BoxFit.cover,
-                                  ),
-                                  Positioned(
-                                    right: 8,
-                                    bottom: 8,
-                                    child: Material(
-                                      color: colorToken.surface,
-                                      shape: const CircleBorder(),
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(8),
-                                        child: Icon(
-                                          Icons.edit,
-                                          size: 20,
-                                          color: colorToken.primary,
+                                    const SizedBox(height: 12),
+                                    Text(
+                                      'Tap to add a product photo',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        color: colorToken.textSecondary,
+                                        fontFamily: 'SourceSans3',
+                                      ),
+                                    ),
+                                  ],
+                                )
+                                : Stack(
+                                  fit: StackFit.expand,
+                                  children: [
+                                    Image.file(
+                                      File(_pickedImage!.path),
+                                      fit: BoxFit.cover,
+                                    ),
+                                    Positioned(
+                                      right: 8,
+                                      bottom: 8,
+                                      child: Material(
+                                        color: colorToken.surface,
+                                        shape: const CircleBorder(),
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(8),
+                                          child: Icon(
+                                            Icons.edit,
+                                            size: 20,
+                                            color: colorToken.primary,
+                                          ),
                                         ),
                                       ),
                                     ),
-                                  ),
-                                ],
-                              ),
+                                  ],
+                                ),
                       ),
                     ),
                   ),
@@ -460,8 +462,11 @@ class _NewItemState extends State<NewItem> {
                       ),
                       child: Row(
                         children: [
-                          Icon(Icons.calendar_today,
-                              color: colorToken.primary, size: 24),
+                          Icon(
+                            Icons.calendar_today,
+                            color: colorToken.primary,
+                            size: 24,
+                          ),
                           const SizedBox(width: 16),
                           Expanded(
                             child: Column(
@@ -477,8 +482,9 @@ class _NewItemState extends State<NewItem> {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  DateFormat('MMMM dd, yyyy')
-                                      .format(_selectedDate),
+                                  DateFormat(
+                                    'MMMM dd, yyyy',
+                                  ).format(_selectedDate),
                                   style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w600,
@@ -489,8 +495,11 @@ class _NewItemState extends State<NewItem> {
                               ],
                             ),
                           ),
-                          Icon(Icons.arrow_forward_ios,
-                              color: colorToken.textSecondary, size: 16),
+                          Icon(
+                            Icons.arrow_forward_ios,
+                            color: colorToken.textSecondary,
+                            size: 16,
+                          ),
                         ],
                       ),
                     ),
@@ -512,23 +521,24 @@ class _NewItemState extends State<NewItem> {
                         ),
                         elevation: 0,
                       ),
-                      child: _isLoading
-                          ? const SizedBox(
-                              height: 24,
-                              width: 24,
-                              child: CircularProgressIndicator(
-                                color: Colors.white,
-                                strokeWidth: 2.5,
+                      child:
+                          _isLoading
+                              ? const SizedBox(
+                                height: 24,
+                                width: 24,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2.5,
+                                ),
+                              )
+                              : const Text(
+                                'Create Auction',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  fontFamily: 'SourceSans3',
+                                ),
                               ),
-                            )
-                          : const Text(
-                              'Create Auction',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                fontFamily: 'SourceSans3',
-                              ),
-                            ),
                     ),
                   ),
 

@@ -11,7 +11,11 @@ class NotificationSettingsPage extends StatelessWidget {
   const NotificationSettingsPage({super.key});
 
   static const _categories = <(String, String, String)>[
-    ('sellerUpdates', 'Bids on my auctions', 'When someone bids or an auction of mine ends'),
+    (
+      'sellerUpdates',
+      'Bids on my auctions',
+      'When someone bids or an auction of mine ends',
+    ),
     ('outbid', 'Outbid alerts', "When you've been outbid"),
     ('endingSoon', 'Ending soon', 'Reminders before watched auctions close'),
     ('newAuction', 'Followed sellers', 'New auctions from sellers you follow'),
@@ -42,48 +46,52 @@ class NotificationSettingsPage extends StatelessWidget {
           ),
         ),
       ),
-      body: uid == null
-          ? Center(
-              child: Text(
-                'Sign in to manage notifications',
-                style: TextStyle(color: colorToken.textSecondary),
+      body:
+          uid == null
+              ? Center(
+                child: Text(
+                  'Sign in to manage notifications',
+                  style: TextStyle(color: colorToken.textSecondary),
+                ),
+              )
+              : StreamBuilder<Map<String, bool>>(
+                stream: UserRepository.watchNotificationPrefs(uid),
+                builder: (context, snapshot) {
+                  final prefs = snapshot.data ?? const <String, bool>{};
+                  return ListView(
+                    children: [
+                      for (final (key, title, subtitle) in _categories)
+                        SwitchListTile(
+                          value: prefs[key] ?? true,
+                          activeColor: colorToken.primary,
+                          title: Text(
+                            title,
+                            style: TextStyle(
+                              color: colorToken.textPrimary,
+                              fontFamily: 'SourceSans3',
+                            ),
+                          ),
+                          subtitle: Text(
+                            subtitle,
+                            style: TextStyle(
+                              color: colorToken.textSecondary,
+                              fontSize: 12,
+                              fontFamily: 'SourceSans3',
+                            ),
+                          ),
+                          onChanged: (value) {
+                            final updated = Map<String, bool>.from(prefs)
+                              ..[key] = value;
+                            UserRepository.updateNotificationPrefs(
+                              uid,
+                              updated,
+                            );
+                          },
+                        ),
+                    ],
+                  );
+                },
               ),
-            )
-          : StreamBuilder<Map<String, bool>>(
-              stream: UserRepository.watchNotificationPrefs(uid),
-              builder: (context, snapshot) {
-                final prefs = snapshot.data ?? const <String, bool>{};
-                return ListView(
-                  children: [
-                    for (final (key, title, subtitle) in _categories)
-                      SwitchListTile(
-                        value: prefs[key] ?? true,
-                        activeColor: colorToken.primary,
-                        title: Text(
-                          title,
-                          style: TextStyle(
-                            color: colorToken.textPrimary,
-                            fontFamily: 'SourceSans3',
-                          ),
-                        ),
-                        subtitle: Text(
-                          subtitle,
-                          style: TextStyle(
-                            color: colorToken.textSecondary,
-                            fontSize: 12,
-                            fontFamily: 'SourceSans3',
-                          ),
-                        ),
-                        onChanged: (value) {
-                          final updated = Map<String, bool>.from(prefs)
-                            ..[key] = value;
-                          UserRepository.updateNotificationPrefs(uid, updated);
-                        },
-                      ),
-                  ],
-                );
-              },
-            ),
     );
   }
 }

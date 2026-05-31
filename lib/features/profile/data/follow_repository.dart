@@ -51,8 +51,13 @@ class FollowRepository {
     return _follows
         .where('followerId', isEqualTo: followerId)
         .snapshots()
-        .map((q) =>
-            q.docs.map((d) => d.data()['sellerId'] as String? ?? '').where((id) => id.isNotEmpty).toList());
+        .map(
+          (q) =>
+              q.docs
+                  .map((d) => d.data()['sellerId'] as String? ?? '')
+                  .where((id) => id.isNotEmpty)
+                  .toList(),
+        );
   }
 
   static Future<int> countFollowing(String followerId) async {

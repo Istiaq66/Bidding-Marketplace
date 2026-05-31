@@ -17,9 +17,10 @@ class ShareUtil {
     String? productName,
   }) async {
     final url = '$_baseUrl/auction/$productId';
-    final name = (productName == null || productName.isEmpty)
-        ? 'an auction'
-        : '"$productName"';
+    final name =
+        (productName == null || productName.isEmpty)
+            ? 'an auction'
+            : '"$productName"';
     await Share.share(
       'Check out $name on Bidding Marketplace: $url',
       subject: 'Bidding Marketplace',
@@ -27,8 +28,7 @@ class ShareUtil {
   }
 
   static Future<void> shareProfile({String? userName}) async {
-    final name =
-        (userName == null || userName.isEmpty) ? 'me' : userName;
+    final name = (userName == null || userName.isEmpty) ? 'me' : userName;
     await Share.share(
       'Follow $name on Bidding Marketplace: $_baseUrl',
       subject: 'Bidding Marketplace',

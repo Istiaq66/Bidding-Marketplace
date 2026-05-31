@@ -58,25 +58,26 @@ class _DeleteAccountPageState extends State<DeleteAccountPage> {
   Future<void> _confirmDelete() async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Delete account?'),
-        content: const Text(
-          'This will permanently remove your profile, your watchlist, '
-          'every auction you created without bids, and every bid you placed. '
-          'This action cannot be undone.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
+      builder:
+          (ctx) => AlertDialog(
+            title: const Text('Delete account?'),
+            content: const Text(
+              'This will permanently remove your profile, your watchlist, '
+              'every auction you created without bids, and every bid you placed. '
+              'This action cannot be undone.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                style: TextButton.styleFrom(foregroundColor: Colors.red),
+                child: const Text('Delete'),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
     );
     if (confirmed != true) return;
 
@@ -153,14 +154,13 @@ class _DeleteAccountPageState extends State<DeleteAccountPage> {
                 ),
               ),
               const SizedBox(height: 24),
-              if (!_isReauthenticated) ..._buildReauthSection(colorToken)
-              else ..._buildConfirmSection(colorToken),
+              if (!_isReauthenticated)
+                ..._buildReauthSection(colorToken)
+              else
+                ..._buildConfirmSection(colorToken),
               if (_error != null) ...[
                 const SizedBox(height: 16),
-                Text(
-                  _error!,
-                  style: TextStyle(color: colorToken.error),
-                ),
+                Text(_error!, style: TextStyle(color: colorToken.error)),
               ],
             ],
           ),
@@ -200,9 +200,7 @@ class _DeleteAccountPageState extends State<DeleteAccountPage> {
           decoration: InputDecoration(
             labelText: 'Password',
             labelStyle: TextStyle(color: colorToken.textSecondary),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
           ),
         ),
       ],
@@ -213,21 +211,21 @@ class _DeleteAccountPageState extends State<DeleteAccountPage> {
           backgroundColor: colorToken.primary,
           foregroundColor: colorToken.onPrimary,
           padding: const EdgeInsets.symmetric(vertical: 14),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
-        child: _isWorking
-            ? const SizedBox(
-                width: 18,
-                height: 18,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: Colors.white,
+        child:
+            _isWorking
+                ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
+                )
+                : Text(
+                  _isGoogleUser ? 'Continue with Google' : 'Verify Password',
                 ),
-              )
-            : Text(_isGoogleUser
-                ? 'Continue with Google'
-                : 'Verify Password'),
       ),
     ];
   }
@@ -258,8 +256,7 @@ class _DeleteAccountPageState extends State<DeleteAccountPage> {
           backgroundColor: colorToken.error,
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(vertical: 14),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
       ),
     ];

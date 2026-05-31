@@ -112,127 +112,136 @@ class _ProductDetailsState extends State<ProductDetails> {
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: colorToken.surface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(
-          'Place Your Bid',
-          style: TextStyle(
-            color: colorToken.textPrimary,
-            fontWeight: FontWeight.bold,
-            fontFamily: 'SourceSans3',
-          ),
-        ),
-        content: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Current bid: \$${product.currentBid.toStringAsFixed(2)}',
-                style: TextStyle(
-                  color: colorToken.textSecondary,
-                  fontFamily: 'SourceSans3',
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                product.bidCount == 0
-                    ? 'First bid must clear the start price.'
-                    : 'Min next bid: \$${product.nextMinBid.toStringAsFixed(2)} '
-                        '(\$${product.minIncrement.toStringAsFixed(2)} increment)',
-                style: TextStyle(
-                  color: colorToken.textSecondary,
-                  fontFamily: 'SourceSans3',
-                  fontSize: 12,
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _bidController,
-                keyboardType: TextInputType.number,
-                autofocus: true,
-                style: TextStyle(
-                  color: colorToken.textPrimary,
-                  fontFamily: 'SourceSans3',
-                ),
-                decoration: InputDecoration(
-                  labelText: 'Your Bid Amount',
-                  prefixIcon:
-                      Icon(Icons.attach_money, color: colorToken.primary),
-                  labelStyle: TextStyle(
-                    color: colorToken.textSecondary,
-                    fontFamily: 'SourceSans3',
-                  ),
-                  filled: true,
-                  fillColor: colorToken.surfaceVariant,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: colorToken.primary, width: 2),
-                  ),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Enter bid amount';
-                  }
-                  final bid = double.tryParse(value);
-                  if (bid == null) return 'Enter a valid number';
-                  if (bid <= product.currentBid) {
-                    return 'Bid must be > \$${product.currentBid.toStringAsFixed(2)}';
-                  }
-                  if (product.bidCount > 0 && bid < product.nextMinBid) {
-                    return 'Bid must be ≥ \$${product.nextMinBid.toStringAsFixed(2)}';
-                  }
-                  return null;
-                },
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              _bidController.clear();
-              Navigator.pop(context);
-            },
-            child: Text(
-              'Cancel',
+      builder:
+          (context) => AlertDialog(
+            backgroundColor: colorToken.surface,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            title: Text(
+              'Place Your Bid',
               style: TextStyle(
-                color: colorToken.textSecondary,
+                color: colorToken.textPrimary,
+                fontWeight: FontWeight.bold,
                 fontFamily: 'SourceSans3',
               ),
             ),
-          ),
-          ElevatedButton(
-            onPressed: _isLoading ? null : () => _placeBid(product),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.black,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+            content: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Current bid: \$${product.currentBid.toStringAsFixed(2)}',
+                    style: TextStyle(
+                      color: colorToken.textSecondary,
+                      fontFamily: 'SourceSans3',
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    product.bidCount == 0
+                        ? 'First bid must clear the start price.'
+                        : 'Min next bid: \$${product.nextMinBid.toStringAsFixed(2)} '
+                            '(\$${product.minIncrement.toStringAsFixed(2)} increment)',
+                    style: TextStyle(
+                      color: colorToken.textSecondary,
+                      fontFamily: 'SourceSans3',
+                      fontSize: 12,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _bidController,
+                    keyboardType: TextInputType.number,
+                    autofocus: true,
+                    style: TextStyle(
+                      color: colorToken.textPrimary,
+                      fontFamily: 'SourceSans3',
+                    ),
+                    decoration: InputDecoration(
+                      labelText: 'Your Bid Amount',
+                      prefixIcon: Icon(
+                        Icons.attach_money,
+                        color: colorToken.primary,
+                      ),
+                      labelStyle: TextStyle(
+                        color: colorToken.textSecondary,
+                        fontFamily: 'SourceSans3',
+                      ),
+                      filled: true,
+                      fillColor: colorToken.surfaceVariant,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                          color: colorToken.primary,
+                          width: 2,
+                        ),
+                      ),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Enter bid amount';
+                      }
+                      final bid = double.tryParse(value);
+                      if (bid == null) return 'Enter a valid number';
+                      if (bid <= product.currentBid) {
+                        return 'Bid must be > \$${product.currentBid.toStringAsFixed(2)}';
+                      }
+                      if (product.bidCount > 0 && bid < product.nextMinBid) {
+                        return 'Bid must be ≥ \$${product.nextMinBid.toStringAsFixed(2)}';
+                      }
+                      return null;
+                    },
+                  ),
+                ],
               ),
             ),
-            child: _isLoading
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      color: Colors.white,
-                      strokeWidth: 2,
-                    ),
-                  )
-                : const Text(
-                    'Place Bid',
-                    style: TextStyle(fontFamily: 'SourceSans3'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  _bidController.clear();
+                  Navigator.pop(context);
+                },
+                child: Text(
+                  'Cancel',
+                  style: TextStyle(
+                    color: colorToken.textSecondary,
+                    fontFamily: 'SourceSans3',
                   ),
+                ),
+              ),
+              ElevatedButton(
+                onPressed: _isLoading ? null : () => _placeBid(product),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.black,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child:
+                    _isLoading
+                        ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                        : const Text(
+                          'Place Bid',
+                          style: TextStyle(fontFamily: 'SourceSans3'),
+                        ),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 
@@ -314,9 +323,10 @@ class _ProductDetailsState extends State<ProductDetails> {
                       ),
                       child: Icon(
                         _isWatchlisted ? Icons.favorite : Icons.favorite_border,
-                        color: _isWatchlisted
-                            ? colorToken.error
-                            : colorToken.textPrimary,
+                        color:
+                            _isWatchlisted
+                                ? colorToken.error
+                                : colorToken.textPrimary,
                       ),
                     ),
                     onPressed: _toggleWatchlist,
@@ -330,27 +340,29 @@ class _ProductDetailsState extends State<ProductDetails> {
                     ),
                     child: Icon(Icons.share, color: colorToken.textPrimary),
                   ),
-                  onPressed: () => ShareUtil.shareAuction(
-                    productId: widget.docId,
-                    productName: _product?.name,
-                  ),
+                  onPressed:
+                      () => ShareUtil.shareAuction(
+                        productId: widget.docId,
+                        productName: _product?.name,
+                      ),
                 ),
               ],
               flexibleSpace: FlexibleSpaceBar(
-                background: product.imageUrl.isNotEmpty
-                    ? CustomImageHolder(
-                        imageUrl: product.imageUrl,
-                        height: double.infinity,
-                        width: double.infinity,
-                      )
-                    : Container(
-                        color: colorToken.surfaceVariant,
-                        child: Icon(
-                          Icons.shopping_bag_outlined,
-                          size: 64,
-                          color: colorToken.textSecondary,
+                background:
+                    product.imageUrl.isNotEmpty
+                        ? CustomImageHolder(
+                          imageUrl: product.imageUrl,
+                          height: double.infinity,
+                          width: double.infinity,
+                        )
+                        : Container(
+                          color: colorToken.surfaceVariant,
+                          child: Icon(
+                            Icons.shopping_bag_outlined,
+                            size: 64,
+                            color: colorToken.textSecondary,
+                          ),
                         ),
-                      ),
               ),
             ),
             SliverToBoxAdapter(
@@ -374,8 +386,11 @@ class _ProductDetailsState extends State<ProductDetails> {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.lock_clock,
-                                size: 16, color: colorToken.error),
+                            Icon(
+                              Icons.lock_clock,
+                              size: 16,
+                              color: colorToken.error,
+                            ),
                             const SizedBox(width: 6),
                             Text(
                               'Auction Ended',
@@ -548,90 +563,103 @@ class _ProductDetailsState extends State<ProductDetails> {
   Widget _sellerCard(Product product, colorToken, String currentUserId) {
     return InkWell(
       borderRadius: BorderRadius.circular(12),
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => SellerProfilePage(sellerId: product.sellerId),
-        ),
-      ),
-      child: Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: colorToken.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: colorToken.divider),
-      ),
-      child: Row(
-        children: [
-          UserAvatar(imageUrl: product.sellerPhoto, radius: 22),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Seller',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: colorToken.textSecondary,
-                    fontFamily: 'SourceSans3',
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  product.sellerName.isNotEmpty
-                      ? product.sellerName
-                      : 'Unknown seller',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: colorToken.textPrimary,
-                    fontFamily: 'SourceSans3',
-                  ),
-                ),
-              ],
+      onTap:
+          () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => SellerProfilePage(sellerId: product.sellerId),
             ),
           ),
-          StreamBuilder<bool>(
-            stream: FollowRepository.watchIsFollowing(
-                currentUserId, product.sellerId),
-            builder: (context, snap) {
-              final following = snap.data ?? false;
-              return OutlinedButton.icon(
-                onPressed: () => _toggleFollow(
-                    currentUserId, product.sellerId, following),
-                icon: Icon(
-                  following ? Icons.check : Icons.add,
-                  size: 18,
-                  color:
-                      following ? colorToken.textSecondary : colorToken.primary,
-                ),
-                label: Text(
-                  following ? 'Following' : 'Follow',
-                  style: TextStyle(
-                    color: following
-                        ? colorToken.textSecondary
-                        : colorToken.primary,
-                    fontFamily: 'SourceSans3',
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: colorToken.surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: colorToken.divider),
+        ),
+        child: Row(
+          children: [
+            UserAvatar(imageUrl: product.sellerPhoto, radius: 22),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Seller',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: colorToken.textSecondary,
+                      fontFamily: 'SourceSans3',
+                    ),
                   ),
-                ),
-                style: OutlinedButton.styleFrom(
-                  side: BorderSide(
+                  const SizedBox(height: 2),
+                  Text(
+                    product.sellerName.isNotEmpty
+                        ? product.sellerName
+                        : 'Unknown seller',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: colorToken.textPrimary,
+                      fontFamily: 'SourceSans3',
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            StreamBuilder<bool>(
+              stream: FollowRepository.watchIsFollowing(
+                currentUserId,
+                product.sellerId,
+              ),
+              builder: (context, snap) {
+                final following = snap.data ?? false;
+                return OutlinedButton.icon(
+                  onPressed:
+                      () => _toggleFollow(
+                        currentUserId,
+                        product.sellerId,
+                        following,
+                      ),
+                  icon: Icon(
+                    following ? Icons.check : Icons.add,
+                    size: 18,
                     color:
-                        following ? colorToken.divider : colorToken.primary,
+                        following
+                            ? colorToken.textSecondary
+                            : colorToken.primary,
                   ),
-                ),
-              );
-            },
-          ),
-        ],
-      ),
+                  label: Text(
+                    following ? 'Following' : 'Follow',
+                    style: TextStyle(
+                      color:
+                          following
+                              ? colorToken.textSecondary
+                              : colorToken.primary,
+                      fontFamily: 'SourceSans3',
+                    ),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    side: BorderSide(
+                      color:
+                          following ? colorToken.divider : colorToken.primary,
+                    ),
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Future<void> _toggleFollow(
-      String followerId, String sellerId, bool following) async {
+    String followerId,
+    String sellerId,
+    bool following,
+  ) async {
     try {
       if (following) {
         await FollowRepository.unfollow(followerId, sellerId);
@@ -667,15 +695,12 @@ class _ProductDetailsState extends State<ProductDetails> {
         child: SizedBox(
           height: 56,
           child: ElevatedButton(
-            onPressed:
-                product.isActive ? () => _showBidDialog(product) : null,
+            onPressed: product.isActive ? () => _showBidDialog(product) : null,
             style: ElevatedButton.styleFrom(
-              backgroundColor: product.isActive
-                  ? Colors.black
-                  : colorToken.surfaceVariant,
-              foregroundColor: product.isActive
-                  ? Colors.white
-                  : colorToken.textSecondary,
+              backgroundColor:
+                  product.isActive ? Colors.black : colorToken.surfaceVariant,
+              foregroundColor:
+                  product.isActive ? Colors.white : colorToken.textSecondary,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -712,8 +737,7 @@ class _ProductDetailsState extends State<ProductDetails> {
 
         final bids = snapshot.data ?? const <Bid>[];
         if (bids.isEmpty) {
-          final isOwner =
-              AuthRepository.currentUserId == _product?.sellerId;
+          final isOwner = AuthRepository.currentUserId == _product?.sellerId;
           if (isOwner) return const SizedBox.shrink();
           return Container(
             padding: const EdgeInsets.all(24),
@@ -741,18 +765,17 @@ class _ProductDetailsState extends State<ProductDetails> {
           separatorBuilder: (_, __) => const SizedBox(height: 10),
           itemBuilder: (context, index) {
             final bid = bids[index];
-            final bidAmount =
-                (double.tryParse(bid.amount.toString()) ?? 0)
-                    .toStringAsFixed(2);
+            final bidAmount = (double.tryParse(bid.amount.toString()) ?? 0)
+                .toStringAsFixed(2);
             final bidTime = bid.bidTime;
 
             return Container(
-              padding:
-                  const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
               decoration: BoxDecoration(
-                color: index == 0
-                    ? colorToken.success.withValues(alpha: 0.1)
-                    : colorToken.surface,
+                color:
+                    index == 0
+                        ? colorToken.success.withValues(alpha: 0.1)
+                        : colorToken.surface,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
@@ -760,16 +783,16 @@ class _ProductDetailsState extends State<ProductDetails> {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: index == 0
-                          ? colorToken.success
-                          : colorToken.surfaceVariant,
+                      color:
+                          index == 0
+                              ? colorToken.success
+                              : colorToken.surfaceVariant,
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
                       index == 0 ? Icons.emoji_events : Icons.person,
-                      color: index == 0
-                          ? Colors.white
-                          : colorToken.textSecondary,
+                      color:
+                          index == 0 ? Colors.white : colorToken.textSecondary,
                       size: 20,
                     ),
                   ),

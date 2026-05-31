@@ -37,10 +37,7 @@ void main() async {
     );
   }
   await Firebase.initializeApp();
-  await Supabase.initialize(
-    url: _supabaseUrl,
-    anonKey: _supabaseAnonKey,
-  );
+  await Supabase.initialize(url: _supabaseUrl, anonKey: _supabaseAnonKey);
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
   await FcmService.init();
 
@@ -63,7 +60,9 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider<ThemeProvider>(create: (_) => ThemeProvider(sharedPreferences)),
+        ChangeNotifierProvider<ThemeProvider>(
+          create: (_) => ThemeProvider(sharedPreferences),
+        ),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
