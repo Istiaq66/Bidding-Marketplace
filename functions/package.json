@@ -15,6 +15,7 @@
     "logs": "firebase functions:log"
   },
   "dependencies": {
+    "@supabase/storage-js": "~2.7.1",
     "firebase-admin": "^12.6.0",
     "firebase-functions": "^6.0.1"
   },

@@ -130,10 +130,7 @@ class _EditAuctionPageState extends State<EditAuctionPage> {
     try {
       String? newImageUrl;
       if (_newImage != null) {
-        newImageUrl = await StorageService.uploadProductImage(
-          uid: widget.product.sellerId,
-          file: _newImage!,
-        );
+        newImageUrl = await StorageService.uploadProductImage(file: _newImage!);
       }
 
       final inc = double.tryParse(_increment.text.trim());

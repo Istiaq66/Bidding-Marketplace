@@ -1,3 +1,4 @@
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:image_picker/image_picker.dart';
@@ -15,6 +16,8 @@ class StorageService {
   static const String _bucket = 'product_images';
 
   static SupabaseClient get _client => Supabase.instance.client;
+  static FirebaseFunctions get _functions =>
+      FirebaseFunctions.instanceFor(region: 'us-central1');
   static ImagePicker _picker = ImagePicker();
 
   @visibleForTesting
@@ -30,51 +33,42 @@ class StorageService {
     return _picker.pickImage(source: source, maxWidth: 2000, imageQuality: 90);
   }
 
-  /// Compresses [file] and uploads it to `product_images/{uid}/{id}.jpg`.
-  /// Returns the public `https` URL.
+  /// Compresses [file] and uploads it to `product_images/{uid}/{id}.jpg`,
+  /// where `{uid}` is the signed-in user. Returns the public `https` URL.
   static Future<String> uploadProductImage({
-    required String uid,
     required XFile file,
     String? id,
   }) async {
     final bytes = await _compress(file);
-    final name = '${id ?? DateTime.now().millisecondsSinceEpoch}.jpg';
-    final path = '$uid/$name';
-
-    await _client.storage
-        .from(_bucket)
-        .uploadBinary(
-          path,
-          bytes,
-          fileOptions: const FileOptions(
-            contentType: 'image/jpeg',
-            upsert: true,
-          ),
-        );
-
-    return _bustCache(_client.storage.from(_bucket).getPublicUrl(path));
+    return _upload('${id ?? DateTime.now().millisecondsSinceEpoch}.jpg', bytes);
   }
 
   /// Compresses [file] and uploads it to `product_images/{uid}/avatar.jpg`.
   /// Reuses the public product bucket so no extra bucket setup is needed.
-  /// Keeps `{uid}` as the first path segment to satisfy uid-based RLS.
   /// Returns the public `https` URL.
-  static Future<String> uploadProfileImage({
-    required String uid,
-    required XFile file,
-  }) async {
+  static Future<String> uploadProfileImage({required XFile file}) async {
     final bytes = await _compress(file);
-    final path = '$uid/avatar.jpg';
+    return _upload('avatar.jpg', bytes);
+  }
+
+  /// The bucket has no anon write access. The `createImageUploadUrl` Cloud
+  /// Function verifies the Firebase user and signs an upload for
+  /// `{uid}/{name}` with the Supabase service-role key; the bytes then go
+  /// straight to Supabase with that one-minute token.
+  static Future<String> _upload(String name, Uint8List bytes) async {
+    final result = await _functions
+        .httpsCallable('createImageUploadUrl')
+        .call<Object?>({'name': name});
+    final data = Map<String, dynamic>.from(result.data as Map);
+    final path = data['path'] as String;
 
     await _client.storage
         .from(_bucket)
-        .uploadBinary(
+        .uploadBinaryToSignedUrl(
           path,
+          data['token'] as String,
           bytes,
-          fileOptions: const FileOptions(
-            contentType: 'image/jpeg',
-            upsert: true,
-          ),
+          const FileOptions(contentType: 'image/jpeg', upsert: true),
         );
 
     return _bustCache(_client.storage.from(_bucket).getPublicUrl(path));
@@ -94,7 +88,11 @@ class StorageService {
     final path = _pathFromPublicUrl(url);
     if (path == null) return;
     try {
-      await _client.storage.from(_bucket).remove([path]);
+      // Deletes go through the `deleteImage` Cloud Function, which only
+      // removes files in the caller's own folder.
+      await _functions.httpsCallable('deleteImage').call<Object?>({
+        'path': path,
+      });
     } catch (_) {
       // Already deleted or transient error — ignore.
     }

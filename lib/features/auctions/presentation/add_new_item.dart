@@ -122,7 +122,6 @@ class _NewItemState extends State<NewItem> {
 
     try {
       final imageUrl = await StorageService.uploadProductImage(
-        uid: sellerId,
         file: _pickedImage!,
       );
 

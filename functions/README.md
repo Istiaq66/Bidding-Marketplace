@@ -10,6 +10,8 @@ search-index sync.
 | `endAuction`     | Schedule — every 5 minutes               | Closes products where `status == 'active'` and `endsAt <= now`. Sets `winnerId`, notifies both parties. |
 | `onBidCreate`    | Firestore `bids/{bidId}` onCreate        | Notifies the seller (`bid_placed`) and the previous high bidder (`outbid`).                             |
 | `onAuctionWrite` | Firestore `products/{productId}` onWrite | Keeps `nameLower` (lowercased `Product Name`) in sync for prefix search. Idempotent.                    |
+| `createImageUploadUrl` | Callable (auth required)           | Signs a one-minute Supabase upload URL for `product_images/{uid}/{name}`.                               |
+| `deleteImage`    | Callable (auth required)                 | Deletes a Supabase image, only inside the caller's `{uid}/` folder.                                     |
 
 All functions deploy to `us-central1`. Change the `REGION` constant in each
 `src/*.ts` to relocate.
@@ -59,6 +61,21 @@ cd functions
 npm run shell
 # inside the shell:
 endAuction()
+```
+
+## Supabase config (image functions)
+
+`createImageUploadUrl` / `deleteImage` sign requests with the Supabase
+service-role key. Set it once per Firebase project (never commit it):
+
+```sh
+firebase functions:secrets:set SUPABASE_SERVICE_ROLE_KEY
+```
+
+and put the project URL in `functions/.env` (gitignored):
+
+```
+SUPABASE_URL=https://<your-project-ref>.supabase.co
 ```
 
 ## Deploy

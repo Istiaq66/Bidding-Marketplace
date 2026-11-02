@@ -113,10 +113,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     try {
       String? imageUrl = _existingImageUrl;
       if (_pickedImage != null) {
-        imageUrl = await StorageService.uploadProfileImage(
-          uid: uid,
-          file: _pickedImage!,
-        );
+        imageUrl = await StorageService.uploadProfileImage(file: _pickedImage!);
       }
       await UserRepository.updateProfile(
         uid: uid,

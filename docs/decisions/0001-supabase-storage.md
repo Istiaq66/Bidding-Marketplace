@@ -52,14 +52,16 @@ Firebase. Implementation: `lib/core/services/storage_service.dart`.
   Per-user write isolation is therefore **not enforceable** on the Supabase side:
   uploads run as the `anon` role and any holder of the anon key can
   write/overwrite/delete any path in `product_images`. The only server-side
-  boundaries are the **bucket-level size cap (5 MB) and MIME allowlist**. This is an
-  accepted residual risk for v1.1. The policy SQL is committed at
-  `supabase/policies.sql`.
-  - **Hardening path (future):** either (a) wire Supabase third-party auth to verify
-    the Firebase JWT so `auth.uid()` is populated, then switch to owner-scoped
-    policies on `(storage.foldername(name))[1]`; or (b) route uploads through a
-    Cloud/edge function that signs them with the service-role key and lock the
-    bucket to no anon write.
+  boundaries are the **bucket-level size cap (5 MB) and MIME allowlist**. This was
+  an accepted residual risk for v1.1.
+  - **Update (2026-11-02): hardened via option (b).** The anon role now has no
+    policy on `storage.objects`. Uploads use one-minute signed URLs issued by the
+    `createImageUploadUrl` Cloud Function, which verifies the Firebase ID token and
+    always targets `{uid}/{name}`; deletes go through `deleteImage`, which only
+    removes paths in the caller's folder. Public reads keep working without a
+    SELECT policy, and anon `list()` is blocked. See `functions/src/storage.ts`
+    and `supabase/policies.sql`. The service-role key lives only in Firebase
+    Secret Manager.
 - **Two storage providers to operate.** Account-deletion orphan cleanup
   (`PROMPT.md` DoD §4) must call `StorageService.deleteByUrl`, which targets
   Supabase, not Firebase.
