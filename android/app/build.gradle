@@ -79,8 +79,19 @@ android {
     buildTypes {
         release {
             minifyEnabled true
+            // Without a keystore, fall back to the debug key so local
+            // `flutter run --release` works. Never distribute such a build;
+            // CI refuses to produce one (see taskGraph check below).
             signingConfig System.getenv("KEYSTORE_PATH") != null ? signingConfigs.release : signingConfigs.debug
         }
+    }
+}
+
+gradle.taskGraph.whenReady { graph ->
+    def releaseTask = graph.allTasks.any { it.name.toLowerCase().contains("release") }
+    if (releaseTask && System.getenv("CI") != null && System.getenv("KEYSTORE_PATH") == null) {
+        throw new GradleException(
+            "KEYSTORE_PATH is not set: refusing to sign a CI release build with the debug key.")
     }
 }
 
