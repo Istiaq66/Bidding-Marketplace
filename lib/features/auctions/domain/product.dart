@@ -92,6 +92,14 @@ class Product {
     'sellerPhoto': sellerPhoto,
   };
 
+  /// True once the server sweep (`endAuction`) has closed the auction and
+  /// settled [winnerId]. An auction can be past [endsAt] (so not [isActive])
+  /// for a few minutes before this flips.
+  bool get isClosed => status == 'ended';
+
+  /// Whether [uid] won this auction. Only true after the server close.
+  bool isWonBy(String? uid) => isClosed && uid != null && winnerId == uid;
+
   bool get isActive {
     if (status != 'active') return false;
     if (endsAt != null) return endsAt!.isAfter(DateTime.now());

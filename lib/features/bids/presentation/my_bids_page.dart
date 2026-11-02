@@ -115,9 +115,11 @@ class MyBids extends StatelessWidget {
         final product = productSnapshot.data;
         if (product == null) return const SizedBox();
 
-        final isLeading =
-            product.highestBidderId != null &&
-            product.highestBidderId == bid.bidderId;
+        final (statusLabel, statusIcon, statusColor) = _bidStatus(
+          product,
+          bid.bidderId,
+          colorToken,
+        );
 
         return Card(
           margin: const EdgeInsets.only(bottom: 12),
@@ -186,27 +188,19 @@ class MyBids extends StatelessWidget {
             trailing: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color:
-                    isLeading
-                        ? colorToken.bidActive.withValues(alpha: 0.1)
-                        : colorToken.error.withValues(alpha: 0.1),
+                color: statusColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(
-                    isLeading ? Icons.trending_up : Icons.trending_down,
-                    size: 16,
-                    color: isLeading ? colorToken.bidActive : colorToken.error,
-                  ),
+                  Icon(statusIcon, size: 16, color: statusColor),
                   const SizedBox(width: 4),
                   Text(
-                    isLeading ? 'Leading' : 'Outbid',
+                    statusLabel,
                     style: TextStyle(
                       fontSize: 12,
-                      color:
-                          isLeading ? colorToken.bidActive : colorToken.error,
+                      color: statusColor,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -226,5 +220,27 @@ class MyBids extends StatelessWidget {
         );
       },
     );
+  }
+
+  /// Label, icon and color for the status chip on a bid row.
+  (String, IconData, Color) _bidStatus(
+    Product product,
+    String bidderId,
+    ColorToken colorToken,
+  ) {
+    if (product.isClosed) {
+      return product.isWonBy(bidderId)
+          ? ('Won', Icons.emoji_events, colorToken.bidWon)
+          : ('Lost', Icons.cancel_outlined, colorToken.bidLost);
+    }
+    // Past endsAt; the server sweep hasn't settled the winner yet.
+    if (!product.isActive) {
+      return ('Ended', Icons.hourglass_bottom, colorToken.textSecondary);
+    }
+    final isLeading =
+        product.highestBidderId != null && product.highestBidderId == bidderId;
+    return isLeading
+        ? ('Leading', Icons.trending_up, colorToken.bidActive)
+        : ('Outbid', Icons.trending_down, colorToken.error);
   }
 }

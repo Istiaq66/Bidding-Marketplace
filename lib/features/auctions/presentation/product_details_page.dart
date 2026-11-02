@@ -371,38 +371,9 @@ class _ProductDetailsState extends State<ProductDetails> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Auction ended badge
+                    // Auction result banner (winner / seller) or ended badge
                     if (!product.isActive)
-                      Container(
-                        margin: const EdgeInsets.only(bottom: 12),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: colorToken.error.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.lock_clock,
-                              size: 16,
-                              color: colorToken.error,
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              'Auction Ended',
-                              style: TextStyle(
-                                color: colorToken.error,
-                                fontWeight: FontWeight.bold,
-                                fontFamily: 'SourceSans3',
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                      _buildEndedBanner(product, colorToken, currentUserId),
 
                     Text(
                       product.name,
@@ -560,6 +531,121 @@ class _ProductDetailsState extends State<ProductDetails> {
     );
   }
 
+  Widget _buildEndedBanner(
+    Product product,
+    ColorToken colorToken,
+    String? currentUserId,
+  ) {
+    final amount = '\$${product.currentBid.toStringAsFixed(2)}';
+    final isSeller = currentUserId == product.sellerId;
+
+    if (product.isWonBy(currentUserId)) {
+      return _resultBanner(
+        colorToken,
+        color: colorToken.bidWon,
+        icon: Icons.emoji_events,
+        title: 'You won this auction!',
+        subtitle: 'Winning bid: $amount',
+      );
+    }
+
+    if (isSeller && product.isClosed) {
+      final sold = product.winnerId != null;
+      return _resultBanner(
+        colorToken,
+        color: sold ? colorToken.bidWon : colorToken.textSecondary,
+        icon: sold ? Icons.sell : Icons.do_not_disturb_alt,
+        title: sold ? 'Sold for $amount' : 'Ended with no bids',
+        subtitle:
+            sold
+                ? 'The winning bidder has been notified.'
+                : 'Nobody placed a bid on this auction.',
+      );
+    }
+
+    // Past endsAt but the server hasn't settled the winner yet.
+    final label =
+        product.isClosed ? 'Auction Ended' : 'Auction Ended · finalizing';
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: colorToken.error.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.lock_clock, size: 16, color: colorToken.error),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: TextStyle(
+              color: colorToken.error,
+              fontWeight: FontWeight.bold,
+              fontFamily: 'SourceSans3',
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _resultBanner(
+    ColorToken colorToken, {
+    required Color color,
+    required IconData icon,
+    required String title,
+    required String subtitle,
+  }) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.4)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+            child: Icon(icon, color: Colors.white, size: 24),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: colorToken.textPrimary,
+                    fontFamily: 'SourceSans3',
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: colorToken.textSecondary,
+                    fontFamily: 'SourceSans3',
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _sellerCard(Product product, colorToken, String currentUserId) {
     return InkWell(
       borderRadius: BorderRadius.circular(12),
@@ -707,7 +793,11 @@ class _ProductDetailsState extends State<ProductDetails> {
               elevation: 0,
             ),
             child: Text(
-              product.isActive ? 'Place Bid' : 'Auction Ended',
+              product.isActive
+                  ? 'Place Bid'
+                  : product.isWonBy(AuthRepository.currentUserId)
+                  ? 'You Won'
+                  : 'Auction Ended',
               style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -823,9 +913,11 @@ class _ProductDetailsState extends State<ProductDetails> {
                                   color: colorToken.success,
                                   borderRadius: BorderRadius.circular(4),
                                 ),
-                                child: const Text(
-                                  'Leading',
-                                  style: TextStyle(
+                                child: Text(
+                                  (_product?.isClosed ?? false)
+                                      ? 'Winner'
+                                      : 'Leading',
+                                  style: const TextStyle(
                                     fontSize: 10,
                                     color: Colors.white,
                                     fontWeight: FontWeight.bold,
