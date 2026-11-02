@@ -43,3 +43,7 @@ firebase-debug.log
 firebase-debug.*.log
 .firebase/
 
+# Claude Code personal settings / hooks
+.claude/settings.local.json
+.claude/hooks/
+
