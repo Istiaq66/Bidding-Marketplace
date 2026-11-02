@@ -29,7 +29,6 @@ class BidRepository {
     required double amount,
   }) async {
     final productRef = _db.collection('products').doc(productId);
-    final bidRef = _bids.doc();
 
     await _db.runTransaction((tx) async {
       final productSnap = await tx.get(productRef);
@@ -73,6 +72,11 @@ class BidRepository {
         );
       }
 
+      // Security rules require the bid id to be `{productId}_{newBidCount}`
+      // and the bid + product update to land in the same transaction.
+      final newCount = bidCount + 1;
+      final bidRef = _bids.doc('${productId}_$newCount');
+
       tx.set(bidRef, {
         'Bidder Id': bidderId,
         'Product Id': productId,
@@ -83,7 +87,7 @@ class BidRepository {
 
       tx.update(productRef, {
         'currentBid': amount,
-        'bidCount': FieldValue.increment(1),
+        'bidCount': newCount,
         'highestBidderId': bidderId,
       });
     });

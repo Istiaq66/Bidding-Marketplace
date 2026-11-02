@@ -36,14 +36,13 @@ class ProductRepository {
         (sellerData['photo'] as String?) ??
         '';
 
-    // Compute endsAt at 23:59:59 local time on the selected date
-    Timestamp? endsAt;
-    try {
-      final parsed = DateTime.parse(date);
-      endsAt = Timestamp.fromDate(
-        DateTime(parsed.year, parsed.month, parsed.day, 23, 59, 59),
-      );
-    } catch (_) {}
+    // Compute endsAt at 23:59:59 local time on the selected date. Security
+    // rules reject a product without a valid future endsAt.
+    final parsed = DateTime.tryParse(date);
+    if (parsed == null) throw Exception('Invalid end date');
+    final endsAt = Timestamp.fromDate(
+      DateTime(parsed.year, parsed.month, parsed.day, 23, 59, 59),
+    );
 
     final minPrice = double.tryParse(minBidPrice) ?? 0;
 
