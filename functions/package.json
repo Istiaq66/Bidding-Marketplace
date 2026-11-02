@@ -12,7 +12,8 @@
     "serve": "npm run build && firebase emulators:start --only functions,firestore",
     "shell": "npm run build && firebase functions:shell",
     "deploy": "firebase deploy --only functions",
-    "logs": "firebase functions:log"
+    "logs": "firebase functions:log",
+    "test": "npm run build && cd .. && firebase emulators:exec --only firestore --project demo-bidding \"node --test functions/test/lifecycle.test.js\""
   },
   "dependencies": {
     "@supabase/storage-js": "~2.7.1",

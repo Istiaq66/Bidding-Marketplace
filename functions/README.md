@@ -63,6 +63,15 @@ npm run shell
 endAuction()
 ```
 
+## Tests
+
+Lifecycle tests (`test/lifecycle.test.js`) run the built functions against the
+Firestore emulator. Needs Java 21+ for the emulator:
+
+```sh
+npm test
+```
+
 ## Supabase config (image functions)
 
 `createImageUploadUrl` / `deleteImage` sign requests with the Supabase

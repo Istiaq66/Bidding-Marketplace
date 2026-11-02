@@ -1,15 +1,15 @@
 import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { logger } from 'firebase-functions/v2';
 import {
-  FieldValue,
   Firestore,
+  QueryDocumentSnapshot,
   Timestamp,
   getFirestore,
 } from 'firebase-admin/firestore';
-import { sendPush } from './push';
+import { distinctUserIds, notifyUsers } from './notify';
 
 const REGION = 'us-central1';
-const BATCH_LIMIT = 50;
+const PAGE_SIZE = 100;
 const WINDOW_MS = 60 * 60 * 1000; // notify ~1h before close
 
 /**
@@ -18,6 +18,9 @@ const WINDOW_MS = 60 * 60 * 1000; // notify ~1h before close
  * within the next hour and that hasn't been flagged yet, notifies every
  * watcher and bidder (except the seller) and sets `endingSoonNotified` so the
  * reminder fires at most once.
+ *
+ * Pages through the whole window: auctions cluster at 23:59:59, so a single
+ * fixed-size page full of already-notified products would starve the rest.
  */
 export const auctionEndingSoon = onSchedule(
   {
@@ -31,28 +34,36 @@ export const auctionEndingSoon = onSchedule(
     const now = Timestamp.now();
     const soon = Timestamp.fromMillis(Date.now() + WINDOW_MS);
 
-    const snap = await db
-      .collection('products')
-      .where('status', '==', 'active')
-      .where('endsAt', '>', now)
-      .where('endsAt', '<=', soon)
-      .limit(BATCH_LIMIT)
-      .get();
+    let cursor: QueryDocumentSnapshot | undefined;
+    let notified = 0;
+    for (;;) {
+      let query = db
+        .collection('products')
+        .where('status', '==', 'active')
+        .where('endsAt', '>', now)
+        .where('endsAt', '<=', soon)
+        .orderBy('endsAt')
+        .limit(PAGE_SIZE);
+      if (cursor) query = query.startAfter(cursor);
 
-    if (snap.empty) {
-      logger.debug('auctionEndingSoon: nothing closing soon');
-      return;
-    }
+      const snap = await query.get();
+      if (snap.empty) break;
+      cursor = snap.docs[snap.docs.length - 1];
 
-    for (const doc of snap.docs) {
-      const data = doc.data() as Record<string, unknown>;
-      if (data['endingSoonNotified'] === true) continue;
-      try {
-        await notifyEndingSoon(db, doc.id, data);
-      } catch (err) {
-        logger.error(`auctionEndingSoon failed for ${doc.id}`, err);
+      for (const doc of snap.docs) {
+        const data = doc.data() as Record<string, unknown>;
+        if (data['endingSoonNotified'] === true) continue;
+        try {
+          await notifyEndingSoon(db, doc.id, data);
+          notified++;
+        } catch (err) {
+          logger.error(`auctionEndingSoon failed for ${doc.id}`, err);
+        }
       }
+      if (snap.size < PAGE_SIZE) break;
     }
+
+    if (notified > 0) logger.info(`auctionEndingSoon: notified ${notified} auction(s)`);
   },
 );
 
@@ -62,59 +73,24 @@ async function notifyEndingSoon(
   data: Record<string, unknown>,
 ): Promise<void> {
   const sellerId = (data['User Id'] as string | undefined) ?? '';
-  const productName = (data['Product Name'] as string | undefined) ?? '';
-  const productImage = (data['Image Url'] as string | undefined) ?? '';
 
-  const recipients = new Set<string>();
-
-  const watchers = await db
-    .collection('watchlist')
-    .where('Product Id', '==', productId)
-    .get();
-  watchers.forEach((d) => {
-    const uid = d.data()['User Id'] as string | undefined;
-    if (uid) recipients.add(uid);
-  });
-
-  const bidders = await db
-    .collection('bids')
-    .where('Product Id', '==', productId)
-    .get();
-  bidders.forEach((d) => {
-    const uid = d.data()['Bidder Id'] as string | undefined;
-    if (uid) recipients.add(uid);
-  });
-
+  const [watchers, bidders] = await Promise.all([
+    distinctUserIds(db, 'watchlist', 'Product Id', productId, 'User Id'),
+    distinctUserIds(db, 'bids', 'Product Id', productId, 'Bidder Id'),
+  ]);
+  const recipients = new Set([...watchers, ...bidders]);
   if (sellerId) recipients.delete(sellerId);
 
-  const batch = db.batch();
-  for (const uid of recipients) {
-    const ref = db
-      .collection('notifications')
-      .doc(uid)
-      .collection('items')
-      .doc();
-    batch.set(ref, {
-      type: 'auction_ending_soon',
-      productId,
-      productName,
-      productImage,
-      amount: null,
-      read: false,
-      createdAt: FieldValue.serverTimestamp(),
-    });
-  }
-
-  // Flag even when there were no recipients so we don't re-scan it every run.
-  batch.update(db.collection('products').doc(productId), {
-    endingSoonNotified: true,
+  await notifyUsers(db, recipients, productId, {
+    type: 'auction_ending_soon',
+    productId,
+    productName: (data['Product Name'] as string | undefined) ?? '',
+    productImage: (data['Image Url'] as string | undefined) ?? '',
   });
 
-  await batch.commit();
-
-  await Promise.all(
-    [...recipients].map((uid) =>
-      sendPush(db, uid, 'auction_ending_soon', productName, productId),
-    ),
-  );
+  // Flag even when there were no recipients so we don't re-scan it every run.
+  await db
+    .collection('products')
+    .doc(productId)
+    .update({ endingSoonNotified: true });
 }
