@@ -64,10 +64,16 @@ class MyApp extends StatelessWidget {
           create: (_) => ThemeProvider(sharedPreferences),
         ),
       ],
-      child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        navigatorKey: FcmService.navigatorKey,
-        home: const AuthPage(),
+      // Rebuilds on theme toggle so stock Material widgets (dialogs, pickers,
+      // text fields, snackbars) follow the app's color tokens too.
+      child: Consumer<ThemeProvider>(
+        builder:
+            (context, themeProvider, _) => MaterialApp(
+              debugShowCheckedModeBanner: false,
+              navigatorKey: FcmService.navigatorKey,
+              theme: themeProvider.colorToken.themeData,
+              home: const AuthPage(),
+            ),
       ),
     );
   }

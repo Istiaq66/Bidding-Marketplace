@@ -93,18 +93,15 @@ class BidRepository {
     });
   }
 
+  /// Top [limit] bids on a product, highest first. Sorted and limited
+  /// server-side (index: Product Id + Bid Amount desc).
   static Stream<List<Bid>> watchByProduct(String productId, {int limit = 5}) {
-    return _bids.where('Product Id', isEqualTo: productId).snapshots().map((
-      snap,
-    ) {
-      final list =
-          snap.docs.map(Bid.fromFirestore).toList()..sort((a, b) {
-            final ad = double.tryParse(a.amount) ?? 0;
-            final bd = double.tryParse(b.amount) ?? 0;
-            return bd.compareTo(ad);
-          });
-      return list.take(limit).toList();
-    });
+    return _bids
+        .where('Product Id', isEqualTo: productId)
+        .orderBy('Bid Amount', descending: true)
+        .limit(limit)
+        .snapshots()
+        .map((snap) => snap.docs.map(Bid.fromFirestore).toList());
   }
 
   static Stream<List<Bid>> watchByBidder(String bidderId) {
@@ -117,18 +114,18 @@ class BidRepository {
         );
   }
 
+  /// Most recent [limit] bids by [bidderId]. Sorted and limited server-side
+  /// (index: Bidder Id + Created At desc).
   static Stream<List<Bid>> watchRecentByBidder(
     String bidderId, {
     int limit = 5,
   }) {
-    return _bids.where('Bidder Id', isEqualTo: bidderId).snapshots().map((
-      snap,
-    ) {
-      final list = _sortByCreatedDesc(
-        snap.docs.map(Bid.fromFirestore).toList(),
-      );
-      return list.take(limit).toList();
-    });
+    return _bids
+        .where('Bidder Id', isEqualTo: bidderId)
+        .orderBy('Created At', descending: true)
+        .limit(limit)
+        .snapshots()
+        .map((snap) => snap.docs.map(Bid.fromFirestore).toList());
   }
 
   /// Streams the set of product ids [bidderId] has placed at least one bid on.

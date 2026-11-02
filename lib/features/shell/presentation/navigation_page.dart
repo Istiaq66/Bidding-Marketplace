@@ -47,11 +47,35 @@ class _NavigationPageState extends State<NavigationPage> {
     super.dispose();
   }
 
-  List<Widget> get _screens => [
-    const Home(),
-    Dashboard(onBrowse: () => setState(() => index = 0)),
-    const Profile(),
-  ];
+  // Tabs live in an IndexedStack so switching doesn't throw away Home's
+  // loaded pages and scroll position. Each tab is built on first visit and
+  // the widget instances are cached, so parent rebuilds (e.g. unread count)
+  // don't rebuild them. Profile loads its stats once, so it gets a fresh key
+  // on every visit; Dashboard gets one on "Refresh".
+  final _visited = <int>{0};
+  final Widget _home = const Home();
+  late Widget _dashboard = _newDashboard();
+  Key _profileKey = UniqueKey();
+
+  Widget _newDashboard() =>
+      Dashboard(key: UniqueKey(), onBrowse: () => _selectTab(0));
+
+  Widget _screen(int i) {
+    if (!_visited.contains(i)) return const SizedBox.shrink();
+    return switch (i) {
+      0 => _home,
+      1 => _dashboard,
+      _ => Profile(key: _profileKey),
+    };
+  }
+
+  void _selectTab(int i) {
+    setState(() {
+      if (i == 2 && index != 2) _profileKey = UniqueKey();
+      index = i;
+      _visited.add(i);
+    });
+  }
 
   void _showComingSoon(String label) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -295,7 +319,7 @@ class _NavigationPageState extends State<NavigationPage> {
                   ),
                   onTap: () {
                     Navigator.pop(context);
-                    setState(() {});
+                    setState(() => _dashboard = _newDashboard());
                   },
                 ),
                 ListTile(
@@ -507,7 +531,7 @@ class _NavigationPageState extends State<NavigationPage> {
         return Scaffold(
           backgroundColor: colorToken.background,
           appBar: _getAppBar(context, index), // Dynamic AppBar
-          body: _screens[index],
+          body: IndexedStack(index: index, children: List.generate(3, _screen)),
           bottomNavigationBar: NavigationBarTheme(
             data: NavigationBarThemeData(
               backgroundColor: colorToken.surface,
@@ -537,10 +561,7 @@ class _NavigationPageState extends State<NavigationPage> {
             ),
             child: NavigationBar(
               selectedIndex: index,
-              onDestinationSelected:
-                  (index) => setState(() {
-                    this.index = index;
-                  }),
+              onDestinationSelected: _selectTab,
               elevation: 0,
               backgroundColor: colorToken.surface,
               destinations: const [

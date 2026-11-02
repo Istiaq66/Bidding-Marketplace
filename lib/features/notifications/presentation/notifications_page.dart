@@ -120,11 +120,7 @@ class NotificationsPage extends StatelessWidget {
   }
 
   Future<void> _markAllRead(BuildContext context, String userId) async {
-    final stream = NotificationRepository.watchByUser(userId);
-    final notifications = await stream.first;
-    for (final n in notifications.where((n) => !n.read)) {
-      await NotificationRepository.markRead(userId, n.id);
-    }
+    await NotificationRepository.markAllRead(userId);
   }
 
   Widget _buildTile(

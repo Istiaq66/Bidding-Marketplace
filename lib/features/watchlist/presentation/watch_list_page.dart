@@ -8,13 +8,30 @@ import 'package:app/features/watchlist/data/watchlist_repository.dart';
 import 'package:app/features/auctions/presentation/product_details_page.dart';
 import 'package:flutter/material.dart';
 
-class WatchList extends StatelessWidget {
+class WatchList extends StatefulWidget {
   const WatchList({super.key});
+
+  @override
+  State<WatchList> createState() => _WatchListState();
+}
+
+class _WatchListState extends State<WatchList> {
+  final String? userId = AuthRepository.currentUserId;
+
+  // Created once so rebuilds don't re-subscribe; product lookups are cached
+  // per id so a list update doesn't refetch every row.
+  late final Stream<List<WatchlistEntry>> _stream =
+      userId == null
+          ? const Stream.empty()
+          : WatchlistRepository.watchByUser(userId!);
+  final _productFutures = <String, Future<Product?>>{};
+
+  Future<Product?> _productFor(String id) =>
+      _productFutures.putIfAbsent(id, () => ProductRepository.getById(id));
 
   @override
   Widget build(BuildContext context) {
     final colorToken = ThemeProvider.of(context).colorToken;
-    final userId = AuthRepository.currentUserId;
 
     return Scaffold(
       backgroundColor: colorToken.background,
@@ -26,10 +43,7 @@ class WatchList extends StatelessWidget {
       ),
       body: SafeArea(
         child: StreamBuilder<List<WatchlistEntry>>(
-          stream:
-              userId == null
-                  ? const Stream.empty()
-                  : WatchlistRepository.watchByUser(userId),
+          stream: _stream,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return Center(
@@ -107,7 +121,7 @@ class WatchList extends StatelessWidget {
       future:
           entry.productId.isEmpty
               ? Future.value(null)
-              : ProductRepository.getById(entry.productId),
+              : _productFor(entry.productId),
       builder: (context, productSnapshot) {
         final product = productSnapshot.data;
 

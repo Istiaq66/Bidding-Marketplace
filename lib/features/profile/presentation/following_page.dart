@@ -105,7 +105,7 @@ class FollowingPage extends StatelessWidget {
   }
 }
 
-class _SellerTile extends StatelessWidget {
+class _SellerTile extends StatefulWidget {
   const _SellerTile({
     required this.followerId,
     required this.sellerId,
@@ -117,9 +117,29 @@ class _SellerTile extends StatelessWidget {
   final ColorToken colorToken;
 
   @override
+  State<_SellerTile> createState() => _SellerTileState();
+}
+
+class _SellerTileState extends State<_SellerTile> {
+  // Fetched once per seller, not on every rebuild of the list.
+  late Future<AppUser?> _seller = UserRepository.getById(widget.sellerId);
+
+  String get followerId => widget.followerId;
+  String get sellerId => widget.sellerId;
+  ColorToken get colorToken => widget.colorToken;
+
+  @override
+  void didUpdateWidget(_SellerTile old) {
+    super.didUpdateWidget(old);
+    if (old.sellerId != widget.sellerId) {
+      _seller = UserRepository.getById(widget.sellerId);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return FutureBuilder<AppUser?>(
-      future: UserRepository.getById(sellerId),
+      future: _seller,
       builder: (context, snap) {
         final seller = snap.data;
         final name =

@@ -7,13 +7,30 @@ import 'package:app/features/auctions/presentation/product_details_page.dart';
 import 'package:app/core/theme/theme_provider.dart';
 import 'package:flutter/material.dart';
 
-class MyBids extends StatelessWidget {
+class MyBids extends StatefulWidget {
   const MyBids({super.key});
+
+  @override
+  State<MyBids> createState() => _MyBidsState();
+}
+
+class _MyBidsState extends State<MyBids> {
+  final String? userId = AuthRepository.currentUserId;
+
+  // Created once so rebuilds don't re-subscribe; product lookups are cached
+  // per id so a list update doesn't refetch every row.
+  late final Stream<List<Bid>> _stream =
+      userId == null
+          ? const Stream.empty()
+          : BidRepository.watchByBidder(userId!);
+  final _productFutures = <String, Future<Product?>>{};
+
+  Future<Product?> _productFor(String id) =>
+      _productFutures.putIfAbsent(id, () => ProductRepository.getById(id));
 
   @override
   Widget build(BuildContext context) {
     final colorToken = ThemeProvider.of(context).colorToken;
-    final userId = AuthRepository.currentUserId;
 
     return Scaffold(
       backgroundColor: colorToken.background,
@@ -25,10 +42,7 @@ class MyBids extends StatelessWidget {
       ),
       body: SafeArea(
         child: StreamBuilder<List<Bid>>(
-          stream:
-              userId == null
-                  ? const Stream.empty()
-                  : BidRepository.watchByBidder(userId),
+          stream: _stream,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return Center(
@@ -107,10 +121,7 @@ class MyBids extends StatelessWidget {
     final bidTime = bid.bidTime;
 
     return FutureBuilder<Product?>(
-      future:
-          productId.isEmpty
-              ? Future.value(null)
-              : ProductRepository.getById(productId),
+      future: productId.isEmpty ? Future.value(null) : _productFor(productId),
       builder: (context, productSnapshot) {
         final product = productSnapshot.data;
         if (product == null) return const SizedBox();

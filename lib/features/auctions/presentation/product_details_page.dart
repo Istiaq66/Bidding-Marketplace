@@ -3,6 +3,7 @@ import 'package:app/core/widgets/custom_image_holder.dart';
 import 'package:app/core/widgets/user_avatar.dart';
 import 'package:app/features/bids/domain/bid.dart';
 import 'package:app/features/auctions/domain/product.dart';
+import 'package:app/features/auctions/presentation/bid_dialog.dart';
 import 'package:app/features/auth/data/auth_repository.dart';
 import 'package:app/features/bids/data/bid_repository.dart';
 import 'package:app/features/auctions/data/product_repository.dart';
@@ -23,12 +24,17 @@ class ProductDetails extends StatefulWidget {
 }
 
 class _ProductDetailsState extends State<ProductDetails> {
-  final _bidController = TextEditingController();
-  final _formKey = GlobalKey<FormState>();
-  bool _isLoading = false;
   bool _isWatchlisted = false;
   Product? _product;
   StreamSubscription<Product?>? _productSub;
+
+  // Streams are created once, not in build(): every new bid rebuilds this
+  // page, and a fresh stream there would re-subscribe and flash a spinner.
+  late final Stream<List<Bid>> _bidsStream = BidRepository.watchByProduct(
+    widget.docId,
+  );
+  Stream<bool>? _followingStream;
+  String? _followingKey;
 
   @override
   void initState() {
@@ -42,7 +48,6 @@ class _ProductDetailsState extends State<ProductDetails> {
   @override
   void dispose() {
     _productSub?.cancel();
-    _bidController.dispose();
     super.dispose();
   }
 
@@ -77,172 +82,27 @@ class _ProductDetailsState extends State<ProductDetails> {
     }
   }
 
-  Future<void> _placeBid(Product product) async {
-    if (!_formKey.currentState!.validate()) return;
-
-    final userId = AuthRepository.currentUserId;
-    if (userId == null) {
+  Future<void> _showBidDialog(Product product) async {
+    if (AuthRepository.currentUserId == null) {
       _showErrorSnackbar('Please login to place a bid');
       return;
     }
-
-    final bidAmount = double.tryParse(_bidController.text.trim()) ?? 0;
-
-    setState(() => _isLoading = true);
-    final navigator = Navigator.of(context);
-
-    try {
-      await BidRepository.place(
-        productId: widget.docId,
-        bidderId: userId,
-        amount: bidAmount,
-      );
+    final placed = await showDialog<bool>(
+      context: context,
+      builder: (_) => BidDialog(initialProduct: product),
+    );
+    if (placed == true && mounted) {
       _showSuccessSnackbar('Bid placed successfully!');
-      _bidController.clear();
-      navigator.pop();
-    } on Exception catch (e) {
-      _showErrorSnackbar(e.toString().replaceFirst('Exception: ', ''));
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  void _showBidDialog(Product product) {
-    final colorToken = ThemeProvider.of(context).colorToken;
-
-    showDialog(
-      context: context,
-      builder:
-          (context) => AlertDialog(
-            backgroundColor: colorToken.surface,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            title: Text(
-              'Place Your Bid',
-              style: TextStyle(
-                color: colorToken.textPrimary,
-                fontWeight: FontWeight.bold,
-                fontFamily: 'SourceSans3',
-              ),
-            ),
-            content: Form(
-              key: _formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Current bid: \$${product.currentBid.toStringAsFixed(2)}',
-                    style: TextStyle(
-                      color: colorToken.textSecondary,
-                      fontFamily: 'SourceSans3',
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    product.bidCount == 0
-                        ? 'First bid must clear the start price.'
-                        : 'Min next bid: \$${product.nextMinBid.toStringAsFixed(2)} '
-                            '(\$${product.minIncrement.toStringAsFixed(2)} increment)',
-                    style: TextStyle(
-                      color: colorToken.textSecondary,
-                      fontFamily: 'SourceSans3',
-                      fontSize: 12,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _bidController,
-                    keyboardType: TextInputType.number,
-                    autofocus: true,
-                    style: TextStyle(
-                      color: colorToken.textPrimary,
-                      fontFamily: 'SourceSans3',
-                    ),
-                    decoration: InputDecoration(
-                      labelText: 'Your Bid Amount',
-                      prefixIcon: Icon(
-                        Icons.attach_money,
-                        color: colorToken.primary,
-                      ),
-                      labelStyle: TextStyle(
-                        color: colorToken.textSecondary,
-                        fontFamily: 'SourceSans3',
-                      ),
-                      filled: true,
-                      fillColor: colorToken.surfaceVariant,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(
-                          color: colorToken.primary,
-                          width: 2,
-                        ),
-                      ),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Enter bid amount';
-                      }
-                      final bid = double.tryParse(value);
-                      if (bid == null) return 'Enter a valid number';
-                      if (bid <= product.currentBid) {
-                        return 'Bid must be > \$${product.currentBid.toStringAsFixed(2)}';
-                      }
-                      if (product.bidCount > 0 && bid < product.nextMinBid) {
-                        return 'Bid must be ≥ \$${product.nextMinBid.toStringAsFixed(2)}';
-                      }
-                      return null;
-                    },
-                  ),
-                ],
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  _bidController.clear();
-                  Navigator.pop(context);
-                },
-                child: Text(
-                  'Cancel',
-                  style: TextStyle(
-                    color: colorToken.textSecondary,
-                    fontFamily: 'SourceSans3',
-                  ),
-                ),
-              ),
-              ElevatedButton(
-                onPressed: _isLoading ? null : () => _placeBid(product),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.black,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                child:
-                    _isLoading
-                        ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2,
-                          ),
-                        )
-                        : const Text(
-                          'Place Bid',
-                          style: TextStyle(fontFamily: 'SourceSans3'),
-                        ),
-              ),
-            ],
-          ),
-    );
+  Stream<bool> _isFollowing(String uid, String sellerId) {
+    final key = '${uid}_$sellerId';
+    if (_followingKey != key) {
+      _followingKey = key;
+      _followingStream = FollowRepository.watchIsFollowing(uid, sellerId);
+    }
+    return _followingStream!;
   }
 
   void _showSuccessSnackbar(String message) {
@@ -695,10 +555,7 @@ class _ProductDetailsState extends State<ProductDetails> {
               ),
             ),
             StreamBuilder<bool>(
-              stream: FollowRepository.watchIsFollowing(
-                currentUserId,
-                product.sellerId,
-              ),
+              stream: _isFollowing(currentUserId, product.sellerId),
               builder: (context, snap) {
                 final following = snap.data ?? false;
                 return OutlinedButton.icon(
@@ -814,7 +671,7 @@ class _ProductDetailsState extends State<ProductDetails> {
     final colorToken = ThemeProvider.of(context).colorToken;
 
     return StreamBuilder<List<Bid>>(
-      stream: BidRepository.watchByProduct(widget.docId),
+      stream: _bidsStream,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Center(

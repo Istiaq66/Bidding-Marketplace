@@ -8,16 +8,46 @@ import 'package:app/features/auctions/presentation/product_details_page.dart';
 import 'package:app/core/theme/theme_provider.dart';
 import 'package:flutter/material.dart';
 
-class Dashboard extends StatelessWidget {
+class Dashboard extends StatefulWidget {
   final VoidCallback? onBrowse;
 
   const Dashboard({super.key, this.onBrowse});
 
   @override
+  State<Dashboard> createState() => _DashboardState();
+}
+
+class _DashboardState extends State<Dashboard> {
+  final String? userId = AuthRepository.currentUserId;
+
+  // Created once: streams built in build() re-subscribe on every rebuild.
+  // Identical Firestore queries share one listener under the hood, so the
+  // two product streams cost a single subscription.
+  late final Stream<List<Product>> _statsProducts = _watchProducts();
+  late final Stream<List<Product>> _activeProducts = _watchProducts();
+  late final Stream<List<Bid>> _bids =
+      userId == null
+          ? const Stream.empty()
+          : BidRepository.watchByBidder(userId!);
+  late final Stream<List<Bid>> _recentBids =
+      userId == null
+          ? const Stream.empty()
+          : BidRepository.watchRecentByBidder(userId!, limit: 5);
+  final _productFutures = <String, Future<Product?>>{};
+
+  Stream<List<Product>> _watchProducts() =>
+      userId == null
+          ? const Stream.empty()
+          : ProductRepository.watchByUser(userId!);
+
+  /// Cached per product id so list rebuilds don't refetch.
+  Future<Product?> _productFor(String id) =>
+      _productFutures.putIfAbsent(id, () => ProductRepository.getById(id));
+
+  @override
   Widget build(BuildContext context) {
     final themeProvider = ThemeProvider.of(context, listen: false);
     final colorToken = themeProvider.colorToken;
-    final userId = AuthRepository.currentUserId;
 
     return SafeArea(
       child: SingleChildScrollView(
@@ -26,16 +56,10 @@ class Dashboard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             StreamBuilder<List<Product>>(
-              stream:
-                  userId == null
-                      ? const Stream.empty()
-                      : ProductRepository.watchByUser(userId),
+              stream: _statsProducts,
               builder: (context, productSnapshot) {
                 return StreamBuilder<List<Bid>>(
-                  stream:
-                      userId == null
-                          ? const Stream.empty()
-                          : BidRepository.watchByBidder(userId),
+                  stream: _bids,
                   builder: (context, bidSnapshot) {
                     final products = productSnapshot.data ?? const <Product>[];
                     final bids = bidSnapshot.data ?? const <Bid>[];
@@ -121,7 +145,7 @@ class Dashboard extends StatelessWidget {
                     'Browse Items',
                     Icons.search,
                     colorToken.info,
-                    () => onBrowse?.call(),
+                    () => widget.onBrowse?.call(),
                   ),
                 ),
               ],
@@ -152,10 +176,7 @@ class Dashboard extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             StreamBuilder<List<Product>>(
-              stream:
-                  userId == null
-                      ? const Stream.empty()
-                      : ProductRepository.watchByUser(userId),
+              stream: _activeProducts,
               builder: (context, snapshot) {
                 if (snapshot.hasError) {
                   return _buildEmptyState(
@@ -293,7 +314,7 @@ class Dashboard extends StatelessWidget {
     }
 
     return StreamBuilder<List<Bid>>(
-      stream: BidRepository.watchRecentByBidder(userId, limit: 5),
+      stream: _recentBids,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Center(
@@ -334,7 +355,7 @@ class Dashboard extends StatelessWidget {
                 future:
                     bid.productId.isEmpty
                         ? Future.value(null)
-                        : ProductRepository.getById(bid.productId),
+                        : _productFor(bid.productId),
                 builder: (context, productSnapshot) {
                   final product = productSnapshot.data;
                   final amount = (double.tryParse(bid.amount.toString()) ?? 0)

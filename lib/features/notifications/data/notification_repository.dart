@@ -17,21 +17,44 @@ class NotificationRepository {
     return _db.collection('notifications').doc(uid).collection('items');
   }
 
-  static Stream<List<AppNotification>> watchByUser(String uid) {
+  /// Newest [limit] notifications.
+  static Stream<List<AppNotification>> watchByUser(
+    String uid, {
+    int limit = 50,
+  }) {
     return _items(uid)
         .orderBy('createdAt', descending: true)
+        .limit(limit)
         .snapshots()
         .map((snap) => snap.docs.map(AppNotification.fromFirestore).toList());
   }
 
+  /// Unread count, capped at 100 (the badge shows "99+" beyond that) so a
+  /// large backlog isn't streamed just to count it.
   static Stream<int> watchUnreadCount(String uid) {
     return _items(uid)
         .where('read', isEqualTo: false)
+        .limit(100)
         .snapshots()
         .map((snap) => snap.docs.length);
   }
 
   static Future<void> markRead(String uid, String id) async {
     await _items(uid).doc(id).update({'read': true});
+  }
+
+  /// Marks every unread notification read, in batches of 500 writes.
+  static Future<void> markAllRead(String uid) async {
+    while (true) {
+      final unread =
+          await _items(uid).where('read', isEqualTo: false).limit(500).get();
+      if (unread.docs.isEmpty) return;
+      final batch = _db.batch();
+      for (final doc in unread.docs) {
+        batch.update(doc.reference, {'read': true});
+      }
+      await batch.commit();
+      if (unread.docs.length < 500) return;
+    }
   }
 }
