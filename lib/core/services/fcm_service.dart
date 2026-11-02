@@ -5,7 +5,8 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 /// Wires Firebase Cloud Messaging into the app:
 ///   - requests notification permission,
-///   - registers/unregisters the device token under `users/{uid}.fcmTokens`,
+///   - registers/unregisters the device token under
+///     `users/{uid}/private/profile.fcmTokens` (owner-only),
 ///   - shows foreground messages via a local notification channel,
 ///   - routes notification taps to the relevant product.
 ///

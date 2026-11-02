@@ -115,27 +115,6 @@ class SellerProfilePage extends StatelessWidget {
               style: TextStyle(fontSize: 14, color: colorToken.textSecondary),
             ),
           ],
-          if (seller?.address != null && seller!.address!.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.location_on_outlined,
-                  size: 16,
-                  color: colorToken.textTertiary,
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  seller.address!,
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: colorToken.textTertiary,
-                  ),
-                ),
-              ],
-            ),
-          ],
           const SizedBox(height: 12),
           FutureBuilder<int>(
             future: FollowRepository.countFollowers(sellerId),

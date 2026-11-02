@@ -37,32 +37,41 @@ service cloud.firestore {
     }
 
     // ── Users ────────────────────────────────────────────────────────────────
-    // TODO: email/phone/address/fcmTokens are readable by every signed-in
-    // user. Splitting them into an owner-only subcollection needs a data
-    // migration and a Cloud Functions change (push.ts reads fcmTokens).
+    // Public profile: name, photo, bio. Readable by any signed-in user.
     match /users/{uid} {
       allow read: if signedIn();
       allow create: if isUser(uid)
-        && request.resource.data.keys().hasOnly(userKeys())
-        && validUserFields();
+        && request.resource.data.keys().hasOnly(publicKeys())
+        && request.resource.data.get('userId', uid) == uid;
+      // Updates may also delete private fields older app versions left on the
+      // public doc (UserRepository.migrateLegacyPrivateFields), but the
+      // result must hold public fields only.
       allow update: if isUser(uid)
         && request.resource.data.diff(resource.data).affectedKeys()
-             .hasOnly(userKeys())
-        && validUserFields();
+             .hasOnly(publicKeys().concat(privateKeys()))
+        && request.resource.data.keys().hasOnly(publicKeys())
+        && request.resource.data.get('userId', uid) == uid;
       allow delete: if isUser(uid);
 
-      function userKeys() {
-        return ['userId', 'name', 'email', 'photo', 'profileImage', 'phone',
-                'bio', 'address', 'updatedAt', 'fcmTokens',
-                'notificationPrefs'];
+      function publicKeys() {
+        return ['userId', 'name', 'photo', 'profileImage', 'bio', 'updatedAt'];
       }
 
-      function validUserFields() {
-        let d = request.resource.data;
-        return d.get('userId', uid) == uid
-          && (d.get('fcmTokens', []) is list && d.get('fcmTokens', []).size() <= 10)
-          && d.get('notificationPrefs', {}) is map;
+      // Contact details, push tokens and prefs: owner-only. Cloud Functions
+      // (push.ts) read them via the Admin SDK.
+      match /private/{docId} {
+        allow read, delete: if isUser(uid);
+        allow create, update: if isUser(uid)
+          && docId == 'profile'
+          && request.resource.data.keys().hasOnly(privateKeys().concat(['updatedAt']))
+          && request.resource.data.get('fcmTokens', []) is list
+          && request.resource.data.get('fcmTokens', []).size() <= 10
+          && request.resource.data.get('notificationPrefs', {}) is map;
       }
+    }
+
+    function privateKeys() {
+      return ['email', 'phone', 'address', 'fcmTokens', 'notificationPrefs'];
     }
 
     // ── Products ─────────────────────────────────────────────────────────────

@@ -21,17 +21,25 @@ class AppUser {
     this.address,
   });
 
-  factory AppUser.fromFirestore(DocumentSnapshot snapshot) {
+  /// Builds a user from the public `users/{uid}` doc. Pass the owner's
+  /// `private/profile` data as [private] to fill contact fields; without it
+  /// they fall back to legacy values still on the public doc (pre-migration).
+  factory AppUser.fromFirestore(
+    DocumentSnapshot snapshot, {
+    Map<String, dynamic>? private,
+  }) {
     final data = (snapshot.data() as Map<String, dynamic>? ?? const {});
+    final priv = private ?? const <String, dynamic>{};
+    String? privateField(String key) => (priv[key] ?? data[key]) as String?;
     return AppUser(
       id: snapshot.id,
       name: data['name'] as String?,
-      email: data['email'] as String?,
+      email: privateField('email'),
       photo: data['photo'] as String?,
       profileImage: data['profileImage'] as String?,
-      phone: data['phone'] as String?,
+      phone: privateField('phone'),
       bio: data['bio'] as String?,
-      address: data['address'] as String?,
+      address: privateField('address'),
     );
   }
 

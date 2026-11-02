@@ -39,7 +39,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     if (uid == null) return;
     setState(() => _isLoading = true);
     try {
-      final user = await UserRepository.getById(uid);
+      final user = await UserRepository.getOwnProfile(uid);
       if (user != null) {
         _nameController.text = user.name ?? '';
         _emailController.text = user.email ?? '';

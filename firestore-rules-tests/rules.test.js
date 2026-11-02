@@ -10,6 +10,7 @@ import {
 import {
   Timestamp,
   deleteDoc,
+  deleteField,
   doc,
   getDoc,
   runTransaction,
@@ -310,13 +311,20 @@ describe('follows', () => {
   });
 });
 
-describe('users', () => {
-  test('owner can create, update profile and tokens', async () => {
+describe('users: public profile', () => {
+  test('owner can create and update public fields; others can read', async () => {
     const ref = doc(db(ALICE), 'users', ALICE);
-    await assertSucceeds(setDoc(ref, { userId: ALICE, name: 'A', email: 'a@x' }));
-    await assertSucceeds(
-      setDoc(ref, { phone: '1', fcmTokens: ['t1'], notificationPrefs: { outbid: false } }, { merge: true }),
-    );
+    await assertSucceeds(setDoc(ref, { userId: ALICE, name: 'A', photo: null }));
+    await assertSucceeds(setDoc(ref, { bio: 'hi' }, { merge: true }));
+    await assertSucceeds(getDoc(doc(db(BOB), 'users', ALICE)));
+  });
+
+  test('private fields cannot be written to the public doc', async () => {
+    const ref = doc(db(ALICE), 'users', ALICE);
+    await assertFails(setDoc(ref, { userId: ALICE, email: 'a@x' }));
+    await setDoc(ref, { userId: ALICE, name: 'A' });
+    await assertFails(setDoc(ref, { phone: '1' }, { merge: true }));
+    await assertFails(setDoc(ref, { fcmTokens: ['t'] }, { merge: true }));
   });
 
   test('cannot write another user or unknown fields', async () => {
@@ -324,8 +332,52 @@ describe('users', () => {
     await assertFails(setDoc(doc(db(ALICE), 'users', ALICE), { isAdmin: true }));
   });
 
-  test('token list is capped', async () => {
+  test('owner can strip legacy private fields (migration)', async () => {
+    await env.withSecurityRulesDisabled((ctx) =>
+      setDoc(doc(ctx.firestore(), 'users', ALICE), {
+        userId: ALICE,
+        name: 'A',
+        email: 'a@x',
+        fcmTokens: ['t'],
+      }),
+    );
+    const ref = doc(db(ALICE), 'users', ALICE);
+    // Can't update other fields while legacy private fields remain.
+    await assertFails(updateDoc(ref, { bio: 'hi' }));
+    await assertSucceeds(
+      updateDoc(ref, { email: deleteField(), fcmTokens: deleteField() }),
+    );
+    await assertSucceeds(updateDoc(ref, { bio: 'hi' }));
+  });
+});
+
+describe('users: private profile', () => {
+  const priv = (uid, owner = uid) => doc(db(uid), 'users', owner, 'private', 'profile');
+
+  test('owner can read and write contact, tokens, prefs', async () => {
+    await assertSucceeds(
+      setDoc(priv(ALICE), {
+        email: 'a@x',
+        phone: '1',
+        address: 'street',
+        fcmTokens: ['t1'],
+        notificationPrefs: { outbid: false },
+      }),
+    );
+    await assertSucceeds(getDoc(priv(ALICE)));
+    await assertSucceeds(deleteDoc(priv(ALICE)));
+  });
+
+  test('other users cannot read or write it', async () => {
+    await setDoc(priv(ALICE), { email: 'a@x', fcmTokens: ['t1'] });
+    await assertFails(getDoc(priv(BOB, ALICE)));
+    await assertFails(setDoc(priv(BOB, ALICE), { email: 'evil' }, { merge: true }));
+  });
+
+  test('only the profile doc, known keys, capped tokens', async () => {
+    await assertFails(setDoc(doc(db(ALICE), 'users', ALICE, 'private', 'other'), { email: 'a' }));
+    await assertFails(setDoc(priv(ALICE), { isAdmin: true }));
     const tokens = Array.from({ length: 11 }, (_, i) => `t${i}`);
-    await assertFails(setDoc(doc(db(ALICE), 'users', ALICE), { fcmTokens: tokens }));
+    await assertFails(setDoc(priv(ALICE), { fcmTokens: tokens }));
   });
 });

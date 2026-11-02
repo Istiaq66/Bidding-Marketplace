@@ -55,16 +55,28 @@ export async function sendPush(
   amount?: number | null,
 ): Promise<void> {
   if (!uid) return;
+  // Tokens and prefs live in the owner-only `users/{uid}/private/profile`.
+  // Users not yet migrated by the app still have them on `users/{uid}`.
   const userRef = db.collection('users').doc(uid);
-  const userSnap = await userRef.get();
-  if (!userSnap.exists) return;
+  const privateRef = userRef.collection('private').doc('profile');
+  const [userSnap, privateSnap] = await Promise.all([
+    userRef.get(),
+    privateRef.get(),
+  ]);
+  if (!userSnap.exists && !privateSnap.exists) return;
 
-  const user = userSnap.data() as Record<string, unknown>;
-  const prefs = (user['notificationPrefs'] as Record<string, unknown>) ?? {};
+  const legacy = (userSnap.data() ?? {}) as Record<string, unknown>;
+  const priv = (privateSnap.data() ?? {}) as Record<string, unknown>;
+
+  const prefs = ((priv['notificationPrefs'] ?? legacy['notificationPrefs']) ??
+    {}) as Record<string, unknown>;
   const key = PREF_KEY[type];
   if (key && prefs[key] === false) return; // muted
 
-  const tokens = (user['fcmTokens'] as string[] | undefined) ?? [];
+  const privateTokens = (priv['fcmTokens'] as string[] | undefined) ?? [];
+  const legacyTokens = (legacy['fcmTokens'] as string[] | undefined) ?? [];
+  // FCM multicast accepts at most 500 tokens.
+  const tokens = [...new Set([...privateTokens, ...legacyTokens])].slice(0, 500);
   if (tokens.length === 0) return;
 
   const { title, body } = pushContent(type, productName, amount);
@@ -90,7 +102,11 @@ export async function sendPush(
     });
 
     if (invalid.length > 0) {
-      await userRef.update({ fcmTokens: FieldValue.arrayRemove(...invalid) });
+      const prune = { fcmTokens: FieldValue.arrayRemove(...invalid) };
+      await Promise.all([
+        privateSnap.exists ? privateRef.update(prune) : null,
+        legacyTokens.length > 0 ? userRef.update(prune) : null,
+      ]);
     }
   } catch (err) {
     logger.error(`sendPush failed for ${uid}`, err);

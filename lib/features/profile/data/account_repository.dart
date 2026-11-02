@@ -1,8 +1,8 @@
 import 'package:app/features/auth/data/auth_repository.dart';
 import 'package:app/features/bids/data/bid_repository.dart';
 import 'package:app/features/auctions/data/product_repository.dart';
+import 'package:app/features/profile/data/user_repository.dart';
 import 'package:app/features/watchlist/data/watchlist_repository.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
@@ -12,7 +12,6 @@ import 'package:google_sign_in/google_sign_in.dart';
 class AccountRepository {
   AccountRepository._();
 
-  static final FirebaseFirestore _db = FirebaseFirestore.instance;
   static final FirebaseAuth _auth = FirebaseAuth.instance;
 
   /// Re-authenticates the current user with their email/password.
@@ -68,7 +67,7 @@ class AccountRepository {
   ///   1. `watchlist` entries
   ///   2. `products` (only docs with `bidCount == 0`)
   ///   3. `bids` (best-effort; rules currently block delete)
-  ///   4. `users/{uid}`
+  ///   4. `users/{uid}` and `users/{uid}/private/profile`
   ///   5. `FirebaseAuth.currentUser.delete()`
   ///
   /// If Firestore writes fail mid-way the auth account is left intact so the
@@ -83,7 +82,7 @@ class AccountRepository {
     await WatchlistRepository.deleteAllByUser(uid);
     await ProductRepository.deleteAllByUser(uid);
     await BidRepository.deleteAllByBidder(uid);
-    await _db.collection('users').doc(uid).delete();
+    await UserRepository.deleteProfile(uid);
 
     try {
       await user.delete();

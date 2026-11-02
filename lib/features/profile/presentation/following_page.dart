@@ -147,9 +147,11 @@ class _SellerTile extends StatelessWidget {
             ),
           ),
           subtitle:
-              seller?.email != null && seller!.email!.isNotEmpty
+              seller?.bio != null && seller!.bio!.isNotEmpty
                   ? Text(
-                    seller.email!,
+                    seller.bio!,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontSize: 13,
                       color: colorToken.textSecondary,
