@@ -1,4 +1,4 @@
-import 'package:app/features/auctions/domain/product.dart';
+import 'package:bidding_marketplace/features/auctions/domain/product.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

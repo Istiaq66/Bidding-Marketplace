@@ -1,11 +1,11 @@
-import 'package:app/features/auth/data/auth_repository.dart';
-import 'package:app/features/profile/data/follow_repository.dart';
-import 'package:app/features/profile/data/user_repository.dart';
-import 'package:app/features/profile/domain/app_user.dart';
-import 'package:app/core/theme/theme_provider.dart';
-import 'package:app/core/widgets/user_avatar.dart';
-import 'package:app/features/profile/presentation/seller_profile_page.dart';
-import 'package:app/core/widgets/load_error.dart';
+import 'package:bidding_marketplace/features/auth/data/auth_repository.dart';
+import 'package:bidding_marketplace/features/profile/data/follow_repository.dart';
+import 'package:bidding_marketplace/features/profile/data/user_repository.dart';
+import 'package:bidding_marketplace/features/profile/domain/app_user.dart';
+import 'package:bidding_marketplace/core/theme/theme_provider.dart';
+import 'package:bidding_marketplace/core/widgets/user_avatar.dart';
+import 'package:bidding_marketplace/features/profile/presentation/seller_profile_page.dart';
+import 'package:bidding_marketplace/core/widgets/load_error.dart';
 import 'package:flutter/material.dart';
 
 /// Lists the sellers the current user follows, with an Unfollow action.

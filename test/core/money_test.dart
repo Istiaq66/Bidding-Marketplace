@@ -1,4 +1,4 @@
-import 'package:app/core/utils/money.dart';
+import 'package:bidding_marketplace/core/utils/money.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

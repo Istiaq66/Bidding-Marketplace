@@ -8,7 +8,7 @@ class ShareUtil {
   ShareUtil._();
 
   // TODO(deeplinks): replace once Android intent filters / iOS Universal
-  // Links are configured. Bundle id: `com.example.app` (see android/app
+  // Links are configured. Bundle id: `com.bidplace.app` (see android/app
   // build.gradle and ios/Runner/Info.plist before flipping this domain on).
   static const String _baseUrl = 'https://bidding-marketplace.app';
 

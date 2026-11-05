@@ -1,10 +1,10 @@
 import 'dart:io';
 
-import 'package:app/features/auth/data/auth_repository.dart';
-import 'package:app/features/profile/data/user_repository.dart';
-import 'package:app/core/services/storage_service.dart';
-import 'package:app/core/theme/theme_provider.dart';
-import 'package:app/core/widgets/user_avatar.dart';
+import 'package:bidding_marketplace/features/auth/data/auth_repository.dart';
+import 'package:bidding_marketplace/features/profile/data/user_repository.dart';
+import 'package:bidding_marketplace/core/services/storage_service.dart';
+import 'package:bidding_marketplace/core/theme/theme_provider.dart';
+import 'package:bidding_marketplace/core/widgets/user_avatar.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -315,13 +315,16 @@ class _EditProfilePageState extends State<EditProfilePage> {
                             const SizedBox(height: 16),
 
                             _buildTextField(
+                              // This is a contact address shown to other
+                              // users, not the Firebase sign-in email —
+                              // changing it here doesn't affect login.
                               controller: _emailController,
-                              label: 'Email',
+                              label: 'Contact Email',
                               icon: Icons.email_outlined,
                               keyboardType: TextInputType.emailAddress,
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
-                                  return 'Please enter your email';
+                                  return 'Please enter a contact email';
                                 }
                                 if (!RegExp(
                                   r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',

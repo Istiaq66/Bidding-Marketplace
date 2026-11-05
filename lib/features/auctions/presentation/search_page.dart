@@ -1,9 +1,9 @@
 import 'dart:async';
-import 'package:app/features/auctions/domain/product.dart';
-import 'package:app/features/auctions/data/product_repository.dart';
-import 'package:app/features/auctions/presentation/product_details_page.dart';
-import 'package:app/core/theme/theme_provider.dart';
-import 'package:app/core/utils/money.dart';
+import 'package:bidding_marketplace/features/auctions/domain/product.dart';
+import 'package:bidding_marketplace/features/auctions/data/product_repository.dart';
+import 'package:bidding_marketplace/features/auctions/presentation/product_details_page.dart';
+import 'package:bidding_marketplace/core/theme/theme_provider.dart';
+import 'package:bidding_marketplace/core/utils/money.dart';
 import 'package:flutter/material.dart';
 
 class SearchPage extends StatefulWidget {

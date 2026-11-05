@@ -1,7 +1,7 @@
-import 'package:app/core/theme/theme_provider.dart';
-import 'package:app/features/auth/data/auth_repository.dart';
-import 'package:app/features/auctions/data/product_repository.dart';
-import 'package:app/features/auctions/presentation/my_auction_page.dart';
+import 'package:bidding_marketplace/core/theme/theme_provider.dart';
+import 'package:bidding_marketplace/features/auth/data/auth_repository.dart';
+import 'package:bidding_marketplace/features/auctions/data/product_repository.dart';
+import 'package:bidding_marketplace/features/auctions/presentation/my_auction_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:firebase_auth_mocks/firebase_auth_mocks.dart';

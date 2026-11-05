@@ -1,4 +1,4 @@
-import 'package:app/core/theme/theme_provider.dart';
+import 'package:bidding_marketplace/core/theme/theme_provider.dart';
 import 'package:flutter/material.dart';
 
 /// Shown when a stream or future fails, so a permission or network error

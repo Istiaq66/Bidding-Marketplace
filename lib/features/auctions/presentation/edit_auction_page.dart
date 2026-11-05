@@ -1,10 +1,10 @@
 import 'dart:io';
 
-import 'package:app/features/auctions/domain/product.dart';
-import 'package:app/core/services/storage_service.dart';
-import 'package:app/core/theme/theme_provider.dart';
-import 'package:app/core/widgets/custom_image_holder.dart';
-import 'package:app/features/auctions/data/product_repository.dart';
+import 'package:bidding_marketplace/features/auctions/domain/product.dart';
+import 'package:bidding_marketplace/core/services/storage_service.dart';
+import 'package:bidding_marketplace/core/theme/theme_provider.dart';
+import 'package:bidding_marketplace/core/widgets/custom_image_holder.dart';
+import 'package:bidding_marketplace/features/auctions/data/product_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';

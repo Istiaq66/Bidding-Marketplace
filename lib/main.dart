@@ -1,7 +1,7 @@
-import 'package:app/core/services/fcm_service.dart';
-import 'package:app/features/auctions/presentation/product_details_page.dart';
-import 'package:app/features/auth/presentation/auth_page.dart';
-import 'package:app/core/theme/theme_provider.dart';
+import 'package:bidding_marketplace/core/services/fcm_service.dart';
+import 'package:bidding_marketplace/features/auctions/presentation/product_details_page.dart';
+import 'package:bidding_marketplace/features/auth/presentation/auth_page.dart';
+import 'package:bidding_marketplace/core/theme/theme_provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';

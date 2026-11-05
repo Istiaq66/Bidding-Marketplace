@@ -1,5 +1,5 @@
-import 'package:app/features/profile/domain/app_user.dart';
-import 'package:app/features/auth/data/auth_repository.dart';
+import 'package:bidding_marketplace/features/profile/domain/app_user.dart';
+import 'package:bidding_marketplace/features/auth/data/auth_repository.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 

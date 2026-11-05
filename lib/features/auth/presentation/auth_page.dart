@@ -1,5 +1,5 @@
-import 'package:app/features/auth/data/auth_repository.dart';
-import 'package:app/features/shell/presentation/navigation_page.dart';
+import 'package:bidding_marketplace/features/auth/data/auth_repository.dart';
+import 'package:bidding_marketplace/features/shell/presentation/navigation_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'login.dart';

@@ -1,9 +1,9 @@
-import 'package:app/core/services/fcm_service.dart';
-import 'package:app/features/auth/data/auth_repository.dart';
-import 'package:app/features/bids/data/bid_repository.dart';
-import 'package:app/features/auctions/data/product_repository.dart';
-import 'package:app/features/profile/data/user_repository.dart';
-import 'package:app/features/watchlist/data/watchlist_repository.dart';
+import 'package:bidding_marketplace/core/services/fcm_service.dart';
+import 'package:bidding_marketplace/features/auth/data/auth_repository.dart';
+import 'package:bidding_marketplace/features/bids/data/bid_repository.dart';
+import 'package:bidding_marketplace/features/auctions/data/product_repository.dart';
+import 'package:bidding_marketplace/features/profile/data/user_repository.dart';
+import 'package:bidding_marketplace/features/watchlist/data/watchlist_repository.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 

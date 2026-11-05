@@ -1,10 +1,10 @@
-import 'package:app/features/auctions/domain/product.dart';
-import 'package:app/features/auth/data/auth_repository.dart';
-import 'package:app/features/auctions/data/product_repository.dart';
-import 'package:app/features/auctions/presentation/add_new_item.dart';
-import 'package:app/features/auctions/presentation/edit_auction_page.dart';
-import 'package:app/core/theme/theme_provider.dart';
-import 'package:app/core/widgets/load_error.dart';
+import 'package:bidding_marketplace/features/auctions/domain/product.dart';
+import 'package:bidding_marketplace/features/auth/data/auth_repository.dart';
+import 'package:bidding_marketplace/features/auctions/data/product_repository.dart';
+import 'package:bidding_marketplace/features/auctions/presentation/add_new_item.dart';
+import 'package:bidding_marketplace/features/auctions/presentation/edit_auction_page.dart';
+import 'package:bidding_marketplace/core/theme/theme_provider.dart';
+import 'package:bidding_marketplace/core/widgets/load_error.dart';
 import 'package:flutter/material.dart';
 
 class MyAuctionsPage extends StatelessWidget {

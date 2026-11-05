@@ -1,9 +1,9 @@
 import 'dart:io';
 
-import 'package:app/features/auth/data/auth_repository.dart';
-import 'package:app/features/auctions/data/product_repository.dart';
-import 'package:app/core/services/storage_service.dart';
-import 'package:app/core/theme/theme_provider.dart';
+import 'package:bidding_marketplace/features/auth/data/auth_repository.dart';
+import 'package:bidding_marketplace/features/auctions/data/product_repository.dart';
+import 'package:bidding_marketplace/core/services/storage_service.dart';
+import 'package:bidding_marketplace/core/theme/theme_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';

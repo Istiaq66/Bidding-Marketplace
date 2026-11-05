@@ -1,4 +1,4 @@
-import 'package:app/features/watchlist/domain/watchlist_entry.dart';
+import 'package:bidding_marketplace/features/watchlist/domain/watchlist_entry.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 

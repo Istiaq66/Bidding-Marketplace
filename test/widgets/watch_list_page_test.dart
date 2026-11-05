@@ -1,7 +1,7 @@
-import 'package:app/core/theme/theme_provider.dart';
-import 'package:app/features/auth/data/auth_repository.dart';
-import 'package:app/features/watchlist/data/watchlist_repository.dart';
-import 'package:app/features/watchlist/presentation/watch_list_page.dart';
+import 'package:bidding_marketplace/core/theme/theme_provider.dart';
+import 'package:bidding_marketplace/features/auth/data/auth_repository.dart';
+import 'package:bidding_marketplace/features/watchlist/data/watchlist_repository.dart';
+import 'package:bidding_marketplace/features/watchlist/presentation/watch_list_page.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:firebase_auth_mocks/firebase_auth_mocks.dart';
 import 'package:flutter/material.dart';

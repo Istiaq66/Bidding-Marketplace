@@ -1,4 +1,4 @@
-import 'package:app/core/theme/theme_provider.dart';
+import 'package:bidding_marketplace/core/theme/theme_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 

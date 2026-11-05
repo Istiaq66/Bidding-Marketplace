@@ -1,5 +1,5 @@
-import 'package:app/features/bids/domain/bid.dart';
-import 'package:app/core/utils/money.dart';
+import 'package:bidding_marketplace/features/bids/domain/bid.dart';
+import 'package:bidding_marketplace/core/utils/money.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';

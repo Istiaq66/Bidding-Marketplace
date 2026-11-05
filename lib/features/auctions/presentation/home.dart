@@ -1,13 +1,13 @@
 import 'dart:async';
 
-import 'package:app/core/widgets/custom_image_holder.dart';
-import 'package:app/features/auctions/domain/product.dart';
-import 'package:app/features/auctions/data/product_repository.dart';
-import 'package:app/features/bids/data/bid_repository.dart';
-import 'package:app/features/auth/data/auth_repository.dart';
-import 'package:app/features/profile/data/user_repository.dart';
-import 'package:app/features/auctions/presentation/product_details_page.dart';
-import 'package:app/core/theme/theme_provider.dart';
+import 'package:bidding_marketplace/core/widgets/custom_image_holder.dart';
+import 'package:bidding_marketplace/features/auctions/domain/product.dart';
+import 'package:bidding_marketplace/features/auctions/data/product_repository.dart';
+import 'package:bidding_marketplace/features/bids/data/bid_repository.dart';
+import 'package:bidding_marketplace/features/auth/data/auth_repository.dart';
+import 'package:bidding_marketplace/features/profile/data/user_repository.dart';
+import 'package:bidding_marketplace/features/auctions/presentation/product_details_page.dart';
+import 'package:bidding_marketplace/core/theme/theme_provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 

@@ -1,7 +1,7 @@
-import 'package:app/core/theme/theme_provider.dart';
-import 'package:app/core/utils/share.dart';
-import 'package:app/features/profile/presentation/delete_account_page.dart';
-import 'package:app/features/profile/presentation/notification_settings_page.dart';
+import 'package:bidding_marketplace/core/theme/theme_provider.dart';
+import 'package:bidding_marketplace/core/utils/share.dart';
+import 'package:bidding_marketplace/features/profile/presentation/delete_account_page.dart';
+import 'package:bidding_marketplace/features/profile/presentation/notification_settings_page.dart';
 import 'package:flutter/material.dart';
 
 class SettingsPage extends StatelessWidget {

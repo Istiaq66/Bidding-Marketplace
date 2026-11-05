@@ -1,6 +1,6 @@
-import 'package:app/core/widgets/my_button.dart';
-import 'package:app/core/widgets/my_textfield.dart';
-import 'package:app/features/auth/data/auth_repository.dart';
+import 'package:bidding_marketplace/core/widgets/my_button.dart';
+import 'package:bidding_marketplace/core/widgets/my_textfield.dart';
+import 'package:bidding_marketplace/features/auth/data/auth_repository.dart';
 import 'package:flutter/material.dart';
 
 class LoginRegister extends StatefulWidget {

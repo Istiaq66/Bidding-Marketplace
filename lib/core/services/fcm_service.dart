@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:app/features/profile/data/user_repository.dart';
+import 'package:bidding_marketplace/features/profile/data/user_repository.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';

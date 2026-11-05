@@ -1,4 +1,4 @@
-import 'package:app/features/notifications/domain/app_notification.dart';
+import 'package:bidding_marketplace/features/notifications/domain/app_notification.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 
