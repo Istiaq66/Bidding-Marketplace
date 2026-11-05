@@ -1,3 +1,4 @@
+import 'package:app/core/services/fcm_service.dart';
 import 'package:app/features/auth/data/auth_repository.dart';
 import 'package:app/features/bids/data/bid_repository.dart';
 import 'package:app/features/auctions/data/product_repository.dart';
@@ -42,6 +43,7 @@ class AccountRepository {
     if (user == null) {
       throw Exception('No user is currently signed in.');
     }
+    await AuthRepository.ensureGoogleInitialized();
     final account = await GoogleSignIn.instance.authenticate();
     final auth = account.authentication;
     final credential = GoogleAuthProvider.credential(idToken: auth.idToken);
@@ -82,6 +84,8 @@ class AccountRepository {
     await WatchlistRepository.deleteAllByUser(uid);
     await ProductRepository.deleteAllByUser(uid);
     await BidRepository.deleteAllByBidder(uid);
+    // Stop token refreshes from recreating the private profile doc.
+    await FcmService.unregisterToken(uid);
     await UserRepository.deleteProfile(uid);
 
     try {

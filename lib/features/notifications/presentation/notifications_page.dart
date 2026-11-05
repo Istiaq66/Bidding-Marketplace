@@ -3,6 +3,7 @@ import 'package:app/features/auth/data/auth_repository.dart';
 import 'package:app/features/notifications/data/notification_repository.dart';
 import 'package:app/features/auctions/presentation/product_details_page.dart';
 import 'package:app/core/theme/theme_provider.dart';
+import 'package:app/core/widgets/load_error.dart';
 import 'package:flutter/material.dart';
 
 class NotificationsPage extends StatelessWidget {
@@ -61,6 +62,7 @@ class NotificationsPage extends StatelessWidget {
               : StreamBuilder<List<AppNotification>>(
                 stream: NotificationRepository.watchByUser(userId),
                 builder: (context, snapshot) {
+                  if (snapshot.hasError) return const LoadError();
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return Center(
                       child: CircularProgressIndicator(

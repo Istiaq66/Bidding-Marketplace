@@ -29,8 +29,11 @@ class WatchlistRepository {
     return snap.docs.isNotEmpty;
   }
 
+  /// Doc id is `{userId}_{productId}` (enforced by the security rules), so a
+  /// double tap or a race re-writes the same entry instead of duplicating it.
+  /// Legacy auto-id entries are still found by the user/product queries.
   static Future<void> add(String userId, String productId) async {
-    await _watchlist.add({
+    await _watchlist.doc('${userId}_$productId').set({
       'User Id': userId,
       'Product Id': productId,
       'Added At': FieldValue.serverTimestamp(),

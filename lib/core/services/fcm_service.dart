@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:app/features/profile/data/user_repository.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
@@ -32,6 +34,7 @@ class FcmService {
   );
 
   static bool _initialized = false;
+  static StreamSubscription<String>? _tokenRefreshSub;
 
   /// One-time setup. Call after `Firebase.initializeApp()`.
   static Future<void> init() async {
@@ -68,16 +71,22 @@ class FcmService {
   /// Requests permission, fetches the token, stores it, and keeps it fresh.
   static Future<void> registerToken(String uid) async {
     await FirebaseMessaging.instance.requestPermission();
-    final token = await FirebaseMessaging.instance.getToken();
-    if (token != null) await UserRepository.addFcmToken(uid, token);
-
-    FirebaseMessaging.instance.onTokenRefresh.listen((t) {
+    // One listener at a time, bound to the current user: re-registering
+    // (NavigationPage is rebuilt per login) must not stack listeners, and a
+    // refresh after logout must not write to the previous account.
+    await _tokenRefreshSub?.cancel();
+    _tokenRefreshSub = FirebaseMessaging.instance.onTokenRefresh.listen((t) {
       UserRepository.addFcmToken(uid, t);
     });
+
+    final token = await FirebaseMessaging.instance.getToken();
+    if (token != null) await UserRepository.addFcmToken(uid, token);
   }
 
   /// Removes this device's token on logout / account deletion.
   static Future<void> unregisterToken(String uid) async {
+    await _tokenRefreshSub?.cancel();
+    _tokenRefreshSub = null;
     try {
       final token = await FirebaseMessaging.instance.getToken();
       if (token != null) await UserRepository.removeFcmToken(uid, token);

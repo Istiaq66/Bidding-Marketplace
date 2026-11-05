@@ -19,10 +19,26 @@ class AuthRepository {
 
   static Stream<User?> get authStateChanges => _auth.authStateChanges();
 
+  static Future<void>? _googleInit;
+
+  /// google_sign_in 7 must be initialized exactly once before any other call
+  /// (authenticate, signOut, ...), including after a cold start that
+  /// restored a Firebase session without going through sign-in.
+  static Future<void> ensureGoogleInitialized() {
+    return _googleInit ??= () async {
+      try {
+        await GoogleSignIn.instance.initialize(
+          serverClientId: _googleServerClientId,
+        );
+      } catch (_) {
+        _googleInit = null; // allow a retry
+        rethrow;
+      }
+    }();
+  }
+
   static Future<UserCredential> signInWithGoogle() async {
-    await GoogleSignIn.instance.initialize(
-      serverClientId: _googleServerClientId,
-    );
+    await ensureGoogleInitialized();
     final GoogleSignInAccount gUser =
         await GoogleSignIn.instance.authenticate();
     final GoogleSignInAuthentication gAuth = gUser.authentication;
@@ -60,7 +76,12 @@ class AuthRepository {
 
   static Future<void> signOut() async {
     await _auth.signOut();
-    await GoogleSignIn.instance.signOut();
+    // Best-effort: email users never touched Google, and a Google failure
+    // must not block logout.
+    try {
+      await ensureGoogleInitialized();
+      await GoogleSignIn.instance.signOut();
+    } catch (_) {}
   }
 
   static Future<void> resetPassword(String email) async {

@@ -7,6 +7,7 @@ import 'package:app/features/auth/data/auth_repository.dart';
 import 'package:app/features/profile/data/follow_repository.dart';
 import 'package:app/features/profile/data/user_repository.dart';
 import 'package:app/features/profile/domain/app_user.dart';
+import 'package:app/core/widgets/load_error.dart';
 import 'package:flutter/material.dart';
 
 /// Public read-only view of a seller: their photo, name, bio, follower count,
@@ -194,6 +195,7 @@ class SellerProfilePage extends StatelessWidget {
     return StreamBuilder<List<Product>>(
       stream: ProductRepository.watchByUser(sellerId),
       builder: (context, snap) {
+        if (snap.hasError) return const LoadError();
         if (snap.connectionState == ConnectionState.waiting) {
           return Padding(
             padding: const EdgeInsets.all(32),

@@ -13,6 +13,7 @@ import 'package:app/features/profile/presentation/seller_profile_page.dart';
 import 'package:app/core/theme/theme_provider.dart';
 import 'package:app/core/utils/share.dart';
 import 'package:app/core/utils/money.dart';
+import 'package:app/core/widgets/load_error.dart';
 import 'package:flutter/material.dart';
 
 class ProductDetails extends StatefulWidget {
@@ -683,6 +684,7 @@ class _ProductDetailsState extends State<ProductDetails> {
     return StreamBuilder<List<Bid>>(
       stream: _bidsStream,
       builder: (context, snapshot) {
+        if (snapshot.hasError) return const LoadError();
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Center(
             child: Padding(

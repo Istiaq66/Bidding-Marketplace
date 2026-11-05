@@ -293,6 +293,34 @@ describe('notifications', () => {
   });
 });
 
+describe('watchlist', () => {
+  const entry = (uid, productId = PRODUCT) => ({
+    'User Id': uid,
+    'Product Id': productId,
+    'Added At': serverTimestamp(),
+  });
+
+  test('canonical id; re-adding the same entry is allowed', async () => {
+    const ref = doc(db(ALICE), 'watchlist', `${ALICE}_${PRODUCT}`);
+    await assertSucceeds(setDoc(ref, entry(ALICE)));
+    await assertSucceeds(setDoc(ref, entry(ALICE)));
+    await assertSucceeds(deleteDoc(ref));
+  });
+
+  test('rejects random ids, other users and other products in the id', async () => {
+    await assertFails(setDoc(doc(db(ALICE), 'watchlist', 'random'), entry(ALICE)));
+    await assertFails(setDoc(doc(db(BOB), 'watchlist', `${ALICE}_${PRODUCT}`), entry(ALICE)));
+    await assertFails(setDoc(doc(db(ALICE), 'watchlist', `${ALICE}_other`), entry(ALICE)));
+  });
+
+  test("cannot overwrite or read someone else's entry", async () => {
+    await setDoc(doc(db(ALICE), 'watchlist', `${ALICE}_${PRODUCT}`), entry(ALICE));
+    const asBob = doc(db(BOB), 'watchlist', `${ALICE}_${PRODUCT}`);
+    await assertFails(setDoc(asBob, entry(BOB)));
+    await assertFails(getDoc(asBob));
+  });
+});
+
 describe('follows', () => {
   const follow = (uid, id, sellerId) =>
     setDoc(doc(db(uid), 'follows', id), {

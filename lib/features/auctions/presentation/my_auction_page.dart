@@ -4,6 +4,7 @@ import 'package:app/features/auctions/data/product_repository.dart';
 import 'package:app/features/auctions/presentation/add_new_item.dart';
 import 'package:app/features/auctions/presentation/edit_auction_page.dart';
 import 'package:app/core/theme/theme_provider.dart';
+import 'package:app/core/widgets/load_error.dart';
 import 'package:flutter/material.dart';
 
 class MyAuctionsPage extends StatelessWidget {
@@ -105,6 +106,7 @@ class MyAuctionsPage extends StatelessWidget {
     return StreamBuilder<List<Product>>(
       stream: ProductRepository.watchByUser(userId),
       builder: (context, snapshot) {
+        if (snapshot.hasError) return const LoadError();
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Center(
             child: CircularProgressIndicator(color: colorToken.primary),

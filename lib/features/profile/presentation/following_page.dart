@@ -5,6 +5,7 @@ import 'package:app/features/profile/domain/app_user.dart';
 import 'package:app/core/theme/theme_provider.dart';
 import 'package:app/core/widgets/user_avatar.dart';
 import 'package:app/features/profile/presentation/seller_profile_page.dart';
+import 'package:app/core/widgets/load_error.dart';
 import 'package:flutter/material.dart';
 
 /// Lists the sellers the current user follows, with an Unfollow action.
@@ -42,6 +43,7 @@ class FollowingPage extends StatelessWidget {
               : StreamBuilder<List<String>>(
                 stream: FollowRepository.watchFollowingSellerIds(uid),
                 builder: (context, snap) {
+                  if (snap.hasError) return const LoadError();
                   if (snap.connectionState == ConnectionState.waiting) {
                     return Center(
                       child: CircularProgressIndicator(
