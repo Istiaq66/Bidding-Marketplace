@@ -6,6 +6,7 @@ import 'package:app/features/auth/data/auth_repository.dart';
 import 'package:app/features/auctions/data/product_repository.dart';
 import 'package:app/features/watchlist/data/watchlist_repository.dart';
 import 'package:app/features/auctions/presentation/product_details_page.dart';
+import 'package:app/core/utils/money.dart';
 import 'package:flutter/material.dart';
 
 class WatchList extends StatefulWidget {
@@ -165,12 +166,13 @@ class _WatchListState extends State<WatchList> {
                       style: TextStyle(color: colorToken.textSecondary),
                     )
                     : Text(
-                      '\$${product.currentBid.toStringAsFixed(2)} • Ends ${product.date}',
+                      '${formatMoney(product.currentBid)} • Ends ${product.date}',
                       style: TextStyle(color: colorToken.textSecondary),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
             trailing: IconButton(
+              tooltip: 'Remove from watchlist',
               icon: Icon(Icons.favorite, color: colorToken.watchlist),
               onPressed: () => WatchlistRepository.deleteById(entry.id),
             ),

@@ -14,6 +14,7 @@ class PrivacyPage extends StatelessWidget {
         backgroundColor: colorToken.surface,
         elevation: 0,
         leading: IconButton(
+          tooltip: 'Back',
           icon: Icon(Icons.arrow_back, color: colorToken.textPrimary),
           onPressed: () => Navigator.pop(context),
         ),

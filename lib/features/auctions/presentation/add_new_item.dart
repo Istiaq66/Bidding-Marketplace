@@ -30,7 +30,7 @@ class _NewItemState extends State<NewItem> {
   Future<void> _pickImage(ImageSource source) async {
     try {
       final picked = await StorageService.pickImage(source);
-      if (picked != null) setState(() => _pickedImage = picked);
+      if (picked != null && mounted) setState(() => _pickedImage = picked);
     } catch (e) {
       _showErrorSnackbar('Could not pick image: ${e.toString()}');
     }
@@ -74,28 +74,16 @@ class _NewItemState extends State<NewItem> {
   }
 
   Future<void> _selectDate(BuildContext context) async {
-    final colorToken = ThemeProvider.of(context).colorToken;
-
+    // Auctions close at 23:59:59 on the end date, so allowing today could
+    // list an auction with minutes left. The picker follows the app theme.
     final DateTime? pickedDate = await showDatePicker(
       context: context,
       initialDate: _selectedDate,
-      firstDate: DateTime.now(),
+      firstDate: DateTime.now().add(const Duration(days: 1)),
       lastDate: DateTime.now().add(const Duration(days: 365)),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.light(
-              primary: colorToken.primary,
-              onPrimary: Colors.white,
-              surface: colorToken.surface,
-              onSurface: colorToken.textPrimary,
-            ),
-          ),
-          child: child!,
-        );
-      },
     );
 
+    if (!mounted) return;
     if (pickedDate != null && pickedDate != _selectedDate) {
       setState(() {
         _selectedDate = pickedDate;
@@ -120,10 +108,9 @@ class _NewItemState extends State<NewItem> {
       return;
     }
 
+    String? imageUrl;
     try {
-      final imageUrl = await StorageService.uploadProductImage(
-        file: _pickedImage!,
-      );
+      imageUrl = await StorageService.uploadProductImage(file: _pickedImage!);
 
       final increment = double.tryParse(_minIncrementController.text.trim());
       await ProductRepository.create(
@@ -136,6 +123,8 @@ class _NewItemState extends State<NewItem> {
         minIncrement: (increment != null && increment > 0) ? increment : 1,
       );
 
+      imageUrl = null; // now owned by the product
+      if (!mounted) return;
       _showSuccessSnackbar('Auction created successfully!');
 
       _nameController.clear();
@@ -150,7 +139,13 @@ class _NewItemState extends State<NewItem> {
       await Future.delayed(const Duration(milliseconds: 500));
       if (mounted) Navigator.pop(context);
     } catch (e) {
-      _showErrorSnackbar('Failed to create auction: ${e.toString()}');
+      // Don't leave an orphaned photo behind if the product write failed.
+      if (imageUrl != null) StorageService.deleteByUrl(imageUrl);
+      if (!mounted) return;
+      _showErrorSnackbar(
+        'Failed to create auction: '
+        '${e.toString().replaceFirst('Exception: ', '')}',
+      );
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -247,6 +242,7 @@ class _NewItemState extends State<NewItem> {
         backgroundColor: colorToken.surface,
         elevation: 0,
         leading: IconButton(
+          tooltip: 'Back',
           icon: Icon(Icons.arrow_back, color: colorToken.textPrimary),
           onPressed: () => Navigator.pop(context),
         ),
@@ -389,7 +385,9 @@ class _NewItemState extends State<NewItem> {
 
                   TextFormField(
                     controller: _minBidPriceController,
-                    keyboardType: TextInputType.number,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
                     style: TextStyle(
                       color: colorToken.textPrimary,
                       fontFamily: 'SourceSans3',
@@ -416,7 +414,9 @@ class _NewItemState extends State<NewItem> {
 
                   TextFormField(
                     controller: _minIncrementController,
-                    keyboardType: TextInputType.number,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
                     style: TextStyle(
                       color: colorToken.textPrimary,
                       fontFamily: 'SourceSans3',

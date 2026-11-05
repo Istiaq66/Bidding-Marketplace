@@ -106,6 +106,7 @@ class _NavigationPageState extends State<NavigationPage> {
           ),
           actions: [
             IconButton(
+              tooltip: 'Search',
               icon: Icon(Icons.search, color: colorToken.textPrimary),
               onPressed:
                   () => Navigator.push(
@@ -114,6 +115,7 @@ class _NavigationPageState extends State<NavigationPage> {
                   ),
             ),
             IconButton(
+              tooltip: 'Notifications',
               icon: Badge(
                 isLabelVisible: _unreadCount > 0,
                 label: Text(
@@ -152,12 +154,14 @@ class _NavigationPageState extends State<NavigationPage> {
           ),
           actions: [
             IconButton(
+              tooltip: 'Filter',
               icon: Icon(Icons.filter_list, color: colorToken.textPrimary),
               onPressed: () {
                 _showFilterBottomSheet(context);
               },
             ),
             IconButton(
+              tooltip: 'More options',
               icon: Icon(Icons.more_vert, color: colorToken.textPrimary),
               onPressed: () {
                 _showDashboardOptionsMenu(context);
@@ -193,6 +197,7 @@ class _NavigationPageState extends State<NavigationPage> {
               tooltip: 'Toggle theme',
             ),
             IconButton(
+              tooltip: 'Settings',
               icon: Icon(
                 Icons.settings_outlined,
                 color: colorToken.textPrimary,

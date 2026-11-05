@@ -1,4 +1,5 @@
 import 'package:app/features/bids/domain/bid.dart';
+import 'package:app/core/utils/money.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
@@ -58,7 +59,7 @@ class BidRepository {
 
       if (amount <= currentBid) {
         throw Exception(
-          'Bid must be higher than current bid of \$${currentBid.toStringAsFixed(2)}',
+          'Bid must be higher than current bid of ${formatMoney(currentBid)}',
         );
       }
 
@@ -67,8 +68,8 @@ class BidRepository {
       if (bidCount > 0 && amount < currentBid + minIncrement) {
         final required = currentBid + minIncrement;
         throw Exception(
-          'Bid must be at least \$${required.toStringAsFixed(2)} '
-          '(\$${minIncrement.toStringAsFixed(2)} increment)',
+          'Bid must be at least ${formatMoney(required)} '
+          '(${formatMoney(minIncrement)} increment)',
         );
       }
 

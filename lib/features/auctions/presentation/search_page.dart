@@ -3,6 +3,7 @@ import 'package:app/features/auctions/domain/product.dart';
 import 'package:app/features/auctions/data/product_repository.dart';
 import 'package:app/features/auctions/presentation/product_details_page.dart';
 import 'package:app/core/theme/theme_provider.dart';
+import 'package:app/core/utils/money.dart';
 import 'package:flutter/material.dart';
 
 class SearchPage extends StatefulWidget {
@@ -19,6 +20,7 @@ class _SearchPageState extends State<SearchPage> {
   List<Product> _results = [];
   bool _isSearching = false;
   bool _hasSearched = false;
+  String? _searchError;
 
   @override
   void dispose() {
@@ -36,6 +38,7 @@ class _SearchPageState extends State<SearchPage> {
         _results = [];
         _isSearching = false;
         _hasSearched = false;
+        _searchError = null;
       });
       return;
     }
@@ -43,10 +46,19 @@ class _SearchPageState extends State<SearchPage> {
     setState(() => _isSearching = true);
 
     _debounce = Timer(const Duration(milliseconds: 400), () async {
-      final results = await ProductRepository.search(query);
-      if (!mounted) return;
+      List<Product> results;
+      String? error;
+      try {
+        results = await ProductRepository.search(query);
+      } catch (_) {
+        results = [];
+        error = 'Search failed. Check your connection and try again.';
+      }
+      // Drop responses for a query the user has since changed.
+      if (!mounted || _controller.text.trim() != query) return;
       setState(() {
         _results = results;
+        _searchError = error;
         _isSearching = false;
         _hasSearched = true;
       });
@@ -64,6 +76,7 @@ class _SearchPageState extends State<SearchPage> {
         elevation: 0,
         titleSpacing: 0,
         leading: IconButton(
+          tooltip: 'Back',
           icon: Icon(Icons.arrow_back, color: colorToken.textPrimary),
           onPressed: () => Navigator.pop(context),
         ),
@@ -87,6 +100,7 @@ class _SearchPageState extends State<SearchPage> {
         actions: [
           if (_controller.text.isNotEmpty)
             IconButton(
+              tooltip: 'Clear search',
               icon: Icon(Icons.close, color: colorToken.textSecondary),
               onPressed: () {
                 _controller.clear();
@@ -132,6 +146,36 @@ class _SearchPageState extends State<SearchPage> {
               ),
             ),
           ],
+        ),
+      );
+    }
+
+    if (_searchError != null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.error_outline, size: 72, color: colorToken.error),
+              const SizedBox(height: 16),
+              Text(
+                _searchError!,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: colorToken.textSecondary,
+                  fontFamily: 'SourceSans3',
+                ),
+              ),
+              TextButton(
+                onPressed: () => _onChanged(_controller.text),
+                child: Text(
+                  'Retry',
+                  style: TextStyle(color: colorToken.primary),
+                ),
+              ),
+            ],
+          ),
         ),
       );
     }
@@ -225,8 +269,8 @@ class _SearchPageState extends State<SearchPage> {
           children: [
             Text(
               product.bidCount > 0
-                  ? 'Current bid: \$${product.currentBid.toStringAsFixed(2)}'
-                  : 'Starting at: \$${product.currentBid.toStringAsFixed(2)}',
+                  ? 'Current bid: ${formatMoney(product.currentBid)}'
+                  : 'Starting at: ${formatMoney(product.currentBid)}',
               style: TextStyle(
                 color: colorToken.success,
                 fontWeight: FontWeight.w600,

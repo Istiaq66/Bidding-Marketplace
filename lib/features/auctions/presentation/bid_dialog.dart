@@ -5,6 +5,7 @@ import 'package:app/features/auctions/data/product_repository.dart';
 import 'package:app/features/auctions/domain/product.dart';
 import 'package:app/features/auth/data/auth_repository.dart';
 import 'package:app/features/bids/data/bid_repository.dart';
+import 'package:app/core/utils/money.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -51,10 +52,10 @@ class _BidDialogState extends State<BidDialog> {
     if (value == null || value.trim().isEmpty) return 'Enter bid amount';
     if (bid == null) return 'Enter a valid number';
     if (bid <= _product.currentBid) {
-      return 'Bid must be > \$${_product.currentBid.toStringAsFixed(2)}';
+      return 'Bid must be > ${formatMoney(_product.currentBid)}';
     }
     if (_product.bidCount > 0 && bid < _product.nextMinBid) {
-      return 'Bid must be ≥ \$${_product.nextMinBid.toStringAsFixed(2)}';
+      return 'Bid must be ≥ ${formatMoney(_product.nextMinBid)}';
     }
     return null;
   }
@@ -110,7 +111,7 @@ class _BidDialogState extends State<BidDialog> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Current bid: \$${product.currentBid.toStringAsFixed(2)}',
+              'Current bid: ${formatMoney(product.currentBid)}',
               style: TextStyle(
                 color: colorToken.textSecondary,
                 fontFamily: 'SourceSans3',
@@ -120,8 +121,8 @@ class _BidDialogState extends State<BidDialog> {
             Text(
               product.bidCount == 0
                   ? 'First bid must clear the start price.'
-                  : 'Min next bid: \$${product.nextMinBid.toStringAsFixed(2)} '
-                      '(\$${product.minIncrement.toStringAsFixed(2)} increment)',
+                  : 'Min next bid: ${formatMoney(product.nextMinBid)} '
+                      '(${formatMoney(product.minIncrement)} increment)',
               style: TextStyle(
                 color: colorToken.textSecondary,
                 fontFamily: 'SourceSans3',

@@ -32,6 +32,9 @@ class _HomeState extends State<Home> {
   bool _isLoadingMore = false;
   bool _hasMore = true;
   String? _error;
+  // Bumped on every first-page load (refresh / sort change) so responses
+  // from an older request can't overwrite newer results.
+  int _loadGeneration = 0;
 
   Set<String> _myBidProductIds = {};
   StreamSubscription<Set<String>>? _bidSub;
@@ -76,6 +79,7 @@ class _HomeState extends State<Home> {
   }
 
   Future<void> _loadFirstPage() async {
+    final generation = ++_loadGeneration;
     setState(() {
       _isLoading = true;
       _error = null;
@@ -89,6 +93,7 @@ class _HomeState extends State<Home> {
         after: null,
         sort: _sort,
       );
+      if (!mounted || generation != _loadGeneration) return;
       setState(() {
         _products = products;
         _cursor = cursor;
@@ -96,6 +101,7 @@ class _HomeState extends State<Home> {
         _isLoading = false;
       });
     } catch (e) {
+      if (!mounted || generation != _loadGeneration) return;
       setState(() {
         _error = e.toString();
         _isLoading = false;
@@ -104,7 +110,8 @@ class _HomeState extends State<Home> {
   }
 
   Future<void> _loadMore() async {
-    if (_isLoadingMore || !_hasMore || _cursor == null) return;
+    if (_isLoading || _isLoadingMore || !_hasMore || _cursor == null) return;
+    final generation = _loadGeneration;
     setState(() => _isLoadingMore = true);
     try {
       final (products, cursor) = await ProductRepository.fetchPage(
@@ -112,6 +119,7 @@ class _HomeState extends State<Home> {
         after: _cursor,
         sort: _sort,
       );
+      if (!mounted || generation != _loadGeneration) return;
       setState(() {
         _products.addAll(products);
         _cursor = cursor;
@@ -119,6 +127,7 @@ class _HomeState extends State<Home> {
         _isLoadingMore = false;
       });
     } catch (_) {
+      if (!mounted || generation != _loadGeneration) return;
       setState(() => _isLoadingMore = false);
     }
   }

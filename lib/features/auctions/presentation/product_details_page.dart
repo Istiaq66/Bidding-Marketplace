@@ -12,6 +12,7 @@ import 'package:app/features/profile/data/follow_repository.dart';
 import 'package:app/features/profile/presentation/seller_profile_page.dart';
 import 'package:app/core/theme/theme_provider.dart';
 import 'package:app/core/utils/share.dart';
+import 'package:app/core/utils/money.dart';
 import 'package:flutter/material.dart';
 
 class ProductDetails extends StatefulWidget {
@@ -68,17 +69,19 @@ class _ProductDetailsState extends State<ProductDetails> {
       return;
     }
     try {
-      if (_isWatchlisted) {
+      final wasWatchlisted = _isWatchlisted;
+      if (wasWatchlisted) {
         await WatchlistRepository.removeByUserAndProduct(userId, widget.docId);
-        _showSuccessSnackbar('Removed from watchlist');
       } else {
         await WatchlistRepository.add(userId, widget.docId);
-        _showSuccessSnackbar('Added to watchlist');
       }
       if (!mounted) return;
-      setState(() => _isWatchlisted = !_isWatchlisted);
+      setState(() => _isWatchlisted = !wasWatchlisted);
+      _showSuccessSnackbar(
+        wasWatchlisted ? 'Removed from watchlist' : 'Added to watchlist',
+      );
     } catch (_) {
-      _showErrorSnackbar('Failed to update watchlist');
+      if (mounted) _showErrorSnackbar('Failed to update watchlist');
     }
   }
 
@@ -139,6 +142,7 @@ class _ProductDetailsState extends State<ProductDetails> {
           backgroundColor: colorToken.surface,
           elevation: 0,
           leading: IconButton(
+            tooltip: 'Back',
             icon: Icon(Icons.arrow_back, color: colorToken.textPrimary),
             onPressed: () => Navigator.pop(context),
           ),
@@ -162,6 +166,7 @@ class _ProductDetailsState extends State<ProductDetails> {
               pinned: true,
               backgroundColor: colorToken.surface,
               leading: IconButton(
+                tooltip: 'Back',
                 icon: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
@@ -175,6 +180,10 @@ class _ProductDetailsState extends State<ProductDetails> {
               actions: [
                 if (!isOwnProduct)
                   IconButton(
+                    tooltip:
+                        _isWatchlisted
+                            ? 'Remove from watchlist'
+                            : 'Add to watchlist',
                     icon: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
@@ -192,6 +201,7 @@ class _ProductDetailsState extends State<ProductDetails> {
                     onPressed: _toggleWatchlist,
                   ),
                 IconButton(
+                  tooltip: 'Share',
                   icon: Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
@@ -396,7 +406,7 @@ class _ProductDetailsState extends State<ProductDetails> {
     ColorToken colorToken,
     String? currentUserId,
   ) {
-    final amount = '\$${product.currentBid.toStringAsFixed(2)}';
+    final amount = formatMoney(product.currentBid);
     final isSeller = currentUserId == product.sellerId;
 
     if (product.isWonBy(currentUserId)) {

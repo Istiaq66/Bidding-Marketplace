@@ -50,7 +50,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
         _existingImageUrl = (image != null && image.isNotEmpty) ? image : null;
       }
     } catch (_) {
-      _showErrorSnackbar('Failed to load profile data');
+      if (mounted) _showErrorSnackbar('Failed to load profile data');
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -59,9 +59,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
   Future<void> _pickImage(ImageSource source) async {
     try {
       final picked = await StorageService.pickImage(source);
-      if (picked != null) setState(() => _pickedImage = picked);
+      if (picked != null && mounted) setState(() => _pickedImage = picked);
     } catch (e) {
-      _showErrorSnackbar('Could not pick image: ${e.toString()}');
+      if (mounted) _showErrorSnackbar('Could not pick image: ${e.toString()}');
     }
   }
 
@@ -125,10 +125,15 @@ class _EditProfilePageState extends State<EditProfilePage> {
         profileImageUrl: imageUrl,
       );
 
+      if (!mounted) return;
       _showSuccessSnackbar('Profile updated successfully');
       navigator.pop(true);
     } catch (e) {
-      _showErrorSnackbar('Failed to update profile: ${e.toString()}');
+      if (!mounted) return;
+      _showErrorSnackbar(
+        'Failed to update profile: '
+        '${e.toString().replaceFirst('Exception: ', '')}',
+      );
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -186,6 +191,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
         backgroundColor: colorToken.surface,
         elevation: 0,
         leading: IconButton(
+          tooltip: 'Back',
           icon: Icon(Icons.arrow_back, color: colorToken.textPrimary),
           onPressed: () => Navigator.pop(context),
         ),

@@ -13,6 +13,11 @@ class AuthPage extends StatelessWidget {
       body: StreamBuilder<User?>(
         stream: AuthRepository.authStateChanges,
         builder: (context, snapshot) {
+          // Firebase restores the session asynchronously; without this a
+          // signed-in user sees the login screen flash on every cold start.
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
           if (snapshot.hasData) {
             return const NavigationPage();
           }
